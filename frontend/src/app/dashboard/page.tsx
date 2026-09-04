@@ -27,6 +27,15 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_token');
+      const logged = localStorage.getItem('logged_in');
+      if (!token && !logged) {
+        window.location.href = '/login';
+        return;
+      }
+    }
+
     const fetchData = async () => {
       try {
         const prodData = await getInventory();

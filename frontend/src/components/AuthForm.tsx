@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { 
   Eye, 
   EyeOff, 
@@ -11,8 +10,7 @@ import {
   Mail, 
   CheckCircle2, 
   ArrowRight,
-  ShieldCheck,
-  LayoutDashboard
+  ShieldCheck
 } from 'lucide-react';
 import { setDemoMode, setTenantId, login, register } from '@/lib/api';
 
@@ -25,10 +23,10 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
 
   // Form Fields
-  const [username, setUsername] = useState('admin');
-  const [email, setEmail] = useState('admin@enterprise.de');
-  const [password, setPassword] = useState('admin123');
-  const [confirmPassword, setConfirmPassword] = useState('admin123');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // UI state
   const [error, setError] = useState('');
@@ -42,35 +40,68 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
     }
   }, [searchParams]);
 
-  // Direct login
-  const enterDashboard = () => {
-    localStorage.setItem('auth_token', 'bearer_token_eu_' + Date.now());
-    localStorage.setItem('logged_in', 'true');
-    localStorage.setItem('tenant_id', 'empresa-a');
-    setDemoMode(false);
-    setTenantId('empresa-a');
-    window.location.href = '/dashboard';
-  };
-
   // Submit Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    setLoading(true);
-    try {
-      if (mode === 'register') {
-        await register(username.trim() || 'admin', password || 'admin123', email.trim() || 'admin@enterprise.de', 'empresa-a');
-      } else {
-        await login(username.trim() || 'admin', password || 'admin123');
-      }
-    } catch (err) {
-      // ignore network errors and fallback smoothly
+    if (!username.trim() || !password.trim()) {
+      setError('Por favor, ingrese su usuario y contraseña.');
+      return;
     }
-    
-    setSuccess('¡Autenticado con éxito! Redirigiendo al panel...');
-    enterDashboard();
+
+    if (mode === 'register') {
+      if (!email.trim() || !email.includes('@') || !email.includes('.')) {
+        setError('El correo electrónico corporativo es obligatorio y debe ser válido.');
+        return;
+      }
+      if (password.length < 6) {
+        setError('La contraseña debe contener al menos 6 caracteres.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('Las contraseñas no coinciden.');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        await register(username.trim(), password, email.trim(), 'empresa-a');
+        setSuccess('¡Cuenta empresarial creada con éxito! Redirigiendo...');
+        setDemoMode(false);
+        setTenantId('empresa-a');
+        localStorage.setItem('logged_in', 'true');
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 500);
+      } catch (err: any) {
+        setError(err.message || 'Error al registrar usuario.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Login Flow
+    try {
+      setLoading(true);
+      const data = await login(username.trim(), password);
+      const token = data?.access_token || 'bearer_token_eu_' + Date.now();
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('logged_in', 'true');
+      localStorage.setItem('user_session', JSON.stringify({ username: username.trim() }));
+      setDemoMode(false);
+      setTenantId('empresa-a');
+      setSuccess('¡Credenciales verificadas! Iniciando sesión...');
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 400);
+    } catch (err: any) {
+      setError('Credenciales inválidas. Verifique su usuario y contraseña.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -144,7 +175,7 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder={mode === 'register' ? 'ej. tu_tienda' : 'ej. admin'}
+            placeholder={mode === 'register' ? 'ej. tu_empresa' : 'ej. admin'}
             className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 focus:bg-white"
           />
         </div>
@@ -153,13 +184,13 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
           <div>
             <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5 flex items-center gap-1.5">
               <Mail size={13} className="text-blue-600" />
-              Correo Electrónico (Obligatorio)
+              Correo Electrónico Corporativo
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="ventas@tutienda.com"
+              placeholder="contacto@empresa.de"
               className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 focus:bg-white"
             />
           </div>
@@ -206,11 +237,11 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
           {loading ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Accediendo...</span>
+              <span>Verificando credenciales...</span>
             </>
           ) : mode === 'register' ? (
             <>
-              <span>Crear Cuenta y Acceder</span>
+              <span>Crear Cuenta Empresarial</span>
               <ArrowRight size={16} />
             </>
           ) : (
@@ -222,20 +253,9 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
         </button>
       </form>
 
-      {/* Acceso Directo de Demostración */}
-      <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col items-center">
-        <button
-          type="button"
-          onClick={enterDashboard}
-          className="w-full py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer hover:text-slate-900"
-        >
-          <LayoutDashboard size={15} className="text-blue-600" />
-          <span>Acceder Directamente al Dashboard</span>
-        </button>
-        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
-          <ShieldCheck size={14} className="text-emerald-600" />
-          <span>Servidores Seguros Multi-Canal (Frankfurt & AWS EU)</span>
-        </div>
+      <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 font-medium">
+        <ShieldCheck size={14} className="text-emerald-600" />
+        <span>Autenticación TLS / OAuth2 Encriptada</span>
       </div>
     </div>
   );
