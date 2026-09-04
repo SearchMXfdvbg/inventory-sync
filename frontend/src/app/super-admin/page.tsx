@@ -1022,31 +1022,13 @@ export default function SuperAdminPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {!isEditingInView ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingInView(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-xl text-xs font-bold transition-colors cursor-pointer"
-                  >
-                    <Edit size={14} />
-                    <span>Editar Perfil</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingInView(false)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
-                  >
-                    <span>Ver Detalles</span>
-                  </button>
-                )}
                 <button
                   onClick={() => {
                     setIsViewModalOpen(false);
                     setViewedTenant(null);
                     setIsEditingInView(false);
                   }}
-                  className="text-slate-400 hover:text-white cursor-pointer ml-1"
+                  className="text-slate-400 hover:text-white cursor-pointer p-1 rounded-lg hover:bg-slate-800 transition-colors"
                 >
                   <XCircle size={22} />
                 </button>
@@ -1149,7 +1131,7 @@ export default function SuperAdminPage() {
                       className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-blue-400 font-bold text-xs border border-slate-700 cursor-pointer flex items-center gap-1.5"
                     >
                       <Edit size={14} />
-                      <span>Editar</span>
+                      <span>Editar Perfil</span>
                     </button>
                     <button
                       type="button"
