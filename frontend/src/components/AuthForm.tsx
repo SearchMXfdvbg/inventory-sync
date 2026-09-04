@@ -76,14 +76,22 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
 
         try {
           const stored = localStorage.getItem('inventory_sync_tenants_v2');
-          const list = stored ? JSON.parse(stored) : [];
-          const exists = list.some((item: any) => item.name?.toLowerCase() === username.trim().toLowerCase());
-          if (!exists && username.trim().toLowerCase() !== 'cristadmin') {
+          let list = stored ? JSON.parse(stored) : [];
+          const cleanUser = username.trim();
+          const cleanEmail = email.trim();
+          const cleanPwd = password.trim();
+
+          const existingIndex = list.findIndex((item: any) => item.name?.toLowerCase() === cleanUser.toLowerCase());
+          if (existingIndex >= 0) {
+            list[existingIndex].password = cleanPwd;
+            list[existingIndex].email = cleanEmail;
+          } else if (cleanUser.toLowerCase() !== 'cristadmin') {
             list.push({
               id: `TNT-${(list.length + 1).toString().padStart(3, '0')}`,
-              name: username.trim(),
-              owner: username.trim(),
-              email: email.trim(),
+              name: cleanUser,
+              owner: cleanUser,
+              email: cleanEmail,
+              password: cleanPwd,
               plan: 'Plan Básico (<200 SKUs)',
               maxSkus: 200,
               activeSkus: 0,
@@ -93,8 +101,8 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
               created_at: new Date().toISOString(),
               last_sync: 'En Línea'
             });
-            localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(list));
           }
+          localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(list));
         } catch {}
 
         setTimeout(() => {

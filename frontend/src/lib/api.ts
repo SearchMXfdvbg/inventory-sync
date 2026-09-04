@@ -280,14 +280,21 @@ export const register = async (
 
     try {
       const stored = localStorage.getItem('inventory_sync_tenants_v2');
-      const list = stored ? JSON.parse(stored) : [];
-      const exists = list.some((item: any) => item.name?.toLowerCase() === cleanUsername.toLowerCase());
-      if (!exists && cleanUsername.toLowerCase() !== 'cristadmin') {
+      let list = stored ? JSON.parse(stored) : [];
+      const cleanEmail = email.trim();
+      const cleanPwd = password.trim();
+
+      const existingIndex = list.findIndex((item: any) => item.name?.toLowerCase() === cleanUsername.toLowerCase());
+      if (existingIndex >= 0) {
+        list[existingIndex].password = cleanPwd;
+        list[existingIndex].email = cleanEmail;
+      } else if (cleanUsername.toLowerCase() !== 'cristadmin') {
         list.push({
           id: `TNT-${(list.length + 1).toString().padStart(3, '0')}`,
           name: cleanUsername,
           owner: cleanUsername,
-          email: email.trim(),
+          email: cleanEmail,
+          password: cleanPwd,
           plan: 'Plan Básico (<200 SKUs)',
           maxSkus: 200,
           activeSkus: 0,
@@ -297,8 +304,8 @@ export const register = async (
           created_at: new Date().toISOString(),
           last_sync: 'En Línea'
         });
-        localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(list));
       }
+      localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(list));
     } catch {}
   }
   return data;

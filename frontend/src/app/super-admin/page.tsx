@@ -63,6 +63,7 @@ export default function SuperAdminPage() {
   const [newClientName, setNewClientName] = useState('');
   const [newClientOwner, setNewClientOwner] = useState('');
   const [newClientEmail, setNewClientEmail] = useState('');
+  const [newClientPassword, setNewClientPassword] = useState('');
   const [newClientPlan, setNewClientPlan] = useState('Plan Básico (<200 SKUs)');
   const [newClientMaxSkus, setNewClientMaxSkus] = useState(200);
   const [newClientCommission, setNewClientCommission] = useState('25%');
@@ -153,16 +154,20 @@ export default function SuperAdminPage() {
 
       const serverList: Tenant[] = Array.isArray(tenantsRes) ? tenantsRes : [];
 
-      // 3. Merge uniquely by username / name
+      // 3. Merge uniquely by username / name, preserving real passwords
       const tenantMap = new Map<string, Tenant>();
-      serverList.forEach(t => {
+      localTenants.forEach(t => {
         if (t.name?.toLowerCase() !== 'cristadmin') {
           tenantMap.set(t.name.toLowerCase(), t);
         }
       });
-      localTenants.forEach(t => {
-        if (t.name?.toLowerCase() !== 'cristadmin' && !tenantMap.has(t.name.toLowerCase())) {
-          tenantMap.set(t.name.toLowerCase(), t);
+      serverList.forEach(t => {
+        if (t.name?.toLowerCase() !== 'cristadmin') {
+          const existing = tenantMap.get(t.name.toLowerCase());
+          tenantMap.set(t.name.toLowerCase(), {
+            ...t,
+            password: existing?.password || t.password || 'ClienteSeguro2026#'
+          });
         }
       });
 
@@ -197,12 +202,15 @@ export default function SuperAdminPage() {
       return;
     }
 
+    const clientPwd = newClientPassword.trim() || 'ClienteSeguro2026#';
+
     try {
       const newTenantObj: Tenant = {
         id: `TNT-${(tenants.length + 1).toString().padStart(3, '0')}`,
         name: newClientName.trim(),
         owner: newClientOwner.trim() || newClientName.trim(),
         email: newClientEmail.trim(),
+        password: clientPwd,
         plan: newClientPlan,
         maxSkus: Number(newClientMaxSkus),
         activeSkus: 0,
@@ -228,6 +236,7 @@ export default function SuperAdminPage() {
           name: newClientName,
           owner: newClientOwner || newClientName,
           email: newClientEmail,
+          password: clientPwd,
           plan: newClientPlan,
           maxSkus: Number(newClientMaxSkus),
           commission_rate: newClientCommission,
@@ -240,6 +249,7 @@ export default function SuperAdminPage() {
       setNewClientName('');
       setNewClientOwner('');
       setNewClientEmail('');
+      setNewClientPassword('');
       loadData();
     } catch (err) {
       showToast('Error al crear perfil');
@@ -829,6 +839,21 @@ export default function SuperAdminPage() {
                   onChange={(e) => setNewClientEmail(e.target.value)}
                   placeholder="h.weber@techstore-de.com"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-amber-400 uppercase mb-1.5 flex items-center gap-1.5">
+                  <Key size={13} />
+                  <span>Contraseña de Acceso del Cliente</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newClientPassword}
+                  onChange={(e) => setNewClientPassword(e.target.value)}
+                  placeholder="ej. ContraseñaSegura2026#"
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl px-4 py-2.5 text-sm text-amber-300 font-mono"
                 />
               </div>
 
