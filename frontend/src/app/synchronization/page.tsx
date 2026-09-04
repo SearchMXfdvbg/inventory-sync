@@ -194,7 +194,7 @@ export default function SynchronizationPage() {
               <Layers size={40} className="text-slate-300 mb-4" />
               <h3 className="font-bold text-slate-700">Ninguna Transacción Seleccionada</h3>
               <p className="text-xs text-slate-400 max-w-sm mt-2 leading-relaxed">
-                Seleccione una transacción activa de la cola de la izquierda o simule una nueva venta de prueba para observar el flujo de sincronización de datos.
+                Seleccione una transacción activa de la cola de la izquierda para auditar el flujo de sincronización atómica entre canales.
               </p>
             </div>
           )}

@@ -103,9 +103,11 @@ export default function InventoryPage() {
 
   const enableSAE = settings?.ENABLE_SAE ?? true;
   const enableShopify = settings?.ENABLE_SHOPIFY ?? true;
-  const enableML = settings?.ENABLE_MERCADOLIBRE ?? true;
-  const enableTikTok = settings?.ENABLE_TIKTOK ?? true;
+  const enableML = settings?.ENABLE_MERCADOLIBRE ?? false;
+  const enableTikTok = settings?.ENABLE_TIKTOK ?? false;
   const enableAmazon = settings?.ENABLE_AMAZON ?? true;
+  const enableEbay = settings?.ENABLE_EBAY ?? true;
+  const enableKaufland = settings?.ENABLE_KAUFLAND ?? true;
   const masterInv = settings?.INVENTARIO_PRINCIPAL || 'shopify';
 
   const filteredProducts = products.filter((p) => {
@@ -114,15 +116,7 @@ export default function InventoryPage() {
       p.nombre.toLowerCase().includes(searchQuery.toLowerCase());
       
     const matchesStockBajo = filterStockBajo ? p.stock < 5 : true;
-    
-    let matchesDesync = true;
-    if (filterDesincronizado) {
-      if (isDemoMode()) {
-        matchesDesync = p.stock !== p.shopify_stock || p.stock !== p.ml_stock;
-      } else {
-        matchesDesync = false;
-      }
-    }
+    const matchesDesync = filterDesincronizado ? false : true;
 
     return matchesSearch && matchesStockBajo && matchesDesync;
   });
@@ -146,11 +140,11 @@ export default function InventoryPage() {
           <Layers size={16} className="text-blue-600" />
           <span>Inventario Maestro (Fuente de Verdad):</span>
           <span className="bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full border border-blue-200 uppercase font-bold text-[11px]">
-            {masterInv === 'shopify' ? '🛍️ Shopify' : masterInv === 'sae' ? '🖥️ CONTPAQi SAE' : '📦 Mercado Libre'}
+            {masterInv === 'shopify' ? '🛍️ Shopify' : masterInv === 'ebay' ? '🏷️ eBay Alemania' : masterInv === 'kaufland' ? '🛒 Kaufland DE' : masterInv === 'amazon' ? '📦 Amazon EU' : masterInv === 'sae' ? '🖥️ Almacén Central' : '📦 Canal Maestro'}
           </span>
         </div>
         <div className="text-xs text-slate-400">
-          {!enableSAE && <span className="text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-200">SAE Desactivado / Oculto</span>}
+          <span className="text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">● 5 Canales Activos</span>
         </div>
       </div>
 
@@ -206,26 +200,25 @@ export default function InventoryPage() {
               <tr className="border-b border-slate-100 bg-slate-50 text-slate-400 text-xs font-bold uppercase tracking-wider font-mono">
                 <th className="px-6 py-4 font-semibold">Producto</th>
                 <th className="px-6 py-4 font-semibold">SKU</th>
-                {enableSAE && (
-                  <th className="px-6 py-4 font-semibold">
-                    Stock SAE {masterInv === 'sae' && '⭐'}
-                  </th>
-                )}
                 {enableShopify && (
                   <th className="px-6 py-4 font-semibold">
                     Stock Shopify {masterInv === 'shopify' && '⭐'}
                   </th>
                 )}
-                {enableML && (
+                {enableEbay && (
                   <th className="px-6 py-4 font-semibold">
-                    Stock ML {masterInv === 'mercadolibre' && '⭐'}
+                    Stock eBay DE {masterInv === 'ebay' && '⭐'}
                   </th>
                 )}
-                {enableTikTok && (
-                  <th className="px-6 py-4 font-semibold">Stock TikTok</th>
+                {enableKaufland && (
+                  <th className="px-6 py-4 font-semibold">
+                    Stock Kaufland {masterInv === 'kaufland' && '⭐'}
+                  </th>
                 )}
                 {enableAmazon && (
-                  <th className="px-6 py-4 font-semibold">Stock Amazon</th>
+                  <th className="px-6 py-4 font-semibold">
+                    Stock Amazon EU {masterInv === 'amazon' && '⭐'}
+                  </th>
                 )}
                 <th className="px-6 py-4 font-semibold">Sincronización</th>
                 <th className="px-6 py-4 font-semibold text-right">Detalle</th>
@@ -240,49 +233,43 @@ export default function InventoryPage() {
                 </tr>
               ) : (
                 paginatedProducts.map((p) => {
-                  const isDesynced = isDemoMode() && (p.stock !== p.shopify_stock || p.stock !== p.ml_stock);
                   return (
                     <tr key={p.sku} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-slate-800 block truncate max-w-xs">{p.nombre.replace(/\s*\(Demo\)/gi, '').replace(/-Demo/gi, '').replace(/\s+Demo/gi, '')}</span>
+                        <span className="text-sm font-semibold text-slate-800 block truncate max-w-xs">{p.nombre}</span>
                       </td>
                       <td className="px-6 py-4 text-sm font-mono text-slate-500">{p.sku}</td>
-                      
-                      {/* Columna SAE (solo si está activo) */}
-                      {enableSAE && (
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{p.stock}</td>
-                      )}
 
                       {/* Columna Shopify */}
                       {enableShopify && (
-                        <td className="px-6 py-4 text-sm font-medium text-slate-600">
-                          {isDemoMode() ? p.shopify_stock : (masterInv === 'shopify' ? p.stock : 'Sincronizado')}
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-800">
+                          {p.shopify_stock ?? p.stock}
                         </td>
                       )}
 
-                      {/* Columna Mercado Libre */}
-                      {enableML && (
-                        <td className="px-6 py-4 text-sm font-medium text-slate-600">
-                          {isDemoMode() ? p.ml_stock : (masterInv === 'mercadolibre' ? p.stock : 'Sincronizado')}
+                      {/* Columna eBay DE */}
+                      {enableEbay && (
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-800">
+                          {p.ebay_stock ?? p.stock}
                         </td>
                       )}
 
-                      {/* Columna TikTok Shop */}
-                      {enableTikTok && (
-                        <td className="px-6 py-4 text-sm font-medium text-slate-600">
-                          {p.stock}
+                      {/* Columna Kaufland */}
+                      {enableKaufland && (
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-800">
+                          {p.kaufland_stock ?? p.stock}
                         </td>
                       )}
 
                       {/* Columna Amazon */}
                       {enableAmazon && (
-                        <td className="px-6 py-4 text-sm font-medium text-slate-600">
-                          {p.stock}
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-800">
+                          {p.amazon_stock ?? p.stock}
                         </td>
                       )}
 
                       <td className="px-6 py-4">
-                        <StatusBadge status={isDesynced ? 'DESYNC' : 'MATCH'} />
+                        <StatusBadge status={'MATCH'} />
                       </td>
                       <td className="px-6 py-4 text-right">
                         <Link

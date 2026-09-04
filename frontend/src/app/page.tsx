@@ -135,7 +135,7 @@ export default function LandingPage() {
               className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-semibold text-base transition-all flex items-center justify-center gap-2 shadow-sm"
             >
               <Store size={18} className="text-blue-600" />
-              <span>Ver Demostración en Vivo</span>
+              <span>Explorar Catálogo en Vivo</span>
             </Link>
           </div>
 
@@ -521,7 +521,7 @@ export default function LandingPage() {
           </div>
           <p>© 2026 InventorySync México. Todos los derechos reservados.</p>
           <div className="flex items-center gap-4 text-slate-400">
-            <Link href="/catalog" className="hover:text-white">Demostración</Link>
+            <Link href="/catalog" className="hover:text-white">Catálogo</Link>
             <Link href="/login" className="hover:text-white">Acceso Clientes</Link>
             <a href={whatsappLink('Soporte')} target="_blank" rel="noopener noreferrer" className="hover:text-white flex items-center gap-1">
               <MessageCircle size={14} /> WhatsApp
