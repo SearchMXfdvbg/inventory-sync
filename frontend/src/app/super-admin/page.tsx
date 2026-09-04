@@ -1313,7 +1313,7 @@ export default function SuperAdminPage() {
                     className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 cursor-pointer flex items-center gap-2"
                   >
                     <Save size={15} />
-                    <span>Guardar Cambios (PIN 060718)</span>
+                    <span>Guardar Cambios</span>
                   </button>
                 </div>
               </form>
