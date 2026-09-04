@@ -656,63 +656,11 @@ export const getCatalogProducts = async (): Promise<CatalogProduct[]> => {
     const response = await fetchApi(`${BASE_URL}/catalog/products`);
     if (response.ok) {
       const data = await response.json();
-      if (Array.isArray(data) && data.length > 0) return data;
+      if (Array.isArray(data)) return data;
     }
   } catch (err) {}
 
-  return [
-    {
-      id: 'gid://shopify/Product/1001',
-      title: 'Sony Alpha 7 IV Vollformat-Kamera (ILCE-7M4)',
-      vendor: 'Sony Europe B.V.',
-      tags: ['Kamera', 'Foto', 'Elektronik', 'Amazon DE', 'eBay DE'],
-      tiktok_ready: true,
-      variants: [
-        {
-          id: 'gid://shopify/ProductVariant/2001',
-          title: 'Body Only',
-          sku: 'DE-EL-7890-PRO',
-          price: '2399.00',
-          weight: 658,
-          weightUnit: 'GRAMS'
-        }
-      ]
-    },
-    {
-      id: 'gid://shopify/Product/1002',
-      title: 'Dell PowerEdge R750 Server 2x Xeon Silver 4314 64GB',
-      vendor: 'Dell Technologies',
-      tags: ['Server', 'Data Center', 'Enterprise', 'eBay DE'],
-      tiktok_ready: true,
-      variants: [
-        {
-          id: 'gid://shopify/ProductVariant/2002',
-          title: 'Rack 2U',
-          sku: 'DE-IT-4421-SRV',
-          price: '4890.00',
-          weight: 28000,
-          weightUnit: 'GRAMS'
-        }
-      ]
-    },
-    {
-      id: 'gid://shopify/Product/1003',
-      title: 'Bosch Professional Akku-Bohrschrauber GSR 18V-110 C',
-      vendor: 'Bosch Power Tools',
-      tags: ['Werkzeug', 'Bosch Pro', 'Kaufland DE', 'Amazon DE'],
-      tiktok_ready: true,
-      variants: [
-        {
-          id: 'gid://shopify/ProductVariant/2003',
-          title: 'L-BOXX Set mit 2x 5.0Ah Akku',
-          sku: 'DE-HW-9912-WRK',
-          price: '289.00',
-          weight: 2200,
-          weightUnit: 'GRAMS'
-        }
-      ]
-    }
-  ];
+  return [];
 };
 
 export const bulkUpdateCatalog = async (
@@ -756,15 +704,15 @@ export const importInventoryFile = async (file: File): Promise<ImportInventoryRe
 
   return {
     success: true,
-    total_rows: 39420,
+    total_rows: 0,
     created_count: 0,
-    updated_count: 39420,
-    message: `Archivo '${file.name}' procesado exitosamente: 39,420 productos y series actualizados en el sistema central.`
+    updated_count: 0,
+    message: `Archivo '${file.name}' procesado.`
   };
 };
 
 export const downloadInventoryTemplate = async (): Promise<void> => {
-  const csvContent = 'sku,nombre,stock,shopify_inventory_item_id,shopify_location_id,ml_item_id,amazon_asin,ebay_item_id,kaufland_offer_id\nDE-EL-7890-PRO,Sony Alpha 7 IV,45,gid://shopify/InventoryItem/458921478,gid://shopify/Location/89123456,MLM982314567,B09JZT6YK5,2984129841,1049281\n';
+  const csvContent = 'sku,nombre,stock,shopify_inventory_item_id,shopify_location_id,ml_item_id,amazon_asin,ebay_item_id,kaufland_offer_id\nSKU-EJEMPLO-001,Producto Modelo,10,gid://shopify/InventoryItem/123456789,gid://shopify/Location/987654321,MLM123456789,,,\n';
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -775,3 +723,4 @@ export const downloadInventoryTemplate = async (): Promise<void> => {
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
 };
+
