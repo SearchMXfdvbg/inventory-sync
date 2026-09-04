@@ -41,27 +41,14 @@ export default function DashboardPage() {
         const session = localStorage.getItem('user_session');
         if (session) {
           const u = JSON.parse(session);
-          let plan = u.plan || 'Plan Guest';
-          let active = u.is_active ?? true;
-          let reason = u.suspension_reason || '';
-
-          const stored = localStorage.getItem('inventory_sync_tenants_v2');
-          if (stored && u.username) {
-            const list = JSON.parse(stored);
-            const found = list.find((t: any) => t.name?.toLowerCase() === u.username.toLowerCase());
-            if (found) {
-              plan = found.plan || plan;
-              active = found.status === 'ACTIVE';
-              reason = found.suspension_reason || reason;
-            }
-          }
+          const isSuper = u.username?.toLowerCase() === 'cristadmin';
 
           setCurrentUser({
-            username: u.username,
-            role: u.role || 'CLIENT_ADMIN',
-            plan: u.username?.toLowerCase() === 'cristadmin' ? 'Enterprise (39,000 SKUs)' : plan,
-            is_active: u.username?.toLowerCase() === 'cristadmin' ? true : active,
-            suspension_reason: reason
+            username: isSuper ? 'CristAdmin' : (u.username || 'Cliente'),
+            role: isSuper ? 'SUPER_ADMIN' : (u.role || 'CLIENT_ADMIN'),
+            plan: isSuper ? 'Enterprise (39,000 SKUs)' : (u.plan || 'Plan Guest'),
+            is_active: isSuper ? true : (u.is_active ?? true),
+            suspension_reason: isSuper ? '' : (u.suspension_reason || '')
           });
         }
       } catch {}

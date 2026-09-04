@@ -202,13 +202,6 @@ export interface LoginResponse {
 
 export const login = async (username: string, password: string): Promise<LoginResponse> => {
   const cleanUsername = username.trim();
-  let localTenants: any[] = [];
-  if (typeof window !== 'undefined') {
-    try {
-      const stored = localStorage.getItem('inventory_sync_tenants_v2');
-      if (stored) localTenants = JSON.parse(stored);
-    } catch {}
-  }
 
   try {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -217,7 +210,7 @@ export const login = async (username: string, password: string): Promise<LoginRe
         'Content-Type': 'application/json',
         'X-Tenant-ID': getTenantId(),
       },
-      body: JSON.stringify({ username: cleanUsername, password, localTenants }),
+      body: JSON.stringify({ username: cleanUsername, password }),
     });
 
     if (response.ok) {
@@ -226,46 +219,39 @@ export const login = async (username: string, password: string): Promise<LoginRe
       if (token && typeof window !== 'undefined') {
         localStorage.setItem('auth_token', token);
         localStorage.setItem('logged_in', 'true');
-        localStorage.setItem('user_session', JSON.stringify(data.user || { username: cleanUsername }));
+        if (data.user) {
+          localStorage.setItem('user_session', JSON.stringify(data.user));
+          try {
+            const stored = localStorage.getItem('inventory_sync_tenants_v2');
+            let list = stored ? JSON.parse(stored) : [];
+            const idx = list.findIndex((t: any) => t.name?.toLowerCase() === cleanUsername.toLowerCase());
+            if (idx >= 0) {
+              list[idx] = {
+                ...list[idx],
+                plan: data.user.plan || list[idx].plan,
+                status: data.user.is_active ? 'ACTIVE' : 'SUSPENDED',
+                suspension_reason: data.user.suspension_reason || ''
+              };
+              localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(list));
+            }
+          } catch {}
+        }
       }
       return data;
+    } else {
+      let errorDetail = 'Credenciales inválidas. Verifique su usuario y contraseña.';
+      try {
+        const errJson = await response.json();
+        if (errJson.detail) errorDetail = errJson.detail;
+      } catch {}
+      throw new Error(errorDetail);
     }
-  } catch (netErr) {
-    // Continuar a fallback local si hay fallo de red
-  }
-
-  // Fallback seguro contra caché local si el servidor es nuevo o está en frío
-  if (localTenants.length > 0) {
-    const found = localTenants.find((t: any) => t.name?.toLowerCase() === cleanUsername.toLowerCase() || t.owner?.toLowerCase() === cleanUsername.toLowerCase());
-    if (found) {
-      if (found.password && found.password !== password) {
-        throw new Error('Contraseña incorrecta. Verifique sus credenciales.');
-      }
-      const token = `jwt_client_${Date.now()}`;
-      const userObj = {
-        id: found.id || 1,
-        username: found.name,
-        email: found.email,
-        role: 'CLIENT_ADMIN',
-        tenant_id: found.id || 'empresa-a',
-        is_active: found.status === 'ACTIVE',
-        plan: found.plan || 'Plan Guest',
-        suspension_reason: found.suspension_reason || ''
-      };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('auth_token', token);
-        localStorage.setItem('logged_in', 'true');
-        localStorage.setItem('user_session', JSON.stringify(userObj));
-      }
-      return {
-        access_token: token,
-        token_type: 'bearer',
-        user: userObj
-      };
+  } catch (err: any) {
+    if (err.message && (err.message.includes('Credenciales') || err.message.includes('Usuario') || err.message.includes('Contraseña') || err.message.includes('crear una cuenta'))) {
+      throw err;
     }
+    throw new Error(err.message || 'Error de conexión con el servidor.');
   }
-
-  throw new Error('Usuario no registrado. Debe crear una cuenta antes de iniciar sesión.');
 };
 
 export interface RegisterResponse {

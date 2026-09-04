@@ -61,28 +61,14 @@ export default function RootLayout({
         const sessionRaw = localStorage.getItem('user_session');
         if (sessionRaw) {
           const parsed = JSON.parse(sessionRaw);
-          let userPlan = parsed.plan || 'Plan Guest';
-          let userActive = parsed.is_active ?? true;
-          let userReason = parsed.suspension_reason || '';
-
-          // Consultar caché de tenants locales para datos en vivo
-          const storedTenants = localStorage.getItem('inventory_sync_tenants_v2');
-          if (storedTenants && parsed.username) {
-            const tList = JSON.parse(storedTenants);
-            const found = tList.find((t: any) => t.name?.toLowerCase() === parsed.username.toLowerCase());
-            if (found) {
-              userPlan = found.plan || userPlan;
-              userActive = found.status === 'ACTIVE';
-              userReason = found.suspension_reason || userReason;
-            }
-          }
+          const isSuper = parsed.username?.toLowerCase() === 'cristadmin';
 
           setCurrentUser({
-            username: parsed.username || 'Cliente',
-            role: parsed.role || 'CLIENT_ADMIN',
-            plan: parsed.username?.toLowerCase() === 'cristadmin' ? 'Enterprise (39,000 SKUs)' : userPlan,
-            is_active: parsed.username?.toLowerCase() === 'cristadmin' ? true : userActive,
-            suspension_reason: userReason
+            username: isSuper ? 'CristAdmin' : (parsed.username || 'Cliente'),
+            role: isSuper ? 'SUPER_ADMIN' : (parsed.role || 'CLIENT_ADMIN'),
+            plan: isSuper ? 'Enterprise (39,000 SKUs)' : (parsed.plan || 'Plan Guest'),
+            is_active: isSuper ? true : (parsed.is_active ?? true),
+            suspension_reason: isSuper ? '' : (parsed.suspension_reason || '')
           });
         }
       } catch {}

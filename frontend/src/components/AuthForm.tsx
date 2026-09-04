@@ -137,30 +137,33 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
       localStorage.setItem('auth_token', token);
       localStorage.setItem('logged_in', 'true');
 
-      // Buscar si tenemos el tenant en caché local para tener los datos más recientes
-      let localPlan = data?.user?.plan || 'Plan Guest';
-      let localStatus = data?.user?.is_active ?? true;
-      let localReason = data?.user?.suspension_reason || '';
-      try {
-        const storedTenants = localStorage.getItem('inventory_sync_tenants_v2');
-        if (storedTenants) {
-          const tList = JSON.parse(storedTenants);
-          const found = tList.find((t: any) => t.name?.toLowerCase() === cleanUser.toLowerCase());
-          if (found) {
-            localPlan = found.plan || localPlan;
-            localStatus = found.status === 'ACTIVE';
-            localReason = found.suspension_reason || localReason;
-          }
-        }
-      } catch {}
+      // Respetar estrictamente el estado del servidor (is_active, plan, suspension_reason)
+      const userPlan = isSuper ? 'Enterprise (39,000 SKUs)' : (data?.user?.plan || 'Plan Guest');
+      const userActive = isSuper ? true : (data?.user?.is_active ?? true);
+      const userReason = isSuper ? '' : (data?.user?.suspension_reason || '');
 
       localStorage.setItem('user_session', JSON.stringify({ 
         username: isSuper ? 'CristAdmin' : cleanUser, 
         role: isSuper ? 'SUPER_ADMIN' : (data?.user?.role || 'CLIENT_ADMIN'),
-        plan: isSuper ? 'Enterprise (39,000 SKUs)' : localPlan,
-        is_active: isSuper ? true : localStatus,
-        suspension_reason: isSuper ? '' : localReason
+        plan: userPlan,
+        is_active: userActive,
+        suspension_reason: userReason
       }));
+
+      try {
+        const storedTenants = localStorage.getItem('inventory_sync_tenants_v2');
+        let tList = storedTenants ? JSON.parse(storedTenants) : [];
+        const idx = tList.findIndex((t: any) => t.name?.toLowerCase() === cleanUser.toLowerCase());
+        if (idx >= 0) {
+          tList[idx] = {
+            ...tList[idx],
+            plan: userPlan,
+            status: userActive ? 'ACTIVE' : 'SUSPENDED',
+            suspension_reason: userReason
+          };
+          localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(tList));
+        }
+      } catch {}
       setDemoMode(false);
       setTenantId(isSuper ? 'global-master' : 'empresa-a');
       setSuccess(isSuper ? '¡Acceso Maestro de Super Administrador Concedido!' : '¡Credenciales verificadas! Iniciando sesión...');

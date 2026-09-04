@@ -56,6 +56,7 @@ function createSalt(): string {
 }
 
 const STORAGE_FILE = path.join(os.tmpdir(), 'inventory_sync_users_registry.json');
+const LOCAL_DATA_FILE = path.join(process.cwd(), 'data', 'users.json');
 
 const cristSalt = createSalt();
 const defaultSuperAdmin: UserRecord = {
@@ -75,18 +76,22 @@ function readPersistedUsers(): Map<string, UserRecord> {
   const map = new Map<string, UserRecord>();
   map.set('cristadmin', defaultSuperAdmin);
 
-  try {
-    if (fs.existsSync(STORAGE_FILE)) {
-      const data = fs.readFileSync(STORAGE_FILE, 'utf-8');
-      const parsed: Record<string, UserRecord> = JSON.parse(data);
-      Object.keys(parsed).forEach((key) => {
-        if (key.toLowerCase() !== 'cristadmin') {
-          map.set(key.toLowerCase(), parsed[key]);
-        }
-      });
+  // Try reading from LOCAL_DATA_FILE first, then STORAGE_FILE
+  const filesToTry = [LOCAL_DATA_FILE, STORAGE_FILE];
+  for (const f of filesToTry) {
+    try {
+      if (fs.existsSync(f)) {
+        const data = fs.readFileSync(f, 'utf-8');
+        const parsed: Record<string, UserRecord> = JSON.parse(data);
+        Object.keys(parsed).forEach((key) => {
+          if (key.toLowerCase() !== 'cristadmin') {
+            map.set(key.toLowerCase(), parsed[key]);
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('[authStore] Error al leer archivo persistido:', f, err);
     }
-  } catch (err) {
-    console.warn('[authStore] Error al leer archivo persistido:', err);
   }
 
   return map;
@@ -98,7 +103,19 @@ function savePersistedUsers(map: Map<string, UserRecord>) {
     map.forEach((val, key) => {
       obj[key] = val;
     });
-    fs.writeFileSync(STORAGE_FILE, JSON.stringify(obj, null, 2), 'utf-8');
+    const serialized = JSON.stringify(obj, null, 2);
+
+    try {
+      const dir = path.dirname(LOCAL_DATA_FILE);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(LOCAL_DATA_FILE, serialized, 'utf-8');
+    } catch {}
+
+    try {
+      fs.writeFileSync(STORAGE_FILE, serialized, 'utf-8');
+    } catch {}
   } catch (err) {
     console.warn('[authStore] Error al guardar archivo persistido:', err);
   }
@@ -132,7 +149,7 @@ export function registerNewUser(
     existing.salt = salt;
     existing.rawPassword = password;
     existing.email = email.trim().toLowerCase();
-    existing.is_active = true;
+    // Conservar estado de activación y razón de suspensión si ya existían
     registeredUsers.set(cleanUsername, existing);
     savePersistedUsers(registeredUsers);
     return existing;
