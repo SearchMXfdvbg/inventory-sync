@@ -20,6 +20,24 @@ import { clearSession } from '@/lib/api';
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const [currentUser, setCurrentUser] = React.useState('Administrador');
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const session = localStorage.getItem('user_session');
+      if (session) {
+        try {
+          const parsed = JSON.parse(session);
+          if (parsed.username) {
+            setCurrentUser(parsed.username);
+            return;
+          }
+        } catch {}
+      }
+      const user = localStorage.getItem('username');
+      if (user) setCurrentUser(user);
+    }
+  }, []);
 
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -78,20 +96,20 @@ export const Sidebar: React.FC = () => {
       <div className="p-4 border-t border-slate-800 space-y-3">
 
         <div className="flex items-center justify-between px-2">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
-              <User size={14} />
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs shrink-0">
+              {currentUser.charAt(0).toUpperCase()}
             </div>
-            <div className="leading-tight">
-              <p className="text-xs font-semibold text-white">Admin</p>
-              <p className="text-[9px] text-slate-500 font-medium">Administrador</p>
+            <div className="leading-tight min-w-0">
+              <p className="text-xs font-semibold text-white truncate max-w-[120px]">{currentUser}</p>
+              <p className="text-[9px] text-slate-500 font-medium">Propietario / Admin</p>
             </div>
           </div>
           
           <button 
             onClick={handleLogout}
             title="Cerrar sesión"
-            className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-red-400 transition-colors"
+            className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-red-400 transition-colors shrink-0 cursor-pointer"
           >
             <LogOut size={16} />
           </button>
