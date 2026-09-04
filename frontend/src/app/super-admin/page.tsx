@@ -159,15 +159,21 @@ export default function SuperAdminPage() {
       // 3. Merge uniquely by username / name, preserving real passwords
       const tenantMap = new Map<string, Tenant>();
       localTenants.forEach(t => {
-        if (t.name?.toLowerCase() !== 'cristadmin') {
-          tenantMap.set(t.name.toLowerCase(), t);
+        const cleanKey = (t.name || '').trim().toLowerCase();
+        if (cleanKey && cleanKey !== 'cristadmin') {
+          tenantMap.set(cleanKey, {
+            ...t,
+            id: `TNT-${cleanKey.replace(/[^a-z0-9]/g, '')}`
+          });
         }
       });
       serverList.forEach(t => {
-        if (t.name?.toLowerCase() !== 'cristadmin') {
-          const existing = tenantMap.get(t.name.toLowerCase());
-          tenantMap.set(t.name.toLowerCase(), {
+        const cleanKey = (t.name || '').trim().toLowerCase();
+        if (cleanKey && cleanKey !== 'cristadmin') {
+          const existing = tenantMap.get(cleanKey);
+          tenantMap.set(cleanKey, {
             ...t,
+            id: `TNT-${cleanKey.replace(/[^a-z0-9]/g, '')}`,
             password: existing?.password || t.password || 'ClienteSeguro2026#'
           });
         }
@@ -205,12 +211,14 @@ export default function SuperAdminPage() {
     }
 
     const clientPwd = newClientPassword.trim() || 'ClienteSeguro2026#';
+    const cleanName = newClientName.trim();
+    const cleanKey = cleanName.toLowerCase().replace(/[^a-z0-9]/g, '');
 
     try {
       const newTenantObj: Tenant = {
-        id: `TNT-${(tenants.length + 1).toString().padStart(3, '0')}`,
-        name: newClientName.trim(),
-        owner: newClientOwner.trim() || newClientName.trim(),
+        id: `TNT-${cleanKey || Date.now().toString().slice(-4)}`,
+        name: cleanName,
+        owner: newClientOwner.trim() || cleanName,
         email: newClientEmail.trim(),
         password: clientPwd,
         plan: newClientPlan,
@@ -218,13 +226,14 @@ export default function SuperAdminPage() {
         activeSkus: 0,
         channels: selectedChannels,
         status: 'ACTIVE',
+        suspension_reason: '',
         commission_rate: newClientCommission,
         created_at: new Date().toISOString(),
         last_sync: 'En Línea'
       };
 
       // Add to local state and localStorage immediately
-      const updatedList = [newTenantObj, ...tenants.filter(t => t.name.toLowerCase() !== newTenantObj.name.toLowerCase())];
+      const updatedList = [newTenantObj, ...tenants.filter(t => t.name.toLowerCase() !== cleanName.toLowerCase())];
       setTenants(updatedList);
       if (typeof window !== 'undefined') {
         localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(updatedList));
@@ -235,8 +244,8 @@ export default function SuperAdminPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: newClientName,
-          owner: newClientOwner || newClientName,
+          name: cleanName,
+          owner: newClientOwner || cleanName,
           email: newClientEmail,
           password: clientPwd,
           plan: newClientPlan,
@@ -298,19 +307,20 @@ export default function SuperAdminPage() {
       });
       setIsViewModalOpen(true);
     } else if (type === 'toggle_status') {
-      await toggleTenantStatus(tenant.id, tenant.status, suspensionReasonInput);
+      await toggleTenantStatus(tenant.name, tenant.status, suspensionReasonInput);
     } else if (type === 'delete') {
-      handleDeleteTenant(tenant.id);
+      handleDeleteTenant(tenant.name);
     } else if (type === 'update') {
-      await handleSaveEditedTenant(tenant.id, updatePayload);
+      await handleSaveEditedTenant(tenant.name, updatePayload);
     }
     setPendingAction(null);
   };
 
-  const handleSaveEditedTenant = async (id: string, payload: any) => {
+  const handleSaveEditedTenant = async (targetName: string, payload: any) => {
     try {
+      const cleanTarget = targetName.trim().toLowerCase();
       const updatedList = tenants.map(t => {
-        if (t.id === id) {
+        if (t.name.toLowerCase() === cleanTarget) {
           return {
             ...t,
             ...payload
@@ -323,7 +333,7 @@ export default function SuperAdminPage() {
         localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(updatedList));
       }
 
-      if (viewedTenant && viewedTenant.id === id) {
+      if (viewedTenant && viewedTenant.name.toLowerCase() === cleanTarget) {
         setViewedTenant({ ...viewedTenant, ...payload });
       }
       setIsEditingInView(false);
@@ -331,7 +341,7 @@ export default function SuperAdminPage() {
       await fetch('/api/super-admin/tenants', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, ...payload })
+        body: JSON.stringify({ id: targetName, username: targetName, ...payload })
       });
 
       showToast('¡Perfil y credenciales actualizados exitosamente!');
@@ -359,10 +369,12 @@ export default function SuperAdminPage() {
     }
   };
 
-  const toggleTenantStatus = async (id: string, currentStatus: string, reason?: string) => {
+  const toggleTenantStatus = async (targetName: string, currentStatus: string, reason?: string) => {
     const nextStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
     const reasonText = nextStatus === 'SUSPENDED' ? (reason || 'Falta de pago de mensualidad') : '';
-    const updatedList = tenants.map(t => t.id === id ? { 
+    const cleanTarget = targetName.trim().toLowerCase();
+
+    const updatedList = tenants.map(t => t.name.toLowerCase() === cleanTarget ? { 
       ...t, 
       status: nextStatus as 'ACTIVE' | 'SUSPENDED',
       suspension_reason: reasonText
@@ -376,7 +388,7 @@ export default function SuperAdminPage() {
       await fetch('/api/super-admin/tenants', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: nextStatus, suspension_reason: reasonText })
+        body: JSON.stringify({ id: targetName, username: targetName, status: nextStatus, suspension_reason: reasonText })
       });
       showToast(nextStatus === 'SUSPENDED' ? `Perfil suspendido por: ${reasonText}` : 'Perfil de cliente reactivado exitosamente');
       loadData();
@@ -385,15 +397,16 @@ export default function SuperAdminPage() {
     }
   };
 
-  const handleDeleteTenant = async (id: string) => {
-    const updatedList = tenants.filter(t => t.id !== id);
+  const handleDeleteTenant = async (targetName: string) => {
+    const cleanTarget = targetName.trim().toLowerCase();
+    const updatedList = tenants.filter(t => t.name.toLowerCase() !== cleanTarget);
     setTenants(updatedList);
     if (typeof window !== 'undefined') {
       localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(updatedList));
     }
 
     try {
-      await fetch(`/api/super-admin/tenants?id=${id}`, { method: 'DELETE' });
+      await fetch(`/api/super-admin/tenants?id=${encodeURIComponent(targetName)}`, { method: 'DELETE' });
       showToast('Perfil de cliente eliminado exitosamente');
     } catch (err) {
       showToast('Error al eliminar');

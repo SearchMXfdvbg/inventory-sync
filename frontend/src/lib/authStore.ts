@@ -140,7 +140,7 @@ export function registerNewUser(
 
   const salt = createSalt();
   const newUser: UserRecord = {
-    id: registeredUsers.size + 1,
+    id: Date.now() + Math.floor(Math.random() * 1000),
     username: username.trim(),
     email: email.trim().toLowerCase(),
     salt,
@@ -182,8 +182,9 @@ export function getAllTenants(): TenantInfo[] {
 
   registeredUsers.forEach((user) => {
     if (user.role !== 'SUPER_ADMIN') {
+      const cleanName = user.username.toLowerCase().replace(/[^a-z0-9]/g, '');
       list.push({
-        id: `TNT-${user.id.toString().padStart(3, '0')}`,
+        id: `TNT-${cleanName || user.id.toString()}`,
         name: user.username,
         owner: user.username,
         email: user.email,
@@ -209,11 +210,12 @@ export function syncTenantsBatch(tenants: TenantInfo[]): TenantInfo[] {
   if (Array.isArray(tenants)) {
     tenants.forEach((t) => {
       const clean = (t.name || t.owner || '').trim().toLowerCase();
-      if (clean && !registeredUsers.has(clean) && clean !== 'cristadmin') {
+      if (clean && clean !== 'cristadmin') {
         const salt = createSalt();
         const pwd = t.password || 'ClienteSeguro2026#';
+        const existing = registeredUsers.get(clean);
         const newUser: UserRecord = {
-          id: registeredUsers.size + 1,
+          id: existing ? existing.id : (Date.now() + Math.floor(Math.random() * 1000)),
           username: (t.name || t.owner).trim(),
           email: t.email?.trim().toLowerCase() || `${clean}@empresa.com`,
           salt,
@@ -243,10 +245,13 @@ export function updateTenantDetails(
 ): boolean {
   registeredUsers = readPersistedUsers();
   let found = false;
+  const target = idOrUsername.trim().toLowerCase().replace(/^tnt-/, '');
 
   registeredUsers.forEach((user, key) => {
     if (user.role !== 'SUPER_ADMIN') {
-      if (`TNT-${user.id.toString().padStart(3, '0')}` === idOrUsername || user.username.toLowerCase() === idOrUsername.toLowerCase()) {
+      const userClean = user.username.toLowerCase();
+      const userCleanNoSpecial = userClean.replace(/[^a-z0-9]/g, '');
+      if (userClean === target || userCleanNoSpecial === target || `tnt-${user.id}` === target || `tnt-${userCleanNoSpecial}` === target) {
         if (updates.name) user.username = updates.name.trim();
         if (updates.email) user.email = updates.email.trim().toLowerCase();
         if (updates.plan) user.plan = updates.plan;
@@ -287,10 +292,13 @@ export function updateTenantStatus(idOrUsername: string, status: 'ACTIVE' | 'SUS
 export function deleteTenant(idOrUsername: string): boolean {
   registeredUsers = readPersistedUsers();
   let toDeleteKey: string | null = null;
+  const target = idOrUsername.trim().toLowerCase().replace(/^tnt-/, '');
 
   registeredUsers.forEach((user, key) => {
     if (user.role !== 'SUPER_ADMIN') {
-      if (`TNT-${user.id.toString().padStart(3, '0')}` === idOrUsername || user.username.toLowerCase() === idOrUsername.toLowerCase()) {
+      const userClean = user.username.toLowerCase();
+      const userCleanNoSpecial = userClean.replace(/[^a-z0-9]/g, '');
+      if (userClean === target || userCleanNoSpecial === target || `tnt-${user.id}` === target || `tnt-${userCleanNoSpecial}` === target) {
         toDeleteKey = key;
       }
     }

@@ -93,6 +93,76 @@ export default function RootLayout({
     }
   }, [pathname, router, isPublicPage]);
 
+  // Polling en vivo para actualizar suspensiones y planes en tiempo real sin recargar
+  useEffect(() => {
+    let intervalId: any = null;
+
+    const checkLiveStatus = async () => {
+      if (typeof window === 'undefined') return;
+      const sessionRaw = localStorage.getItem('user_session');
+      if (!sessionRaw) return;
+
+      try {
+        const parsed = JSON.parse(sessionRaw);
+        const username = parsed.username;
+        if (!username || username.toLowerCase() === 'cristadmin') return;
+
+        const res = await fetch('/api/super-admin/tenants');
+        if (res.ok) {
+          const tenants: any[] = await res.json();
+          if (Array.isArray(tenants)) {
+            const found = tenants.find((t: any) => t.name?.toLowerCase() === username.toLowerCase());
+            if (found) {
+              const isActive = found.status === 'ACTIVE';
+              const plan = found.plan || 'Plan Guest';
+              const reason = found.suspension_reason || '';
+
+              // Actualizar estado reactivo
+              setCurrentUser({
+                username: found.name,
+                role: 'CLIENT_ADMIN',
+                plan: plan,
+                is_active: isActive,
+                suspension_reason: reason
+              });
+
+              // Sincronizar localStorage
+              localStorage.setItem('user_session', JSON.stringify({
+                ...parsed,
+                plan: plan,
+                is_active: isActive,
+                suspension_reason: reason
+              }));
+
+              const stored = localStorage.getItem('inventory_sync_tenants_v2');
+              let list = stored ? JSON.parse(stored) : [];
+              const idx = list.findIndex((item: any) => item.name?.toLowerCase() === username.toLowerCase());
+              if (idx >= 0) {
+                list[idx] = { ...list[idx], ...found };
+              } else {
+                list.push(found);
+              }
+              localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(list));
+            }
+          }
+        }
+      } catch {}
+    };
+
+    if (isAuthenticated && !isPublicPage) {
+      checkLiveStatus();
+      intervalId = setInterval(checkLiveStatus, 2000);
+      window.addEventListener('focus', checkLiveStatus);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('focus', checkLiveStatus);
+      }
+    };
+  }, [isAuthenticated, isPublicPage]);
+
   let topbarTitle = 'Panel de Control';
   if (cleanPath.startsWith('/inventory/')) {
     topbarTitle = 'Detalle de Producto';
