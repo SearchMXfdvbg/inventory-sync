@@ -1,0 +1,25 @@
+# fly.toml app configuration for inventory-sync
+# Configuración optimizada para Fly.io v2 con división de procesos (Web App y Background Worker)
+
+app = "inventory-sync-app"
+primary_region = "qro"
+
+# Definición de múltiples procesos dentro de la misma aplicación
+[processes]
+app = "uvicorn app:app --host 0.0.0.0 --port 8080"
+worker = "python worker.py"
+
+# Enrutamiento del servicio HTTP únicamente al grupo de procesos 'app'
+[http_service]
+internal_port = 8080
+force_https = true
+auto_stop_machines = true
+auto_start_machines = true
+min_machines_running = 1
+processes = ["app"]
+
+# Configuración de recursos para las máquinas virtuales de Fly
+[[vm]]
+cpu_kind = "shared"
+cpus = 1
+memory_mb = 512
