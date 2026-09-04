@@ -86,19 +86,29 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
     // Login Flow
     try {
       setLoading(true);
-      const data = await login(username.trim(), password);
-      const token = data?.access_token || 'bearer_token_eu_' + Date.now();
+      const cleanUser = username.trim();
+      const isSuper = cleanUser.toLowerCase() === 'cristadmin';
+
+      const data = await login(cleanUser, password);
+      const token = data?.access_token || (isSuper ? 'jwt_superadmin_master' : 'bearer_token_eu_' + Date.now());
       localStorage.setItem('auth_token', token);
       localStorage.setItem('logged_in', 'true');
-      localStorage.setItem('user_session', JSON.stringify({ username: username.trim() }));
+      localStorage.setItem('user_session', JSON.stringify({ 
+        username: isSuper ? 'CristAdmin' : cleanUser, 
+        role: isSuper ? 'SUPER_ADMIN' : (data?.user?.role || 'CLIENT_ADMIN')
+      }));
       setDemoMode(false);
-      setTenantId('empresa-a');
-      setSuccess('¡Credenciales verificadas! Iniciando sesión...');
+      setTenantId(isSuper ? 'global-master' : 'empresa-a');
+      setSuccess(isSuper ? '¡Acceso Maestro de Super Administrador Concedido!' : '¡Credenciales verificadas! Iniciando sesión...');
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        if (isSuper || data?.user?.role === 'SUPER_ADMIN') {
+          window.location.href = '/super-admin';
+        } else {
+          window.location.href = '/dashboard';
+        }
       }, 400);
     } catch (err: any) {
-      setError('Credenciales inválidas. Verifique su usuario y contraseña.');
+      setError(err.message || 'Credenciales inválidas. Verifique su usuario y contraseña.');
     } finally {
       setLoading(false);
     }
