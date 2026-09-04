@@ -29,6 +29,14 @@ export default function RootLayout({
   useEffect(() => {
     setMounted(true);
 
+    // Sincronizar tema oscuro/claro guardado
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
     // Verificar si el usuario ha iniciado sesión en rutas protegidas
     const loggedIn = typeof window !== 'undefined' ? localStorage.getItem('logged_in') : null;
     const hasToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
@@ -64,21 +72,21 @@ export default function RootLayout({
 
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className="bg-slate-50 min-h-screen text-slate-800" suppressHydrationWarning>
+      <body className="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 transition-colors" suppressHydrationWarning>
         {showAppChrome ? (
-          <div className="min-h-screen flex">
+          <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950">
             <Sidebar />
 
-            <div className="flex-1 flex flex-col pl-64">
+            <div className="flex-1 flex flex-col pl-64 bg-slate-50 dark:bg-slate-950 min-h-screen">
               <Topbar title={topbarTitle} />
 
-              <main className="flex-1 p-8 pt-24 min-h-[calc(100vh-4rem)]">
+              <main className="flex-1 p-8 pt-24 min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
                 {children}
               </main>
             </div>
           </div>
         ) : (
-          <main className="min-h-screen">
+          <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
             {children}
           </main>
         )}

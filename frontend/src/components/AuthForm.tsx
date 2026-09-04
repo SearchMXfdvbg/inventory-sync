@@ -12,6 +12,7 @@ import {
   ArrowRight,
   ShieldCheck
 } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 import { setDemoMode, setTenantId, login, register } from '@/lib/api';
 
 export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'login' | 'register' }) {
@@ -115,20 +116,25 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
   };
 
   return (
-    <div className="w-full max-w-md bg-white border border-slate-200 shadow-2xl rounded-3xl p-8">
+    <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-3xl p-8 relative transition-colors">
+      {/* Theme Toggle Top Right */}
+      <div className="absolute top-6 right-6">
+        <ThemeToggle />
+      </div>
+
       {/* Brand Header */}
       <div className="flex flex-col items-center mb-6">
         <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-bold text-2xl shadow-xl shadow-blue-500/25 mb-3">
           IS
         </div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">InventorySync</h1>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">InventorySync</h1>
         <p className="text-slate-400 text-xs mt-1 font-semibold tracking-wide">
           Sincronización Multicanal de Stock en Tiempo Real
         </p>
       </div>
 
       {/* Tabs Switcher: Iniciar Sesión vs Crear Cuenta */}
-      <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-6 border border-slate-200">
+      <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl mb-6 border border-slate-200 dark:border-slate-700">
         <button
           type="button"
           onClick={() => {
@@ -136,10 +142,10 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
             setError('');
             setSuccess('');
           }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             mode === 'login'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
           }`}
         >
           <LogIn size={15} />
@@ -152,10 +158,10 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
             setError('');
             setSuccess('');
           }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             mode === 'register'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
           }`}
         >
           <UserPlus size={15} />
@@ -164,13 +170,13 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-medium p-3.5 rounded-xl mb-5 animate-fade-in">
+        <div className="bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs font-medium p-3.5 rounded-xl mb-5 animate-fade-in">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium p-3.5 rounded-xl mb-5 flex items-center gap-2 animate-fade-in">
+        <div className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-medium p-3.5 rounded-xl mb-5 flex items-center gap-2 animate-fade-in">
           <CheckCircle2 size={16} className="shrink-0" />
           <span>{success}</span>
         </div>
@@ -178,7 +184,7 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">
+          <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1.5">
             {mode === 'register' ? 'Nombre de Usuario' : 'Usuario Corporativo'}
           </label>
           <input
@@ -186,14 +192,14 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder={mode === 'register' ? 'ej. tu_empresa' : 'ej. admin'}
-            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 focus:bg-white"
+            className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900"
           />
         </div>
 
         {mode === 'register' && (
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5 flex items-center gap-1.5">
-              <Mail size={13} className="text-blue-600" />
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1.5 flex items-center gap-1.5">
+              <Mail size={13} className="text-blue-600 dark:text-blue-400" />
               Correo Electrónico Corporativo
             </label>
             <input
@@ -201,25 +207,25 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="contacto@empresa.de"
-              className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 focus:bg-white"
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
         )}
 
         <div>
-          <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">Contraseña</label>
+          <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1.5">Contraseña</label>
           <div className="relative">
             <input
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 focus:bg-white"
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -228,13 +234,13 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
 
         {mode === 'register' && (
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">Confirmar Contraseña</label>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1.5">Confirmar Contraseña</label>
             <input
               type={showPassword ? 'text' : 'password'}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 focus:bg-white"
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
         )}

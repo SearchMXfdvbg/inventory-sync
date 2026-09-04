@@ -25,8 +25,11 @@ import {
   Check,
   TrendingUp,
   Percent,
-  Sliders
+  Sliders,
+  LayoutDashboard
 } from 'lucide-react';
+import Link from 'next/link';
+import ThemeToggle from '@/components/ThemeToggle';
 import { clearSession } from '@/lib/api';
 
 interface Tenant {
@@ -203,16 +206,27 @@ export default function SuperAdminPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-colors shadow-sm"
+              title="Ir al Dashboard de Operaciones"
+            >
+              <LayoutDashboard size={15} className="text-blue-400" />
+              <span>Ver Dashboard</span>
+            </Link>
+
+            <ThemeToggle />
+
             <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-3 py-1.5 rounded-xl">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Nodos AWS Frankfurt / EU: 100% Operativos</span>
+              <span>Nodos AWS Frankfurt: 100% Operativos</span>
             </div>
 
-            <div className="flex items-center gap-3 pl-4 border-l border-slate-800">
+            <div className="flex items-center gap-3 pl-3 border-l border-slate-800">
               <div className="text-right">
                 <p className="text-xs font-bold text-white">CristAdmin</p>
-                <p className="text-[10px] text-slate-400 font-mono">Master SaaS Owner</p>
+                <p className="text-[10px] text-amber-400 font-mono">Master SaaS Owner</p>
               </div>
               <button
                 onClick={handleLogout}
@@ -342,7 +356,16 @@ export default function SuperAdminPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 text-sm">
-                    {tenants.map((t) => (
+                    {tenants.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                          <Users size={32} className="mx-auto mb-2 text-slate-600 opacity-60" />
+                          <p className="font-semibold text-sm text-slate-300">No hay perfiles de clientes registrados aún.</p>
+                          <p className="text-xs text-slate-500 mt-1">Los nuevos clientes aparecerán aquí automáticamente al registrarse o puedes registrar uno nuevo con el botón superior.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      tenants.map((t) => (
                       <tr key={t.id} className="hover:bg-slate-800/40 transition-colors">
                         <td className="px-6 py-4">
                           <p className="font-bold text-white">{t.name}</p>
@@ -400,7 +423,7 @@ export default function SuperAdminPage() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    )))}
                   </tbody>
                 </table>
               </div>

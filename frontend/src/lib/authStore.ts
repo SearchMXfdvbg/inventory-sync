@@ -95,3 +95,71 @@ export function verifyUserCredentials(username: string, password: string): UserR
 
   return null;
 }
+
+export interface TenantInfo {
+  id: string;
+  name: string;
+  owner: string;
+  email: string;
+  plan: string;
+  maxSkus: number;
+  activeSkus: number;
+  channels: string[];
+  status: 'ACTIVE' | 'SUSPENDED';
+  commission_rate: string;
+  created_at: string;
+  last_sync: string;
+}
+
+export function getAllTenants(): TenantInfo[] {
+  const list: TenantInfo[] = [];
+  registeredUsers.forEach((user) => {
+    if (user.role !== 'SUPER_ADMIN') {
+      list.push({
+        id: `TNT-${user.id.toString().padStart(3, '0')}`,
+        name: user.username,
+        owner: user.username,
+        email: user.email,
+        plan: 'Plan Básico (<200 SKUs)',
+        maxSkus: 200,
+        activeSkus: 0,
+        channels: ['Shopify', 'Mercado Libre'],
+        status: user.is_active ? 'ACTIVE' : 'SUSPENDED',
+        commission_rate: '25%',
+        created_at: user.created_at,
+        last_sync: 'En Línea'
+      });
+    }
+  });
+  return list;
+}
+
+export function updateTenantStatus(idOrUsername: string, status: 'ACTIVE' | 'SUSPENDED'): boolean {
+  let found = false;
+  registeredUsers.forEach((user, key) => {
+    if (user.role !== 'SUPER_ADMIN') {
+      if (`TNT-${user.id.toString().padStart(3, '0')}` === idOrUsername || user.username.toLowerCase() === idOrUsername.toLowerCase()) {
+        user.is_active = (status === 'ACTIVE');
+        registeredUsers.set(key, user);
+        found = true;
+      }
+    }
+  });
+  return found;
+}
+
+export function deleteTenant(idOrUsername: string): boolean {
+  let toDeleteKey: string | null = null;
+  registeredUsers.forEach((user, key) => {
+    if (user.role !== 'SUPER_ADMIN') {
+      if (`TNT-${user.id.toString().padStart(3, '0')}` === idOrUsername || user.username.toLowerCase() === idOrUsername.toLowerCase()) {
+        toDeleteKey = key;
+      }
+    }
+  });
+  if (toDeleteKey) {
+    registeredUsers.delete(toDeleteKey);
+    return true;
+  }
+  return false;
+}
