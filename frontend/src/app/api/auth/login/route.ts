@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { findUserByUsername, verifyUserCredentials } from '@/lib/authStore';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { username, password } = body;
+    const { username, password } = body || {};
 
     if (!username || !password) {
       return NextResponse.json(
@@ -13,7 +16,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const cleanUser = username.trim();
+    const cleanUser = String(username).trim();
 
     // 1. Verificar si el usuario existe
     const existingUser = findUserByUsername(cleanUser);
@@ -26,7 +29,7 @@ export async function POST(request: Request) {
 
     // 2. Verificar contraseña con hash criptográfico
     try {
-      const validUser = verifyUserCredentials(cleanUser, password);
+      const validUser = verifyUserCredentials(cleanUser, String(password));
       if (!validUser) {
         return NextResponse.json(
           { detail: 'Contraseña incorrecta. Verifique sus credenciales.' },
@@ -57,7 +60,7 @@ export async function POST(request: Request) {
     }
   } catch (err: any) {
     return NextResponse.json(
-      { detail: 'Error al procesar la solicitud de autenticación' },
+      { detail: 'Error al procesar la solicitud de autenticación: ' + (err?.message || 'Error interno') },
       { status: 500 }
     );
   }

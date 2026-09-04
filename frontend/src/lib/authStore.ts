@@ -14,11 +14,19 @@ export interface UserRecord {
 }
 
 function hashPassword(password: string, salt: string): string {
-  return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+  try {
+    return crypto.createHash('sha256').update(password + ':' + salt).digest('hex');
+  } catch (e) {
+    return Buffer.from(password + ':' + salt).toString('base64');
+  }
 }
 
 function createSalt(): string {
-  return crypto.randomBytes(16).toString('hex');
+  try {
+    return crypto.randomBytes(16).toString('hex');
+  } catch (e) {
+    return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  }
 }
 
 // Base de datos de usuarios persistente en memoria del servidor
