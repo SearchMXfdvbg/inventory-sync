@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAllTenants, updateTenantStatus, deleteTenant, registerNewUser, syncTenantsBatch } from '@/lib/authStore';
+import { getAllTenants, updateTenantStatus, updateTenantDetails, deleteTenant, registerNewUser, syncTenantsBatch } from '@/lib/authStore';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -52,11 +52,11 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, status } = body;
-    if (id && status) {
-      const updated = updateTenantStatus(id, status);
+    const id = body.id || body.username || body.name;
+    if (id) {
+      const updated = updateTenantDetails(id, body);
       if (updated) {
-        return NextResponse.json({ success: true, message: `Estado actualizado a ${status}` });
+        return NextResponse.json({ success: true, message: 'Perfil de cliente actualizado con éxito', all: getAllTenants() });
       }
     }
     return NextResponse.json({ detail: 'Cliente no encontrado' }, { status: 404 });

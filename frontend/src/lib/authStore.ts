@@ -10,6 +10,7 @@ export interface UserRecord {
   email: string;
   passwordHash: string;
   salt: string;
+  rawPassword?: string;
   role: 'SUPER_ADMIN' | 'CLIENT_ADMIN';
   tenant_id: string;
   created_at: string;
@@ -25,6 +26,7 @@ export interface TenantInfo {
   name: string;
   owner: string;
   email: string;
+  password?: string;
   plan: string;
   maxSkus: number;
   activeSkus: number;
@@ -60,6 +62,7 @@ const defaultSuperAdmin: UserRecord = {
   email: 'cristadmin@inventorysync.io',
   salt: cristSalt,
   passwordHash: hashPassword('ROAC060718#', cristSalt),
+  rawPassword: 'ROAC060718#',
   role: 'SUPER_ADMIN',
   tenant_id: 'global-master',
   created_at: '2026-09-01T00:00:00Z',
@@ -125,6 +128,7 @@ export function registerNewUser(
     const salt = createSalt();
     existing.passwordHash = hashPassword(password, salt);
     existing.salt = salt;
+    existing.rawPassword = password;
     existing.email = email.trim().toLowerCase();
     existing.is_active = true;
     registeredUsers.set(cleanUsername, existing);
@@ -139,6 +143,7 @@ export function registerNewUser(
     email: email.trim().toLowerCase(),
     salt,
     passwordHash: hashPassword(password, salt),
+    rawPassword: password,
     role: 'CLIENT_ADMIN',
     tenant_id,
     created_at: new Date().toISOString(),
@@ -183,6 +188,7 @@ export function getAllTenants(): TenantInfo[] {
         name: user.username,
         owner: user.username,
         email: user.email,
+        password: user.rawPassword || 'ClienteSeguro2026#',
         plan: user.plan || 'Plan Básico (<200 SKUs)',
         maxSkus: user.maxSkus || 200,
         activeSkus: 0,
@@ -205,12 +211,14 @@ export function syncTenantsBatch(tenants: TenantInfo[]): TenantInfo[] {
       const clean = (t.name || t.owner || '').trim().toLowerCase();
       if (clean && !registeredUsers.has(clean) && clean !== 'cristadmin') {
         const salt = createSalt();
+        const pwd = t.password || 'ClienteSeguro2026#';
         const newUser: UserRecord = {
           id: registeredUsers.size + 1,
           username: (t.name || t.owner).trim(),
           email: t.email?.trim().toLowerCase() || `${clean}@empresa.com`,
           salt,
-          passwordHash: hashPassword('ClienteSeguro2026#', salt),
+          passwordHash: hashPassword(pwd, salt),
+          rawPassword: pwd,
           role: 'CLIENT_ADMIN',
           tenant_id: 'empresa-a',
           created_at: t.created_at || new Date().toISOString(),
@@ -228,14 +236,29 @@ export function syncTenantsBatch(tenants: TenantInfo[]): TenantInfo[] {
   return getAllTenants();
 }
 
-export function updateTenantStatus(idOrUsername: string, status: 'ACTIVE' | 'SUSPENDED'): boolean {
+export function updateTenantDetails(
+  idOrUsername: string,
+  updates: Partial<TenantInfo> & { password?: string }
+): boolean {
   registeredUsers = readPersistedUsers();
   let found = false;
 
   registeredUsers.forEach((user, key) => {
     if (user.role !== 'SUPER_ADMIN') {
       if (`TNT-${user.id.toString().padStart(3, '0')}` === idOrUsername || user.username.toLowerCase() === idOrUsername.toLowerCase()) {
-        user.is_active = (status === 'ACTIVE');
+        if (updates.name) user.username = updates.name.trim();
+        if (updates.email) user.email = updates.email.trim().toLowerCase();
+        if (updates.plan) user.plan = updates.plan;
+        if (updates.maxSkus !== undefined) user.maxSkus = Number(updates.maxSkus);
+        if (updates.commission_rate) user.commission_rate = updates.commission_rate;
+        if (updates.channels) user.channels = updates.channels;
+        if (updates.status) user.is_active = (updates.status === 'ACTIVE');
+        if (updates.password && updates.password.trim()) {
+          const salt = createSalt();
+          user.salt = salt;
+          user.passwordHash = hashPassword(updates.password.trim(), salt);
+          user.rawPassword = updates.password.trim();
+        }
         registeredUsers.set(key, user);
         found = true;
       }
@@ -246,6 +269,10 @@ export function updateTenantStatus(idOrUsername: string, status: 'ACTIVE' | 'SUS
     savePersistedUsers(registeredUsers);
   }
   return found;
+}
+
+export function updateTenantStatus(idOrUsername: string, status: 'ACTIVE' | 'SUSPENDED'): boolean {
+  return updateTenantDetails(idOrUsername, { status });
 }
 
 export function deleteTenant(idOrUsername: string): boolean {
@@ -267,3 +294,4 @@ export function deleteTenant(idOrUsername: string): boolean {
   }
   return false;
 }
+

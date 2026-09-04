@@ -28,6 +28,7 @@ import {
   Sliders,
   LayoutDashboard,
   Eye,
+  EyeOff,
   ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
@@ -39,6 +40,7 @@ interface Tenant {
   name: string;
   owner: string;
   email: string;
+  password?: string;
   plan: string;
   maxSkus: number;
   activeSkus: number;
@@ -71,13 +73,35 @@ export default function SuperAdminPage() {
   const [securityPin, setSecurityPin] = useState('');
   const [securityError, setSecurityError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<{
-    type: 'view' | 'toggle_status' | 'delete';
+    type: 'view' | 'toggle_status' | 'delete' | 'update';
     tenant: Tenant;
+    updatePayload?: any;
   } | null>(null);
 
-  // Modal Visualizar Perfil
+  // Modal Visualizar / Editar Perfil
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewedTenant, setViewedTenant] = useState<Tenant | null>(null);
+  const [showViewPassword, setShowViewPassword] = useState(false);
+  const [isEditingInView, setIsEditingInView] = useState(false);
+  const [editForm, setEditForm] = useState<{
+    name: string;
+    owner: string;
+    email: string;
+    password: string;
+    plan: string;
+    maxSkus: number;
+    commission_rate: string;
+    channels: string[];
+  }>({
+    name: '',
+    owner: '',
+    email: '',
+    password: '',
+    plan: 'Plan Básico (<200 SKUs)',
+    maxSkus: 200,
+    commission_rate: '25%',
+    channels: ['Shopify', 'Mercado Libre']
+  });
 
   // Notificaciones
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -222,14 +246,14 @@ export default function SuperAdminPage() {
     }
   };
 
-  const requestSecurityAction = (type: 'view' | 'toggle_status' | 'delete', tenant: Tenant) => {
-    setPendingAction({ type, tenant });
+  const requestSecurityAction = (type: 'view' | 'toggle_status' | 'delete' | 'update', tenant: Tenant, updatePayload?: any) => {
+    setPendingAction({ type, tenant, updatePayload });
     setSecurityPin('');
     setSecurityError(null);
     setIsSecurityModalOpen(true);
   };
 
-  const handleValidateSecurityCode = (e: React.FormEvent) => {
+  const handleValidateSecurityCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (securityPin.trim() !== '060718') {
       setSecurityError('Código secreto incorrecto. Acceso denegado.');
@@ -238,20 +262,68 @@ export default function SuperAdminPage() {
 
     if (!pendingAction) return;
 
-    const { type, tenant } = pendingAction;
+    const { type, tenant, updatePayload } = pendingAction;
     setIsSecurityModalOpen(false);
     setSecurityPin('');
     setSecurityError(null);
 
     if (type === 'view') {
       setViewedTenant(tenant);
+      setShowViewPassword(false);
+      setIsEditingInView(false);
+      setEditForm({
+        name: tenant.name,
+        owner: tenant.owner,
+        email: tenant.email,
+        password: tenant.password || 'ClienteSeguro2026#',
+        plan: tenant.plan,
+        maxSkus: tenant.maxSkus,
+        commission_rate: tenant.commission_rate,
+        channels: tenant.channels || ['Shopify', 'Mercado Libre']
+      });
       setIsViewModalOpen(true);
     } else if (type === 'toggle_status') {
       toggleTenantStatus(tenant.id, tenant.status);
     } else if (type === 'delete') {
       handleDeleteTenant(tenant.id);
+    } else if (type === 'update') {
+      await handleSaveEditedTenant(tenant.id, updatePayload);
     }
     setPendingAction(null);
+  };
+
+  const handleSaveEditedTenant = async (id: string, payload: any) => {
+    try {
+      const updatedList = tenants.map(t => {
+        if (t.id === id) {
+          return {
+            ...t,
+            ...payload
+          };
+        }
+        return t;
+      });
+      setTenants(updatedList);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(updatedList));
+      }
+
+      if (viewedTenant && viewedTenant.id === id) {
+        setViewedTenant({ ...viewedTenant, ...payload });
+      }
+      setIsEditingInView(false);
+
+      await fetch('/api/super-admin/tenants', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...payload })
+      });
+
+      showToast('¡Perfil y credenciales actualizados exitosamente!');
+      loadData();
+    } catch (err) {
+      showToast('Error al actualizar datos');
+    }
   };
 
   const handleImpersonateTenant = (tenant: Tenant) => {
@@ -846,7 +918,7 @@ export default function SuperAdminPage() {
             <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4">
               <p className="text-xs text-slate-300 leading-relaxed">
                 Para <strong className="text-amber-400 uppercase font-bold">
-                  {pendingAction.type === 'view' ? 'Visualizar' : pendingAction.type === 'toggle_status' ? (pendingAction.tenant.status === 'ACTIVE' ? 'Suspender' : 'Reactivar') : 'Eliminar'}
+                  {pendingAction.type === 'view' ? 'Visualizar' : pendingAction.type === 'toggle_status' ? (pendingAction.tenant.status === 'ACTIVE' ? 'Suspender' : 'Reactivar') : pendingAction.type === 'update' ? 'Editar y Guardar Datos' : 'Eliminar'}
                 </strong> el perfil de <span className="text-white font-bold">{pendingAction.tenant.name}</span>, ingresa tu código secreto maestro:
               </p>
             </div>
@@ -903,10 +975,10 @@ export default function SuperAdminPage() {
         </div>
       )}
 
-      {/* Modal Visualizar Perfil de Cliente */}
+      {/* Modal Visualizar / Editar Perfil de Cliente */}
       {isViewModalOpen && viewedTenant && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-8 space-y-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-8 space-y-6 shadow-2xl relative my-8">
             <div className="flex items-center justify-between pb-4 border-b border-slate-800">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold">
@@ -914,92 +986,313 @@ export default function SuperAdminPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-white text-lg">{viewedTenant.name}</h3>
+                    <h3 className="font-bold text-white text-lg">{isEditingInView ? editForm.name || viewedTenant.name : viewedTenant.name}</h3>
                     <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 font-mono text-[10px] font-bold">
                       {viewedTenant.id}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400">Detalles y Configuración de Instancia Cliente</p>
+                  <p className="text-xs text-slate-400">
+                    {isEditingInView ? 'Modo de Edición de Perfil & Credenciales' : 'Detalles y Configuración de Instancia Cliente'}
+                  </p>
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  setIsViewModalOpen(false);
-                  setViewedTenant(null);
+              <div className="flex items-center gap-2">
+                {!isEditingInView ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingInView(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    <Edit size={14} />
+                    <span>Editar Perfil</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingInView(false)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    <span>Ver Detalles</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setIsViewModalOpen(false);
+                    setViewedTenant(null);
+                    setIsEditingInView(false);
+                  }}
+                  className="text-slate-400 hover:text-white cursor-pointer ml-1"
+                >
+                  <XCircle size={22} />
+                </button>
+              </div>
+            </div>
+
+            {!isEditingInView ? (
+              // Modo Solo Lectura / Visualización
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                    <p className="text-slate-500 font-medium uppercase text-[10px]">Propietario / Contacto</p>
+                    <p className="text-white font-bold text-sm mt-0.5">{viewedTenant.owner}</p>
+                  </div>
+
+                  <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                    <p className="text-slate-500 font-medium uppercase text-[10px]">Correo Electrónico</p>
+                    <p className="text-white font-mono font-medium truncate mt-0.5" title={viewedTenant.email}>{viewedTenant.email}</p>
+                  </div>
+
+                  {/* Tarjeta de Contraseña con Toggle Ojo */}
+                  <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 col-span-2 flex items-center justify-between">
+                    <div>
+                      <p className="text-slate-500 font-medium uppercase text-[10px] flex items-center gap-1.5">
+                        <Key size={12} className="text-amber-400" />
+                        <span>Contraseña de Acceso del Cliente</span>
+                      </p>
+                      <p className="text-amber-300 font-mono font-bold text-sm tracking-wider mt-1">
+                        {showViewPassword ? (viewedTenant.password || 'ClienteSeguro2026#') : '••••••••••••'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowViewPassword(!showViewPassword)}
+                      className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors border border-slate-800 cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+                    >
+                      {showViewPassword ? (
+                        <>
+                          <EyeOff size={15} />
+                          <span>Ocultar</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye size={15} />
+                          <span>Ver Contraseña</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                    <p className="text-slate-500 font-medium uppercase text-[10px]">Plan Asignado</p>
+                    <p className="text-indigo-400 font-bold mt-0.5">{viewedTenant.plan}</p>
+                  </div>
+
+                  <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                    <p className="text-slate-500 font-medium uppercase text-[10px]">Límite de Catálogo</p>
+                    <p className="text-white font-mono font-bold mt-0.5">{viewedTenant.maxSkus.toLocaleString()} SKUs</p>
+                  </div>
+
+                  <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                    <p className="text-slate-500 font-medium uppercase text-[10px]">Revenue Share Pactado</p>
+                    <p className="text-amber-400 font-mono font-bold text-sm mt-0.5">{viewedTenant.commission_rate}</p>
+                  </div>
+
+                  <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                    <p className="text-slate-500 font-medium uppercase text-[10px]">Estado de Cuenta</p>
+                    <p className={`font-bold mt-0.5 ${viewedTenant.status === 'ACTIVE' ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {viewedTenant.status === 'ACTIVE' ? '● Activo en Tiempo Real' : '● Suspendido'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-2">
+                  <p className="text-slate-500 font-medium uppercase text-[10px]">Canales Habilitados</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewedTenant.channels.map((ch, idx) => (
+                      <span key={idx} className="text-xs font-semibold bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 flex items-center gap-1">
+                        <Check size={12} className="text-emerald-400" />
+                        {ch}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center justify-between border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => handleImpersonateTenant(viewedTenant)}
+                    className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/25 flex items-center gap-2 cursor-pointer"
+                  >
+                    <LayoutDashboard size={15} />
+                    <span>Ver Dashboard como {viewedTenant.name}</span>
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingInView(true)}
+                      className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-blue-400 font-bold text-xs border border-slate-700 cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Edit size={14} />
+                      <span>Editar</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsViewModalOpen(false);
+                        setViewedTenant(null);
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700 cursor-pointer"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Modo Edición de Datos
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  requestSecurityAction('update', viewedTenant, editForm);
                 }}
-                className="text-slate-400 hover:text-white cursor-pointer"
+                className="space-y-4 text-xs"
               >
-                <XCircle size={22} />
-              </button>
-            </div>
+                <div>
+                  <label className="block font-bold text-slate-400 uppercase mb-1">Nombre de la Empresa</label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
 
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
-                <p className="text-slate-500 font-medium uppercase text-[10px]">Propietario / Contacto</p>
-                <p className="text-white font-bold text-sm mt-0.5">{viewedTenant.owner}</p>
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-400 uppercase mb-1">Propietario / Contacto</label>
+                    <input
+                      type="text"
+                      value={editForm.owner}
+                      onChange={(e) => setEditForm({ ...editForm, owner: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
 
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
-                <p className="text-slate-500 font-medium uppercase text-[10px]">Correo Electrónico</p>
-                <p className="text-white font-mono font-medium truncate mt-0.5" title={viewedTenant.email}>{viewedTenant.email}</p>
-              </div>
+                  <div>
+                    <label className="block font-bold text-slate-400 uppercase mb-1">Correo Electrónico</label>
+                    <input
+                      type="email"
+                      required
+                      value={editForm.email}
+                      onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 font-mono"
+                    />
+                  </div>
+                </div>
 
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
-                <p className="text-slate-500 font-medium uppercase text-[10px]">Plan Asignado</p>
-                <p className="text-indigo-400 font-bold mt-0.5">{viewedTenant.plan}</p>
-              </div>
+                {/* Campo Contraseña Editable con botón de ver/ocultar */}
+                <div>
+                  <label className="block font-bold text-amber-400 uppercase mb-1 flex items-center gap-1.5">
+                    <Key size={13} />
+                    <span>Contraseña de Acceso</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showViewPassword ? 'text' : 'password'}
+                      required
+                      value={editForm.password}
+                      onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                      placeholder="Nueva contraseña"
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl pl-4 pr-12 py-2.5 text-sm text-amber-300 font-mono focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowViewPassword(!showViewPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white"
+                    >
+                      {showViewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
 
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
-                <p className="text-slate-500 font-medium uppercase text-[10px]">Límite de Catálogo</p>
-                <p className="text-white font-mono font-bold mt-0.5">{viewedTenant.maxSkus.toLocaleString()} SKUs</p>
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-400 uppercase mb-1">Plan / Nivel</label>
+                    <select
+                      value={editForm.plan}
+                      onChange={(e) => setEditForm({ ...editForm, plan: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white"
+                    >
+                      <option>Plan Básico (&lt;200 SKUs)</option>
+                      <option>Plan Pro (Ilimitado)</option>
+                      <option>Enterprise (39,000 SKUs)</option>
+                    </select>
+                  </div>
 
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
-                <p className="text-slate-500 font-medium uppercase text-[10px]">Revenue Share Pactado</p>
-                <p className="text-amber-400 font-mono font-bold text-sm mt-0.5">{viewedTenant.commission_rate}</p>
-              </div>
+                  <div>
+                    <label className="block font-bold text-slate-400 uppercase mb-1">Límite Máximo SKUs</label>
+                    <input
+                      type="number"
+                      value={editForm.maxSkus}
+                      onChange={(e) => setEditForm({ ...editForm, maxSkus: Number(e.target.value) })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white font-mono"
+                    />
+                  </div>
+                </div>
 
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
-                <p className="text-slate-500 font-medium uppercase text-[10px]">Estado de Cuenta</p>
-                <p className={`font-bold mt-0.5 ${viewedTenant.status === 'ACTIVE' ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {viewedTenant.status === 'ACTIVE' ? '● Activo en Tiempo Real' : '● Suspendido'}
-                </p>
-              </div>
-            </div>
+                <div>
+                  <label className="block font-bold text-slate-400 uppercase mb-1">Revenue Share (%)</label>
+                  <input
+                    type="text"
+                    value={editForm.commission_rate}
+                    onChange={(e) => setEditForm({ ...editForm, commission_rate: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white font-mono"
+                  />
+                </div>
 
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-2">
-              <p className="text-slate-500 font-medium uppercase text-[10px]">Canales Habilitados</p>
-              <div className="flex flex-wrap gap-1.5">
-                {viewedTenant.channels.map((ch, idx) => (
-                  <span key={idx} className="text-xs font-semibold bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 flex items-center gap-1">
-                    <Check size={12} className="text-emerald-400" />
-                    {ch}
-                  </span>
-                ))}
-              </div>
-            </div>
+                <div>
+                  <label className="block font-bold text-slate-400 uppercase mb-1.5">Canales Habilitados</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['Shopify', 'Mercado Libre', 'Amazon DE', 'eBay DE', 'Kaufland DE', 'TikTok Shop'].map((ch) => {
+                      const isChecked = editForm.channels.includes(ch);
+                      return (
+                        <label
+                          key={ch}
+                          className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                            isChecked
+                              ? 'bg-blue-950/40 border-blue-600 text-white'
+                              : 'bg-slate-950 border-slate-800 text-slate-400'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setEditForm({ ...editForm, channels: [...editForm.channels, ch] });
+                              } else {
+                                setEditForm({ ...editForm, channels: editForm.channels.filter((c) => c !== ch) });
+                              }
+                            }}
+                            className="rounded border-slate-700 text-blue-600"
+                          />
+                          <span className="text-[11px] font-semibold">{ch}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
 
-            <div className="pt-2 flex items-center justify-between border-t border-slate-800">
-              <button
-                type="button"
-                onClick={() => handleImpersonateTenant(viewedTenant)}
-                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/25 flex items-center gap-2 cursor-pointer"
-              >
-                <LayoutDashboard size={15} />
-                <span>Ver Dashboard como {viewedTenant.name}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsViewModalOpen(false);
-                  setViewedTenant(null);
-                }}
-                className="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700 cursor-pointer"
-              >
-                Cerrar
-              </button>
-            </div>
+                <div className="pt-3 border-t border-slate-800 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingInView(false)}
+                    className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700 cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 cursor-pointer flex items-center gap-2"
+                  >
+                    <Save size={15} />
+                    <span>Guardar Cambios (PIN 060718)</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
