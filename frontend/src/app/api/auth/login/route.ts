@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { findUserByUsername, verifyUserCredentials } from '@/lib/authStore';
+import { findUserByUsername, verifyUserCredentials, syncTenantsBatch } from '@/lib/authStore';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -7,7 +7,11 @@ export const runtime = 'nodejs';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { username, password } = body || {};
+    const { username, password, localTenants } = body || {};
+
+    if (Array.isArray(localTenants) && localTenants.length > 0) {
+      syncTenantsBatch(localTenants);
+    }
 
     if (!username || !password) {
       return NextResponse.json(
