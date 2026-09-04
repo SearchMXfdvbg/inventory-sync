@@ -26,7 +26,9 @@ import {
   TrendingUp,
   Percent,
   Sliders,
-  LayoutDashboard
+  LayoutDashboard,
+  Eye,
+  ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -63,6 +65,19 @@ export default function SuperAdminPage() {
   const [newClientMaxSkus, setNewClientMaxSkus] = useState(200);
   const [newClientCommission, setNewClientCommission] = useState('25%');
   const [selectedChannels, setSelectedChannels] = useState<string[]>(['Shopify', 'Amazon DE', 'eBay DE']);
+
+  // Modal de Código Secreto Maestro (060718)
+  const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
+  const [securityPin, setSecurityPin] = useState('');
+  const [securityError, setSecurityError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<{
+    type: 'view' | 'toggle_status' | 'delete';
+    tenant: Tenant;
+  } | null>(null);
+
+  // Modal Visualizar Perfil
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewedTenant, setViewedTenant] = useState<Tenant | null>(null);
 
   // Notificaciones
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -207,6 +222,53 @@ export default function SuperAdminPage() {
     }
   };
 
+  const requestSecurityAction = (type: 'view' | 'toggle_status' | 'delete', tenant: Tenant) => {
+    setPendingAction({ type, tenant });
+    setSecurityPin('');
+    setSecurityError(null);
+    setIsSecurityModalOpen(true);
+  };
+
+  const handleValidateSecurityCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (securityPin.trim() !== '060718') {
+      setSecurityError('Código secreto incorrecto. Acceso denegado.');
+      return;
+    }
+
+    if (!pendingAction) return;
+
+    const { type, tenant } = pendingAction;
+    setIsSecurityModalOpen(false);
+    setSecurityPin('');
+    setSecurityError(null);
+
+    if (type === 'view') {
+      setViewedTenant(tenant);
+      setIsViewModalOpen(true);
+    } else if (type === 'toggle_status') {
+      toggleTenantStatus(tenant.id, tenant.status);
+    } else if (type === 'delete') {
+      handleDeleteTenant(tenant.id);
+    }
+    setPendingAction(null);
+  };
+
+  const handleImpersonateTenant = (tenant: Tenant) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('tenant_id', tenant.id);
+      localStorage.setItem('user_session', JSON.stringify({
+        username: tenant.name,
+        role: 'CLIENT_ADMIN',
+        tenant_id: tenant.id
+      }));
+      showToast(`Accediendo al entorno de ${tenant.name}...`);
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 400);
+    }
+  };
+
   const toggleTenantStatus = async (id: string, currentStatus: string) => {
     const nextStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
     const updatedList = tenants.map(t => t.id === id ? { ...t, status: nextStatus as 'ACTIVE' | 'SUSPENDED' } : t);
@@ -228,7 +290,6 @@ export default function SuperAdminPage() {
   };
 
   const handleDeleteTenant = async (id: string) => {
-    if (!confirm('¿Está seguro de eliminar este perfil de cliente y revocar todas sus conexiones?')) return;
     const updatedList = tenants.filter(t => t.id !== id);
     setTenants(updatedList);
     if (typeof window !== 'undefined') {
@@ -237,7 +298,7 @@ export default function SuperAdminPage() {
 
     try {
       await fetch(`/api/super-admin/tenants?id=${id}`, { method: 'DELETE' });
-      showToast('Perfil de cliente eliminado');
+      showToast('Perfil de cliente eliminado exitosamente');
     } catch (err) {
       showToast('Error al eliminar');
     }
@@ -476,7 +537,16 @@ export default function SuperAdminPage() {
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
-                              onClick={() => toggleTenantStatus(t.id, t.status)}
+                              onClick={() => requestSecurityAction('view', t)}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-950/70 text-blue-300 hover:bg-blue-900 border border-blue-800/60 inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                              title="Visualizar perfil de cliente"
+                            >
+                              <Eye size={13} />
+                              <span>Visualizar</span>
+                            </button>
+
+                            <button
+                              onClick={() => requestSecurityAction('toggle_status', t)}
                               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                                 t.status === 'ACTIVE'
                                   ? 'bg-amber-950/60 text-amber-300 hover:bg-amber-900 border border-amber-800/50'
@@ -485,8 +555,9 @@ export default function SuperAdminPage() {
                             >
                               {t.status === 'ACTIVE' ? 'Suspender' : 'Reactivar'}
                             </button>
+
                             <button
-                              onClick={() => handleDeleteTenant(t.id)}
+                              onClick={() => requestSecurityAction('delete', t)}
                               className="p-1.5 rounded-lg bg-red-950/40 text-red-400 hover:bg-red-900 border border-red-800/40 transition-colors cursor-pointer"
                               title="Eliminar perfil"
                             >
@@ -741,6 +812,194 @@ export default function SuperAdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Código Secreto Maestro (060718) */}
+      {isSecurityModalOpen && pendingAction && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-7 space-y-6 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                  <Lock size={18} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-base">Autorización Super Admin</h3>
+                  <p className="text-[11px] text-slate-400 font-mono">Código Secreto Requerido</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsSecurityModalOpen(false);
+                  setPendingAction(null);
+                  setSecurityPin('');
+                  setSecurityError(null);
+                }}
+                className="text-slate-400 hover:text-white cursor-pointer"
+              >
+                <XCircle size={20} />
+              </button>
+            </div>
+
+            <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4">
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Para <strong className="text-amber-400 uppercase font-bold">
+                  {pendingAction.type === 'view' ? 'Visualizar' : pendingAction.type === 'toggle_status' ? (pendingAction.tenant.status === 'ACTIVE' ? 'Suspender' : 'Reactivar') : 'Eliminar'}
+                </strong> el perfil de <span className="text-white font-bold">{pendingAction.tenant.name}</span>, ingresa tu código secreto maestro:
+              </p>
+            </div>
+
+            {securityError && (
+              <div className="bg-red-950/80 border border-red-800 text-red-300 text-xs font-semibold p-3.5 rounded-xl flex items-center gap-2 animate-fade-in">
+                <AlertTriangle size={16} className="shrink-0 text-red-400" />
+                <span>{securityError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleValidateSecurityCode} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Código Secreto de Seguridad (PIN)
+                </label>
+                <input
+                  type="password"
+                  autoFocus
+                  maxLength={10}
+                  value={securityPin}
+                  onChange={(e) => {
+                    setSecurityPin(e.target.value);
+                    setSecurityError(null);
+                  }}
+                  placeholder="••••••"
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl px-4 py-3 text-center text-xl tracking-[0.4em] font-mono text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSecurityModalOpen(false);
+                    setPendingAction(null);
+                    setSecurityPin('');
+                    setSecurityError(null);
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-lg shadow-amber-600/25 cursor-pointer flex items-center gap-2"
+                >
+                  <ShieldCheck size={16} />
+                  <span>Validar y Continuar</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Visualizar Perfil de Cliente */}
+      {isViewModalOpen && viewedTenant && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-8 space-y-6 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold">
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-white text-lg">{viewedTenant.name}</h3>
+                    <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 font-mono text-[10px] font-bold">
+                      {viewedTenant.id}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">Detalles y Configuración de Instancia Cliente</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsViewModalOpen(false);
+                  setViewedTenant(null);
+                }}
+                className="text-slate-400 hover:text-white cursor-pointer"
+              >
+                <XCircle size={22} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                <p className="text-slate-500 font-medium uppercase text-[10px]">Propietario / Contacto</p>
+                <p className="text-white font-bold text-sm mt-0.5">{viewedTenant.owner}</p>
+              </div>
+
+              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                <p className="text-slate-500 font-medium uppercase text-[10px]">Correo Electrónico</p>
+                <p className="text-white font-mono font-medium truncate mt-0.5" title={viewedTenant.email}>{viewedTenant.email}</p>
+              </div>
+
+              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                <p className="text-slate-500 font-medium uppercase text-[10px]">Plan Asignado</p>
+                <p className="text-indigo-400 font-bold mt-0.5">{viewedTenant.plan}</p>
+              </div>
+
+              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                <p className="text-slate-500 font-medium uppercase text-[10px]">Límite de Catálogo</p>
+                <p className="text-white font-mono font-bold mt-0.5">{viewedTenant.maxSkus.toLocaleString()} SKUs</p>
+              </div>
+
+              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                <p className="text-slate-500 font-medium uppercase text-[10px]">Revenue Share Pactado</p>
+                <p className="text-amber-400 font-mono font-bold text-sm mt-0.5">{viewedTenant.commission_rate}</p>
+              </div>
+
+              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                <p className="text-slate-500 font-medium uppercase text-[10px]">Estado de Cuenta</p>
+                <p className={`font-bold mt-0.5 ${viewedTenant.status === 'ACTIVE' ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {viewedTenant.status === 'ACTIVE' ? '● Activo en Tiempo Real' : '● Suspendido'}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-2">
+              <p className="text-slate-500 font-medium uppercase text-[10px]">Canales Habilitados</p>
+              <div className="flex flex-wrap gap-1.5">
+                {viewedTenant.channels.map((ch, idx) => (
+                  <span key={idx} className="text-xs font-semibold bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 flex items-center gap-1">
+                    <Check size={12} className="text-emerald-400" />
+                    {ch}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => handleImpersonateTenant(viewedTenant)}
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/25 flex items-center gap-2 cursor-pointer"
+              >
+                <LayoutDashboard size={15} />
+                <span>Ver Dashboard como {viewedTenant.name}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsViewModalOpen(false);
+                  setViewedTenant(null);
+                }}
+                className="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700 cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}
