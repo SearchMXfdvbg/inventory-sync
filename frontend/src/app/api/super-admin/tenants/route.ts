@@ -38,6 +38,7 @@ export async function POST(request: Request) {
       activeSkus: 0,
       channels: newUser.channels || channels,
       status: (newUser.is_active ? 'ACTIVE' : 'SUSPENDED') as 'ACTIVE' | 'SUSPENDED',
+      suspension_reason: newUser.suspension_reason || '',
       commission_rate: newUser.commission_rate || commission_rate,
       created_at: newUser.created_at,
       last_sync: 'En Línea'

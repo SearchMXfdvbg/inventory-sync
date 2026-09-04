@@ -46,6 +46,7 @@ interface Tenant {
   activeSkus: number;
   channels: string[];
   status: 'ACTIVE' | 'SUSPENDED';
+  suspension_reason?: string;
   commission_rate: string;
   created_at: string;
   last_sync: string;
@@ -64,15 +65,16 @@ export default function SuperAdminPage() {
   const [newClientOwner, setNewClientOwner] = useState('');
   const [newClientEmail, setNewClientEmail] = useState('');
   const [newClientPassword, setNewClientPassword] = useState('');
-  const [newClientPlan, setNewClientPlan] = useState('Plan Básico (<200 SKUs)');
-  const [newClientMaxSkus, setNewClientMaxSkus] = useState(200);
+  const [newClientPlan, setNewClientPlan] = useState('Plan Guest');
+  const [newClientMaxSkus, setNewClientMaxSkus] = useState(0);
   const [newClientCommission, setNewClientCommission] = useState('25%');
   const [selectedChannels, setSelectedChannels] = useState<string[]>(['Shopify', 'Amazon DE', 'eBay DE']);
 
-  // Modal de Código Secreto Maestro (060718)
+  // Modal de Código Secreto Maestro (060718) y Motivo de Suspensión
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
   const [securityPin, setSecurityPin] = useState('');
   const [securityError, setSecurityError] = useState<string | null>(null);
+  const [suspensionReasonInput, setSuspensionReasonInput] = useState('Falta de pago');
   const [pendingAction, setPendingAction] = useState<{
     type: 'view' | 'toggle_status' | 'delete' | 'update';
     tenant: Tenant;
@@ -260,6 +262,9 @@ export default function SuperAdminPage() {
     setPendingAction({ type, tenant, updatePayload });
     setSecurityPin('');
     setSecurityError(null);
+    if (type === 'toggle_status' && tenant.status === 'ACTIVE') {
+      setSuspensionReasonInput('Falta de pago de mensualidad');
+    }
     setIsSecurityModalOpen(true);
   };
 
@@ -286,14 +291,14 @@ export default function SuperAdminPage() {
         owner: tenant.owner,
         email: tenant.email,
         password: tenant.password || 'ClienteSeguro2026#',
-        plan: tenant.plan,
-        maxSkus: tenant.maxSkus,
+        plan: tenant.plan || 'Plan Guest',
+        maxSkus: tenant.maxSkus ?? 0,
         commission_rate: tenant.commission_rate,
         channels: tenant.channels || ['Shopify', 'Mercado Libre']
       });
       setIsViewModalOpen(true);
     } else if (type === 'toggle_status') {
-      toggleTenantStatus(tenant.id, tenant.status);
+      await toggleTenantStatus(tenant.id, tenant.status, suspensionReasonInput);
     } else if (type === 'delete') {
       handleDeleteTenant(tenant.id);
     } else if (type === 'update') {
@@ -342,7 +347,10 @@ export default function SuperAdminPage() {
       localStorage.setItem('user_session', JSON.stringify({
         username: tenant.name,
         role: 'CLIENT_ADMIN',
-        tenant_id: tenant.id
+        tenant_id: tenant.id,
+        plan: tenant.plan,
+        is_active: tenant.status === 'ACTIVE',
+        suspension_reason: tenant.suspension_reason || ''
       }));
       showToast(`Accediendo al entorno de ${tenant.name}...`);
       setTimeout(() => {
@@ -351,9 +359,14 @@ export default function SuperAdminPage() {
     }
   };
 
-  const toggleTenantStatus = async (id: string, currentStatus: string) => {
+  const toggleTenantStatus = async (id: string, currentStatus: string, reason?: string) => {
     const nextStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-    const updatedList = tenants.map(t => t.id === id ? { ...t, status: nextStatus as 'ACTIVE' | 'SUSPENDED' } : t);
+    const reasonText = nextStatus === 'SUSPENDED' ? (reason || 'Falta de pago de mensualidad') : '';
+    const updatedList = tenants.map(t => t.id === id ? { 
+      ...t, 
+      status: nextStatus as 'ACTIVE' | 'SUSPENDED',
+      suspension_reason: reasonText
+    } : t);
     setTenants(updatedList);
     if (typeof window !== 'undefined') {
       localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(updatedList));
@@ -363,11 +376,12 @@ export default function SuperAdminPage() {
       await fetch('/api/super-admin/tenants', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: nextStatus })
+        body: JSON.stringify({ id, status: nextStatus, suspension_reason: reasonText })
       });
-      showToast(`Estado de cuenta actualizado a: ${nextStatus}`);
+      showToast(nextStatus === 'SUSPENDED' ? `Perfil suspendido por: ${reasonText}` : 'Perfil de cliente reactivado exitosamente');
+      loadData();
     } catch (err) {
-      showToast('Error al actualizar');
+      showToast('Error al actualizar estado');
     }
   };
 
@@ -862,9 +876,20 @@ export default function SuperAdminPage() {
                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Plan / Nivel</label>
                   <select
                     value={newClientPlan}
-                    onChange={(e) => setNewClientPlan(e.target.value)}
+                    onChange={(e) => {
+                      const selected = e.target.value;
+                      setNewClientPlan(selected);
+                      if (selected === 'Plan Guest') {
+                        setNewClientMaxSkus(0);
+                      } else if (selected.includes('200')) {
+                        setNewClientMaxSkus(200);
+                      } else if (selected.includes('39,000')) {
+                        setNewClientMaxSkus(39000);
+                      }
+                    }}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white"
                   >
+                    <option>Plan Guest</option>
                     <option>Plan Básico (&lt;200 SKUs)</option>
                     <option>Plan Pro (Ilimitado)</option>
                     <option>Enterprise (39,000 SKUs)</option>
@@ -943,8 +968,8 @@ export default function SuperAdminPage() {
             <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4">
               <p className="text-xs text-slate-300 leading-relaxed">
                 Para <strong className="text-amber-400 uppercase font-bold">
-                  {pendingAction.type === 'view' ? 'Visualizar' : pendingAction.type === 'toggle_status' ? (pendingAction.tenant.status === 'ACTIVE' ? 'Suspender' : 'Reactivar') : pendingAction.type === 'update' ? 'Editar y Guardar Datos' : 'Eliminar'}
-                </strong> el perfil de <span className="text-white font-bold">{pendingAction.tenant.name}</span>, ingresa tu código secreto maestro:
+                  {pendingAction.type === 'view' ? 'Visualizar' : pendingAction.type === 'toggle_status' ? (pendingAction.tenant.status === 'ACTIVE' ? 'Suspender Cuenta' : 'Reactivar Cuenta') : pendingAction.type === 'update' ? 'Editar y Guardar Datos' : 'Eliminar'}
+                </strong> el perfil de <span className="text-white font-bold">{pendingAction.tenant.name}</span>, ingresa tu autorización:
               </p>
             </div>
 
@@ -956,6 +981,45 @@ export default function SuperAdminPage() {
             )}
 
             <form onSubmit={handleValidateSecurityCode} className="space-y-4">
+              {/* Campo para motivo de suspensión si la acción es suspender */}
+              {pendingAction.type === 'toggle_status' && pendingAction.tenant.status === 'ACTIVE' && (
+                <div>
+                  <label className="block text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <AlertTriangle size={13} />
+                    <span>Motivo de Suspensión (Visible para el Cliente)</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={suspensionReasonInput}
+                    onChange={(e) => setSuspensionReasonInput(e.target.value)}
+                    placeholder="ej. Falta de pago de mensualidad..."
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none"
+                  />
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {[
+                      'Falta de pago de mensualidad',
+                      'Incumplimiento de términos y condiciones',
+                      'Revisión de seguridad y auditoría',
+                      'Límite de catálogo excedido'
+                    ].map((reason) => (
+                      <button
+                        key={reason}
+                        type="button"
+                        onClick={() => setSuspensionReasonInput(reason)}
+                        className={`text-[10px] px-2 py-1 rounded-md border transition-colors cursor-pointer ${
+                          suspensionReasonInput === reason
+                            ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'
+                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {reason}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
                   Código Secreto de Seguridad (PIN)
@@ -989,10 +1053,18 @@ export default function SuperAdminPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-lg shadow-amber-600/25 cursor-pointer flex items-center gap-2"
+                  className={`px-5 py-2.5 rounded-xl text-white font-bold text-xs shadow-lg cursor-pointer flex items-center gap-2 ${
+                    pendingAction.type === 'toggle_status' && pendingAction.tenant.status === 'ACTIVE'
+                      ? 'bg-red-600 hover:bg-red-500 shadow-red-600/25'
+                      : 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/25'
+                  }`}
                 >
                   <ShieldCheck size={16} />
-                  <span>Validar y Continuar</span>
+                  <span>
+                    {pendingAction.type === 'toggle_status' && pendingAction.tenant.status === 'ACTIVE'
+                      ? 'Confirmar Suspensión'
+                      : 'Validar y Continuar'}
+                  </span>
                 </button>
               </div>
             </form>
@@ -1100,6 +1172,16 @@ export default function SuperAdminPage() {
                       {viewedTenant.status === 'ACTIVE' ? '● Activo en Tiempo Real' : '● Suspendido'}
                     </p>
                   </div>
+
+                  {viewedTenant.status === 'SUSPENDED' && (
+                    <div className="bg-red-950/70 border border-red-800/80 rounded-xl p-3.5 text-xs text-red-200 col-span-2 flex items-start gap-2.5">
+                      <AlertTriangle size={16} className="text-red-400 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-red-300 uppercase text-[10px]">Motivo de Suspensión Registrado:</p>
+                        <p className="mt-0.5 text-white font-semibold">{viewedTenant.suspension_reason || 'Revisión administrativa de seguridad'}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-2">
@@ -1219,9 +1301,17 @@ export default function SuperAdminPage() {
                     <label className="block font-bold text-slate-400 uppercase mb-1">Plan / Nivel</label>
                     <select
                       value={editForm.plan}
-                      onChange={(e) => setEditForm({ ...editForm, plan: e.target.value })}
+                      onChange={(e) => {
+                        const sel = e.target.value;
+                        setEditForm({ 
+                          ...editForm, 
+                          plan: sel,
+                          maxSkus: sel === 'Plan Guest' ? 0 : (sel.includes('200') ? 200 : (sel.includes('39,000') ? 39000 : editForm.maxSkus))
+                        });
+                      }}
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white"
                     >
+                      <option>Plan Guest</option>
                       <option>Plan Básico (&lt;200 SKUs)</option>
                       <option>Plan Pro (Ilimitado)</option>
                       <option>Enterprise (39,000 SKUs)</option>

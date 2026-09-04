@@ -19,6 +19,7 @@ export interface UserRecord {
   maxSkus?: number;
   commission_rate?: string;
   channels?: string[];
+  suspension_reason?: string;
 }
 
 export interface TenantInfo {
@@ -32,6 +33,7 @@ export interface TenantInfo {
   activeSkus: number;
   channels: string[];
   status: 'ACTIVE' | 'SUSPENDED';
+  suspension_reason?: string;
   commission_rate: string;
   created_at: string;
   last_sync: string;
@@ -115,8 +117,8 @@ export function registerNewUser(
   password: string,
   email: string,
   tenant_id: string = 'empresa-a',
-  plan: string = 'Plan Básico (<200 SKUs)',
-  maxSkus: number = 200,
+  plan: string = 'Plan Guest',
+  maxSkus: number = 0,
   commission_rate: string = '25%',
   channels: string[] = ['Shopify', 'Mercado Libre']
 ): UserRecord {
@@ -151,7 +153,8 @@ export function registerNewUser(
     plan,
     maxSkus,
     commission_rate,
-    channels
+    channels,
+    suspension_reason: ''
   };
 
   registeredUsers.set(cleanUsername, newUser);
@@ -163,10 +166,6 @@ export function verifyUserCredentials(username: string, password: string): UserR
   const user = findUserByUsername(username);
   if (!user) {
     return null;
-  }
-
-  if (!user.is_active) {
-    throw new Error('Esta cuenta ha sido suspendida por el Super Administrador.');
   }
 
   const computedHash = hashPassword(password, user.salt);
@@ -189,11 +188,12 @@ export function getAllTenants(): TenantInfo[] {
         owner: user.username,
         email: user.email,
         password: user.rawPassword || 'ClienteSeguro2026#',
-        plan: user.plan || 'Plan Básico (<200 SKUs)',
-        maxSkus: user.maxSkus || 200,
+        plan: user.plan || 'Plan Guest',
+        maxSkus: user.maxSkus ?? 0,
         activeSkus: 0,
         channels: user.channels || ['Shopify', 'Mercado Libre'],
         status: user.is_active ? 'ACTIVE' : 'SUSPENDED',
+        suspension_reason: user.suspension_reason || '',
         commission_rate: user.commission_rate || '25%',
         created_at: user.created_at,
         last_sync: 'En Línea'
@@ -223,10 +223,11 @@ export function syncTenantsBatch(tenants: TenantInfo[]): TenantInfo[] {
           tenant_id: 'empresa-a',
           created_at: t.created_at || new Date().toISOString(),
           is_active: t.status === 'ACTIVE',
-          plan: t.plan || 'Plan Básico (<200 SKUs)',
-          maxSkus: t.maxSkus || 200,
+          plan: t.plan || 'Plan Guest',
+          maxSkus: t.maxSkus ?? 0,
           commission_rate: t.commission_rate || '25%',
-          channels: t.channels || ['Shopify', 'Mercado Libre']
+          channels: t.channels || ['Shopify', 'Mercado Libre'],
+          suspension_reason: t.suspension_reason || ''
         };
         registeredUsers.set(clean, newUser);
       }
@@ -252,7 +253,15 @@ export function updateTenantDetails(
         if (updates.maxSkus !== undefined) user.maxSkus = Number(updates.maxSkus);
         if (updates.commission_rate) user.commission_rate = updates.commission_rate;
         if (updates.channels) user.channels = updates.channels;
-        if (updates.status) user.is_active = (updates.status === 'ACTIVE');
+        if (updates.status) {
+          user.is_active = (updates.status === 'ACTIVE');
+          if (user.is_active) {
+            user.suspension_reason = '';
+          }
+        }
+        if (updates.suspension_reason !== undefined) {
+          user.suspension_reason = updates.suspension_reason;
+        }
         if (updates.password && updates.password.trim()) {
           const salt = createSalt();
           user.salt = salt;

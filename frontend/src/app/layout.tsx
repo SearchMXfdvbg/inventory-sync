@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import './globals.css';
 import Sidebar from '@/components/Sidebar';
 import Topbar from '@/components/Topbar';
+import AccessGate from '@/components/AccessGate';
 
 export default function RootLayout({
   children,
@@ -15,6 +16,13 @@ export default function RootLayout({
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<{
+    username: string;
+    role?: string;
+    plan?: string;
+    is_active?: boolean;
+    suspension_reason?: string;
+  } | null>(null);
 
   // Páginas independientes/públicas donde NUNCA debe mostrarse el Sidebar ni el Topbar estándar
   const cleanPath = (pathname || '').replace(/\/$/, '') || '/';
@@ -48,6 +56,38 @@ export default function RootLayout({
     const isAuth = Boolean(loggedIn || hasToken);
     setIsAuthenticated(isAuth);
 
+    if (isAuth) {
+      try {
+        const sessionRaw = localStorage.getItem('user_session');
+        if (sessionRaw) {
+          const parsed = JSON.parse(sessionRaw);
+          let userPlan = parsed.plan || 'Plan Guest';
+          let userActive = parsed.is_active ?? true;
+          let userReason = parsed.suspension_reason || '';
+
+          // Consultar caché de tenants locales para datos en vivo
+          const storedTenants = localStorage.getItem('inventory_sync_tenants_v2');
+          if (storedTenants && parsed.username) {
+            const tList = JSON.parse(storedTenants);
+            const found = tList.find((t: any) => t.name?.toLowerCase() === parsed.username.toLowerCase());
+            if (found) {
+              userPlan = found.plan || userPlan;
+              userActive = found.status === 'ACTIVE';
+              userReason = found.suspension_reason || userReason;
+            }
+          }
+
+          setCurrentUser({
+            username: parsed.username || 'Cliente',
+            role: parsed.role || 'CLIENT_ADMIN',
+            plan: parsed.username?.toLowerCase() === 'cristadmin' ? 'Enterprise (39,000 SKUs)' : userPlan,
+            is_active: parsed.username?.toLowerCase() === 'cristadmin' ? true : userActive,
+            suspension_reason: userReason
+          });
+        }
+      } catch {}
+    }
+
     if (!isAuth && !isPublicPage) {
       router.replace('/login');
     }
@@ -75,21 +115,33 @@ export default function RootLayout({
   // El Sidebar y el Topbar SOLO se muestran si la página NO es pública Y el usuario está autenticado
   const showAppChrome = mounted && !isPublicPage && isAuthenticated;
 
+  // Verificar si el usuario debe ser bloqueado por Plan Guest o Suspensión
+  const isRestrictedClient = Boolean(
+    currentUser &&
+    currentUser.username.toLowerCase() !== 'cristadmin' &&
+    currentUser.role !== 'SUPER_ADMIN' &&
+    (currentUser.is_active === false || currentUser.plan === 'Plan Guest' || currentUser.plan?.toLowerCase().includes('guest'))
+  );
+
   return (
     <html lang="es" suppressHydrationWarning>
       <body className="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 transition-colors" suppressHydrationWarning>
         {showAppChrome ? (
-          <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950">
-            <Sidebar />
+          isRestrictedClient ? (
+            <AccessGate user={currentUser!} onRefresh={() => setMounted(false)} />
+          ) : (
+            <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950">
+              <Sidebar />
 
-            <div className="flex-1 flex flex-col pl-64 bg-slate-50 dark:bg-slate-950 min-h-screen">
-              <Topbar title={topbarTitle} />
+              <div className="flex-1 flex flex-col pl-64 bg-slate-50 dark:bg-slate-950 min-h-screen">
+                <Topbar title={topbarTitle} />
 
-              <main className="flex-1 p-8 pt-24 min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
-                {children}
-              </main>
+                <main className="flex-1 p-8 pt-24 min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
+          )
         ) : (
           <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
             {children}

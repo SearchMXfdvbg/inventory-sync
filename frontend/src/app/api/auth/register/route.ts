@@ -39,7 +39,9 @@ export async function POST(request: Request) {
           email: newUser.email,
           role: newUser.role,
           tenant_id: newUser.tenant_id,
-          is_active: newUser.is_active
+          is_active: newUser.is_active,
+          plan: newUser.plan || 'Plan Guest',
+          suspension_reason: newUser.suspension_reason || ''
         }
       });
     } catch (regErr: any) {

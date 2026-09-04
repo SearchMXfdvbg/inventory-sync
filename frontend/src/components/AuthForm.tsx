@@ -92,17 +92,27 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
               owner: cleanUser,
               email: cleanEmail,
               password: cleanPwd,
-              plan: 'Plan Básico (<200 SKUs)',
-              maxSkus: 200,
+              plan: 'Plan Guest',
+              maxSkus: 0,
               activeSkus: 0,
               channels: ['Shopify', 'Mercado Libre'],
               status: 'ACTIVE',
+              suspension_reason: '',
               commission_rate: '25%',
               created_at: new Date().toISOString(),
               last_sync: 'En Línea'
             });
           }
           localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(list));
+          localStorage.setItem('user_session', JSON.stringify({
+            username: cleanUser,
+            email: cleanEmail,
+            role: 'CLIENT_ADMIN',
+            tenant_id: 'empresa-a',
+            plan: 'Plan Guest',
+            is_active: true,
+            suspension_reason: ''
+          }));
         } catch {}
 
         setTimeout(() => {
@@ -126,9 +136,30 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
       const token = data?.access_token || (isSuper ? 'jwt_superadmin_master' : 'bearer_token_eu_' + Date.now());
       localStorage.setItem('auth_token', token);
       localStorage.setItem('logged_in', 'true');
+
+      // Buscar si tenemos el tenant en caché local para tener los datos más recientes
+      let localPlan = data?.user?.plan || 'Plan Guest';
+      let localStatus = data?.user?.is_active ?? true;
+      let localReason = data?.user?.suspension_reason || '';
+      try {
+        const storedTenants = localStorage.getItem('inventory_sync_tenants_v2');
+        if (storedTenants) {
+          const tList = JSON.parse(storedTenants);
+          const found = tList.find((t: any) => t.name?.toLowerCase() === cleanUser.toLowerCase());
+          if (found) {
+            localPlan = found.plan || localPlan;
+            localStatus = found.status === 'ACTIVE';
+            localReason = found.suspension_reason || localReason;
+          }
+        }
+      } catch {}
+
       localStorage.setItem('user_session', JSON.stringify({ 
         username: isSuper ? 'CristAdmin' : cleanUser, 
-        role: isSuper ? 'SUPER_ADMIN' : (data?.user?.role || 'CLIENT_ADMIN')
+        role: isSuper ? 'SUPER_ADMIN' : (data?.user?.role || 'CLIENT_ADMIN'),
+        plan: isSuper ? 'Enterprise (39,000 SKUs)' : localPlan,
+        is_active: isSuper ? true : localStatus,
+        suspension_reason: isSuper ? '' : localReason
       }));
       setDemoMode(false);
       setTenantId(isSuper ? 'global-master' : 'empresa-a');
