@@ -100,7 +100,7 @@ export interface IntegrationStatus {
   };
 }
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+export const API_BASE_URL = typeof window !== 'undefined' ? '/api' : (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000');
 const BASE_URL = API_BASE_URL;
 
 export const isDemoMode = (): boolean => false;
