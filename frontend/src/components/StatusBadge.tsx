@@ -10,39 +10,39 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
 
   switch (status.toUpperCase()) {
     case 'PENDING':
-      bgColor = 'bg-yellow-100 text-yellow-800 border border-yellow-200';
+      bgColor = 'bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-300 dark:border-yellow-800/60';
       label = 'Pendiente';
       break;
     case 'PROCESSING':
-      bgColor = 'bg-blue-100 text-blue-800 border border-blue-200 animate-pulse';
+      bgColor = 'bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/60 animate-pulse';
       label = 'Procesando';
       break;
     case 'PROCESSED':
-      bgColor = 'bg-green-100 text-green-800 border border-green-200';
+      bgColor = 'bg-green-100 text-green-800 border border-green-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60';
       label = 'Procesado';
       break;
     case 'FAILED':
-      bgColor = 'bg-red-100 text-red-800 border border-red-200';
+      bgColor = 'bg-red-100 text-red-800 border border-red-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60';
       label = 'Fallido';
       break;
     case 'MATCH':
-      bgColor = 'bg-green-100 text-green-800 border border-green-200';
+      bgColor = 'bg-green-100 text-green-800 border border-green-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60';
       label = 'Sincronizado';
       break;
     case 'DESYNC':
-      bgColor = 'bg-rose-100 text-rose-800 border border-rose-200';
+      bgColor = 'bg-rose-100 text-rose-800 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60';
       label = 'Desincronizado';
       break;
     case 'HIGH':
-      bgColor = 'bg-red-100 text-red-800 border border-red-200';
+      bgColor = 'bg-red-100 text-red-800 border border-red-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60';
       label = 'Alta';
       break;
     case 'MEDIUM':
-      bgColor = 'bg-amber-100 text-amber-800 border border-amber-200';
+      bgColor = 'bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60';
       label = 'Media';
       break;
     case 'LOW':
-      bgColor = 'bg-blue-100 text-blue-800 border border-blue-200';
+      bgColor = 'bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/60';
       label = 'Baja';
       break;
   }

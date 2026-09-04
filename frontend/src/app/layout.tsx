@@ -16,25 +16,30 @@ export default function RootLayout({
   const [mounted, setMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  // Páginas públicas donde NUNCA debe mostrarse el Sidebar ni el Topbar
+  // Páginas independientes/públicas donde NUNCA debe mostrarse el Sidebar ni el Topbar estándar
   const cleanPath = (pathname || '').replace(/\/$/, '') || '/';
   const isPublicPage = Boolean(
     cleanPath === '/' ||
     cleanPath === '/login' ||
     cleanPath === '/register' ||
     cleanPath.startsWith('/login') ||
-    cleanPath.startsWith('/register')
+    cleanPath.startsWith('/register') ||
+    cleanPath === '/super-admin' ||
+    cleanPath.startsWith('/super-admin')
   );
 
   useEffect(() => {
     setMounted(true);
 
-    // Sincronizar tema oscuro/claro guardado
+    // Sincronizar tema oscuro por defecto
     const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-    } else {
+    if (savedTheme === 'light') {
       document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+      if (!savedTheme) {
+        localStorage.setItem('theme', 'dark');
+      }
     }
 
     // Verificar si el usuario ha iniciado sesión en rutas protegidas

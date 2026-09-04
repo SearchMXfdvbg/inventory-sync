@@ -45,40 +45,40 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ venta }) => 
   ];
 
   return (
-    <div className="bg-white p-6 rounded-xl border border-slate-200">
+    <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 transition-colors">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="font-semibold text-slate-800">Flujo de Sincronización Saga</h3>
-          <p className="text-xs text-slate-400 mt-1">Transacciones automáticas en dos fases</p>
+          <h3 className="font-semibold text-slate-800 dark:text-white">Flujo de Sincronización Saga</h3>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Transacciones automáticas en dos fases</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">Intentos: {venta.attempts}/5</span>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono">Intentos: {venta.attempts}/5</span>
         </div>
       </div>
 
-      <div className="relative border-l border-slate-100 ml-4 space-y-8 pb-2">
+      <div className="relative border-l border-slate-100 dark:border-slate-800 ml-4 space-y-8 pb-2">
         {steps.map((step, idx) => {
           let badge = (
-            <div key={idx} className="absolute -left-[17px] w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center border-4 border-white shadow-sm">
+            <div key={idx} className="absolute -left-[17px] w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-sm">
               <span className="text-xs font-semibold">{idx + 1}</span>
             </div>
           );
 
           if (step.done) {
             badge = (
-              <div key={idx} className="absolute -left-[17px] w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center border-4 border-white shadow-sm">
+              <div key={idx} className="absolute -left-[17px] w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-sm">
                 <Check size={14} className="stroke-[3]" />
               </div>
             );
           } else if (step.active) {
             badge = (
-              <div key={idx} className="absolute -left-[17px] w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center border-4 border-white shadow-sm animate-pulse">
+              <div key={idx} className="absolute -left-[17px] w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-sm animate-pulse">
                 <Loader2 size={14} className="animate-spin" />
               </div>
             );
           } else if (step.failed) {
             badge = (
-              <div key={idx} className="absolute -left-[17px] w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center border-4 border-white shadow-sm">
+              <div key={idx} className="absolute -left-[17px] w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-sm">
                 <X size={14} />
               </div>
             );
@@ -88,10 +88,10 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ venta }) => 
             <div key={idx} className="relative pl-8">
               {badge}
               <div>
-                <h4 className={`text-sm font-semibold leading-none ${step.done ? 'text-slate-800' : step.active ? 'text-blue-600' : step.failed ? 'text-red-600' : 'text-slate-400'}`}>
+                <h4 className={`text-sm font-semibold leading-none ${step.done ? 'text-slate-800 dark:text-slate-100' : step.active ? 'text-blue-600 dark:text-blue-400' : step.failed ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-600'}`}>
                   {step.title}
                 </h4>
-                <p className="text-xs text-slate-500 mt-1.5">{step.desc}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">{step.desc}</p>
               </div>
             </div>
           );
@@ -99,9 +99,9 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ venta }) => 
       </div>
 
       {venta.status === 'FAILED' && venta.last_error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-lg">
-          <h4 className="text-xs font-bold text-red-700 uppercase tracking-wider">Error de Ejecución:</h4>
-          <p className="text-xs text-red-600 mt-1 leading-relaxed font-mono">{venta.last_error}</p>
+        <div className="mt-6 p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/50 rounded-lg">
+          <h4 className="text-xs font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wider">Error de Ejecución:</h4>
+          <p className="text-xs text-rose-600 dark:text-rose-400 mt-1 leading-relaxed font-mono">{venta.last_error}</p>
         </div>
       )}
     </div>

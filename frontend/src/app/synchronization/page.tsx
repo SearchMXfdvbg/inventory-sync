@@ -69,16 +69,16 @@ export default function SynchronizationPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between min-h-[450px]">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between min-h-[450px] transition-colors">
           <div>
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h3 className="font-semibold text-slate-800">Cola Activa</h3>
-                <p className="text-xs text-slate-400 mt-1 font-mono">Transacciones PENDING o PROCESSING</p>
+                <h3 className="font-semibold text-slate-800 dark:text-white">Cola Activa</h3>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-mono">Transacciones PENDING o PROCESSING</p>
               </div>
               <button 
                 onClick={() => loadQueue()} 
-                className="p-1.5 hover:bg-slate-100 rounded-md text-slate-400 hover:text-slate-600 transition-colors"
+                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
                 title="Actualizar Cola"
               >
                 <RefreshCw size={16} />
@@ -87,14 +87,14 @@ export default function SynchronizationPage() {
 
             {loading ? (
               <div className="space-y-4">
-                <div className="h-10 bg-slate-100 rounded-md animate-pulse"></div>
-                <div className="h-10 bg-slate-100 rounded-md animate-pulse"></div>
+                <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-md animate-pulse"></div>
+                <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-md animate-pulse"></div>
               </div>
             ) : queue.length === 0 ? (
               <div className="text-center py-12">
-                <CheckCircle size={32} className="text-green-500 mx-auto mb-3" />
-                <h4 className="text-xs font-bold text-slate-700">Cola de Sincronización Vacía</h4>
-                <p className="text-[10px] text-slate-400 mt-1 max-w-[200px] mx-auto leading-normal">
+                <CheckCircle size={32} className="text-emerald-500 mx-auto mb-3" />
+                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">Cola de Sincronización Vacía</h4>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 max-w-[200px] mx-auto leading-normal">
                   Todos los canales están al día. No hay transacciones pendientes de procesar.
                 </p>
               </div>
@@ -104,21 +104,21 @@ export default function SynchronizationPage() {
                   <button
                     key={item.id}
                     onClick={() => setSelectedVenta(item)}
-                    className={`w-full text-left p-3.5 rounded-lg border transition-all flex items-center justify-between ${
+                    className={`w-full text-left p-3.5 rounded-lg border transition-all flex items-center justify-between cursor-pointer ${
                       selectedVenta?.id === item.id
-                        ? 'border-blue-500 bg-blue-50/50 shadow-sm'
-                        : 'border-slate-150 hover:bg-slate-50'
+                        ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 dark:border-blue-500 shadow-sm'
+                        : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
                     }`}
                   >
                     <div className="min-w-0">
-                      <span className="text-xs font-bold text-slate-800 block truncate font-mono">{item.external_id}</span>
-                      <span className="text-[10px] text-slate-500 mt-1 font-semibold block uppercase font-mono">SKU: {item.sku} (Cant: {item.cantidad})</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block truncate font-mono">{item.external_id}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold block uppercase font-mono">SKU: {item.sku} (Cant: {item.cantidad})</span>
                     </div>
                     <div>
                       {item.status === 'PROCESSING' ? (
                         <Loader2 size={16} className="text-blue-500 animate-spin" />
                       ) : (
-                        <span className="text-[10px] font-bold text-yellow-600 uppercase font-mono">En cola</span>
+                        <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400 uppercase font-mono">En cola</span>
                       )}
                     </div>
                   </button>
@@ -127,7 +127,7 @@ export default function SynchronizationPage() {
             )}
           </div>
 
-          <div className="border-t border-slate-100 pt-4 mt-6">
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-6">
             <button
               onClick={() => loadQueue()}
               className="w-full flex items-center justify-center gap-2 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors cursor-pointer"
@@ -142,58 +142,58 @@ export default function SynchronizationPage() {
             <div className="space-y-6">
               <ActivityTimeline venta={selectedVenta} />
 
-              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <h3 className="font-semibold text-slate-800 mb-6">Esquema Arquitectura Saga (Flujo de Datos)</h3>
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+                <h3 className="font-semibold text-slate-800 dark:text-white mb-6">Esquema Arquitectura Saga (Flujo de Datos)</h3>
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-4">
-                  <div className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-100 bg-slate-50 w-full sm:w-28 text-center shadow-xs">
+                  <div className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 w-full sm:w-28 text-center shadow-xs">
                     <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider font-mono ${
-                      selectedVenta.origen === 'shopify' ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
+                      selectedVenta.origen === 'shopify' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-300'
                     }`}>
                       {selectedVenta.origen}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-700 truncate w-full font-mono">{selectedVenta.external_id}</span>
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 truncate w-full font-mono">{selectedVenta.external_id}</span>
                   </div>
 
-                  <ArrowRight size={20} className="text-slate-300 hidden sm:block stroke-[2.5]" />
+                  <ArrowRight size={20} className="text-slate-300 dark:text-slate-600 hidden sm:block stroke-[2.5]" />
 
                   <div className={`flex flex-col items-center gap-2 p-4 rounded-xl border w-full sm:w-28 text-center transition-all ${
                     selectedVenta.sae_decremented 
-                      ? 'border-green-200 bg-green-50/50 shadow-xs' 
-                      : selectedVenta.status === 'PROCESSING' ? 'border-blue-300 bg-blue-50/50 animate-pulse' : 'border-slate-100 bg-slate-50'
+                      ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 shadow-xs' 
+                      : selectedVenta.status === 'PROCESSING' ? 'border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/30 animate-pulse' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60'
                   }`}>
-                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider font-mono">CONTPAQi SAE</span>
-                    <span className="text-[10px] font-bold text-slate-700">Stock Decrementado</span>
+                    <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">CONTPAQi SAE</span>
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">Stock Decrementado</span>
                   </div>
 
-                  <ArrowRight size={20} className="text-slate-300 hidden sm:block stroke-[2.5]" />
+                  <ArrowRight size={20} className="text-slate-300 dark:text-slate-600 hidden sm:block stroke-[2.5]" />
 
                   <div className={`flex flex-col items-center gap-2 p-4 rounded-xl border w-full sm:w-28 text-center transition-all ${
                     selectedVenta.shopify_synced 
-                      ? 'border-green-200 bg-green-50/50 shadow-xs' 
-                      : selectedVenta.status === 'PROCESSING' && selectedVenta.sae_decremented ? 'border-blue-300 bg-blue-50/50 animate-pulse' : 'border-slate-100 bg-slate-50'
+                      ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 shadow-xs' 
+                      : selectedVenta.status === 'PROCESSING' && selectedVenta.sae_decremented ? 'border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/30 animate-pulse' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60'
                   }`}>
-                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider font-mono">Shopify</span>
-                    <span className="text-[10px] font-bold text-slate-700">Stock Sincronizado</span>
+                    <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">Shopify</span>
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">Stock Sincronizado</span>
                   </div>
 
-                  <ArrowRight size={20} className="text-slate-300 hidden sm:block stroke-[2.5]" />
+                  <ArrowRight size={20} className="text-slate-300 dark:text-slate-600 hidden sm:block stroke-[2.5]" />
 
                   <div className={`flex flex-col items-center gap-2 p-4 rounded-xl border w-full sm:w-28 text-center transition-all ${
                     selectedVenta.ml_synced 
-                      ? 'border-green-200 bg-green-50/50 shadow-xs' 
-                      : selectedVenta.status === 'PROCESSING' && selectedVenta.shopify_synced ? 'border-blue-300 bg-blue-50/50 animate-pulse' : 'border-slate-100 bg-slate-50'
+                      ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 shadow-xs' 
+                      : selectedVenta.status === 'PROCESSING' && selectedVenta.shopify_synced ? 'border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/30 animate-pulse' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60'
                   }`}>
-                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider font-mono">Mercado Libre</span>
-                    <span className="text-[10px] font-bold text-slate-700">Stock Sincronizado</span>
+                    <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">Mercado Libre</span>
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">Stock Sincronizado</span>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="bg-white p-12 rounded-xl border border-slate-200 shadow-sm text-center flex flex-col items-center justify-center min-h-[450px]">
-              <Layers size={40} className="text-slate-300 mb-4" />
-              <h3 className="font-bold text-slate-700">Ninguna Transacción Seleccionada</h3>
-              <p className="text-xs text-slate-400 max-w-sm mt-2 leading-relaxed">
+            <div className="bg-white dark:bg-slate-900 p-12 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-center flex flex-col items-center justify-center min-h-[450px] transition-colors">
+              <Layers size={40} className="text-slate-300 dark:text-slate-600 mb-4" />
+              <h3 className="font-bold text-slate-700 dark:text-slate-200">Ninguna Transacción Seleccionada</h3>
+              <p className="text-xs text-slate-400 dark:text-slate-500 max-w-sm mt-2 leading-relaxed">
                 Seleccione una transacción activa de la cola de la izquierda para auditar el flujo de sincronización atómica entre canales.
               </p>
             </div>

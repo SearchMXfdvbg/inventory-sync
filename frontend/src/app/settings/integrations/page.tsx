@@ -217,17 +217,17 @@ export default function IntegrationsSettingsPage() {
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5 transition-colors">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Canales e Integraciones de Stock</h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Canales e Integraciones de Stock</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
             Configura tu inventario principal (Shopify o SAE) y activa los canales donde vendes en tiempo real.
           </p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg shadow-blue-500/20 transition-all self-start md:self-auto"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg shadow-blue-500/20 transition-all self-start md:self-auto cursor-pointer"
         >
           <Save size={16} />
           <span>{saving ? 'Guardando...' : 'Guardar Todo'}</span>
@@ -237,14 +237,14 @@ export default function IntegrationsSettingsPage() {
       <form onSubmit={handleSave} className="space-y-8">
         
         {/* PANEL PRINCIPAL: ELECCIÓN DE INVENTARIO MAESTRO Y CANALES ACTIVOS */}
-        <div className="bg-white border-2 border-blue-100 shadow-sm rounded-2xl p-6">
+        <div className="bg-white dark:bg-slate-900 border-2 border-blue-100 dark:border-slate-800 shadow-sm rounded-2xl p-6 transition-colors">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
               <Layers size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Inventario Principal y Canales Activos</h2>
-              <p className="text-xs text-slate-500">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Inventario Principal y Canales Activos</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Define qué sistema manda sobre el stock y oculta los canales que no utilices en tu empresa.
               </p>
             </div>
@@ -253,13 +253,13 @@ export default function IntegrationsSettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
             {/* Selector de Inventario Principal */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-2">
                 Inventario Principal (Fuente de la Verdad)
               </label>
               <select
                 value={settings.INVENTARIO_PRINCIPAL || 'shopify'}
                 onChange={(e) => handleInputChange('INVENTARIO_PRINCIPAL', e.target.value)}
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold cursor-pointer"
+                className="w-full border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold cursor-pointer transition-colors"
               >
                 <option value="shopify">🛍️ Shopify (Tiendas Online y Marcas Propias)</option>
                 <option value="amazon">📦 Amazon SP-API (Seller Central - México, EE.UU. y Europa)</option>
@@ -269,20 +269,20 @@ export default function IntegrationsSettingsPage() {
                 <option value="tiktok">🎵 TikTok Shop (Catálogo TikTok Shop)</option>
                 <option value="sae">🖥️ CONTPAQi SAE / Excel (Bodega Física o ERP Administrativo)</option>
               </select>
-              <p className="text-xs text-slate-400 mt-2">
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
                 Cuando caiga una venta en cualquier canal, este inventario maestro será la fuente de la verdad para actualizar en cascada a todos los demás.
               </p>
             </div>
 
             {/* Checkboxes de Canales Activos */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-2">
                 Canales que usas en tu negocio
               </label>
-              <div className="space-y-2.5 bg-slate-50 border border-slate-200 rounded-xl p-3.5">
-                <label className="flex items-center justify-between p-1.5 hover:bg-white rounded-lg cursor-pointer transition-colors">
-                  <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
-                    <Store size={16} className="text-emerald-600" />
+              <div className="space-y-2.5 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5">
+                <label className="flex items-center justify-between p-1.5 hover:bg-white dark:hover:bg-slate-900 rounded-lg cursor-pointer transition-colors">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                    <Store size={16} className="text-emerald-600 dark:text-emerald-400" />
                     Shopify
                   </span>
                   <input
@@ -293,9 +293,9 @@ export default function IntegrationsSettingsPage() {
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-1.5 hover:bg-white rounded-lg cursor-pointer transition-colors">
-                  <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
-                    <Database size={16} className="text-blue-600" />
+                <label className="flex items-center justify-between p-1.5 hover:bg-white dark:hover:bg-slate-900 rounded-lg cursor-pointer transition-colors">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                    <Database size={16} className="text-blue-600 dark:text-blue-400" />
                     CONTPAQi SAE (Desmarcar para ocultar)
                   </span>
                   <input
@@ -306,9 +306,9 @@ export default function IntegrationsSettingsPage() {
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-1.5 hover:bg-white rounded-lg cursor-pointer transition-colors">
-                  <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
-                    <ShoppingBag size={16} className="text-amber-500" />
+                <label className="flex items-center justify-between p-1.5 hover:bg-white dark:hover:bg-slate-900 rounded-lg cursor-pointer transition-colors">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                    <ShoppingBag size={16} className="text-amber-500 dark:text-amber-400" />
                     Mercado Libre
                   </span>
                   <input
@@ -319,9 +319,9 @@ export default function IntegrationsSettingsPage() {
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-1.5 hover:bg-white rounded-lg cursor-pointer transition-colors">
-                  <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
-                    <Video size={16} className="text-rose-500" />
+                <label className="flex items-center justify-between p-1.5 hover:bg-white dark:hover:bg-slate-900 rounded-lg cursor-pointer transition-colors">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                    <Video size={16} className="text-rose-500 dark:text-rose-400" />
                     TikTok Shop
                   </span>
                   <input
@@ -332,9 +332,9 @@ export default function IntegrationsSettingsPage() {
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-1.5 hover:bg-white rounded-lg cursor-pointer transition-colors">
-                  <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
-                    <Globe2 size={16} className="text-amber-600" />
+                <label className="flex items-center justify-between p-1.5 hover:bg-white dark:hover:bg-slate-900 rounded-lg cursor-pointer transition-colors">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                    <Globe2 size={16} className="text-amber-600 dark:text-amber-400" />
                     Amazon SP-API
                   </span>
                   <input
@@ -345,9 +345,9 @@ export default function IntegrationsSettingsPage() {
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-1.5 hover:bg-white rounded-lg cursor-pointer transition-colors">
-                  <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
-                    <ShoppingBag size={16} className="text-blue-500" />
+                <label className="flex items-center justify-between p-1.5 hover:bg-white dark:hover:bg-slate-900 rounded-lg cursor-pointer transition-colors">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                    <ShoppingBag size={16} className="text-blue-500 dark:text-blue-400" />
                     eBay Alemania / Europa
                   </span>
                   <input
@@ -358,9 +358,9 @@ export default function IntegrationsSettingsPage() {
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-1.5 hover:bg-white rounded-lg cursor-pointer transition-colors">
-                  <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
-                    <Store size={16} className="text-red-600" />
+                <label className="flex items-center justify-between p-1.5 hover:bg-white dark:hover:bg-slate-900 rounded-lg cursor-pointer transition-colors">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                    <Store size={16} className="text-red-600 dark:text-red-400" />
                     Kaufland Alemania / Europa
                   </span>
                   <input
@@ -380,74 +380,74 @@ export default function IntegrationsSettingsPage() {
           
           {/* 1. SHOPIFY */}
           {(settings.ENABLE_SHOPIFY ?? true) && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between transition-colors">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
                       <Store size={20} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900">Shopify</h3>
-                      <p className="text-xs text-slate-500">Admin GraphQL API (2026-07)</p>
+                      <h3 className="font-bold text-slate-900 dark:text-white">Shopify</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Admin GraphQL API (2026-07)</p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                     {status?.shopify.status === 'connected' ? 'Conectado' : 'Activo'}
                   </span>
                 </div>
 
                 <div className="space-y-3 text-xs">
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1">Dominio de la Tienda (.myshopify.com)</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Dominio de la Tienda (.myshopify.com)</label>
                     <input
                       type="text"
                       value={settings.SHOP_DOMAIN}
                       onChange={(e) => handleInputChange('SHOP_DOMAIN', e.target.value)}
                       placeholder="tu-tienda.myshopify.com"
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1">Admin API Access Token</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Admin API Access Token</label>
                     <input
                       type="password"
                       value={settings.SHOPIFY_ACCESS_TOKEN}
                       onChange={(e) => handleInputChange('SHOPIFY_ACCESS_TOKEN', e.target.value)}
                       placeholder="shpat_••••••••"
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">Location ID</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Location ID</label>
                       <input
                         type="text"
                         value={settings.SHOPIFY_LOCATION_ID}
                         onChange={(e) => handleInputChange('SHOPIFY_LOCATION_ID', e.target.value)}
                         placeholder="gid://shopify/Location/123"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">API Secret (Webhooks)</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">API Secret (Webhooks)</label>
                       <input
                         type="password"
                         value={settings.SHOPIFY_API_SECRET}
                         onChange={(e) => handleInputChange('SHOPIFY_API_SECRET', e.target.value)}
                         placeholder="shpss_••••••••"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col gap-2">
+                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                       <button
                         type="button"
                         onClick={() => handleTestConnection('shopify')}
                         disabled={testingChannel === 'shopify'}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800/60 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {testingChannel === 'shopify' ? (
                           <>
@@ -466,13 +466,13 @@ export default function IntegrationsSettingsPage() {
                     {testResults['shopify'] && (
                       <div className={`p-2.5 rounded-lg border text-xs flex items-start gap-2 ${
                         testResults['shopify'].success 
-                          ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                          : 'bg-rose-50 border-rose-200 text-rose-700'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200' 
+                          : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300'
                       }`}>
                         {testResults['shopify'].success ? (
-                          <CheckCircle size={15} className="shrink-0 mt-0.5 text-emerald-600" />
+                          <CheckCircle size={15} className="shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
                         ) : (
-                          <AlertCircle size={15} className="shrink-0 mt-0.5 text-rose-600" />
+                          <AlertCircle size={15} className="shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
                         )}
                         <span>{testResults['shopify'].message}</span>
                       </div>
@@ -480,12 +480,12 @@ export default function IntegrationsSettingsPage() {
                   </div>
 
                   {/* Mini tutorial interactivo */}
-                  <details className="mt-3 group bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-600 transition-all">
-                    <summary className="cursor-pointer font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1.5 select-none">
+                  <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
+                    <summary className="cursor-pointer font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
                       <span>¿Cómo extraer estas credenciales en Shopify?</span>
                     </summary>
-                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 space-y-2 text-[11px] leading-relaxed text-slate-600">
+                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
                       <p><strong>1. Dominio:</strong> El subdominio oficial que termina en <code>.myshopify.com</code> (ej: <code>tu-tienda.myshopify.com</code>).</p>
                       <p><strong>2. Access Token:</strong> En tu Shopify Admin ve a <em>Configuración</em> &gt; <em>Apps y canales de venta</em> &gt; <em>Desarrollar apps</em> &gt; <em>Crear una app</em> (nombre: InventorySync). En configuración de API marca los permisos de <code>read_products, write_products, read_inventory, write_inventory, read_orders</code>. Dale <em>Instalar app</em> y copia el token que inicia con <code>shpat_...</code>.</p>
                       <p><strong>3. Location ID:</strong> En <em>Configuración</em> &gt; <em>Ubicaciones</em>, haz clic en tu almacén o tienda principal. El ID es el número al final de la URL en tu navegador (ej: <code>gid://shopify/Location/83942019</code>).</p>
@@ -499,64 +499,64 @@ export default function IntegrationsSettingsPage() {
 
           {/* 2. MERCADO LIBRE */}
           {(settings.ENABLE_MERCADOLIBRE ?? true) && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between transition-colors">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
                       <ShoppingBag size={20} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900">Mercado Libre</h3>
-                      <p className="text-xs text-slate-500">REST API & Webhooks</p>
+                      <h3 className="font-bold text-slate-900 dark:text-white">Mercado Libre</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">REST API & Webhooks</p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
                     {status?.mercadolibre.status === 'connected' ? 'Conectado' : 'Activo'}
                   </span>
                 </div>
 
                 <div className="space-y-3 text-xs">
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1">Access Token (Bearer APP_USR-...)</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Access Token (Bearer APP_USR-...)</label>
                     <input
                       type="password"
                       value={settings.ML_ACCESS_TOKEN}
                       onChange={(e) => handleInputChange('ML_ACCESS_TOKEN', e.target.value)}
                       placeholder="APP_USR-••••••••"
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">User ID (Seller ID)</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">User ID (Seller ID)</label>
                       <input
                         type="text"
                         value={settings.ML_USER_ID}
                         onChange={(e) => handleInputChange('ML_USER_ID', e.target.value)}
                         placeholder="123456789"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">Site ID</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Site ID</label>
                       <input
                         type="text"
                         value={settings.ML_SITE_ID}
                         onChange={(e) => handleInputChange('ML_SITE_ID', e.target.value)}
                         placeholder="MLM"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col gap-2">
+                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                       <button
                         type="button"
                         onClick={() => handleTestConnection('mercadolibre')}
                         disabled={testingChannel === 'mercadolibre'}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {testingChannel === 'mercadolibre' ? (
                           <>
@@ -575,13 +575,13 @@ export default function IntegrationsSettingsPage() {
                     {testResults['mercadolibre'] && (
                       <div className={`p-2.5 rounded-lg border text-xs flex items-start gap-2 ${
                         testResults['mercadolibre'].success 
-                          ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                          : 'bg-rose-50 border-rose-200 text-rose-700'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200' 
+                          : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300'
                       }`}>
                         {testResults['mercadolibre'].success ? (
-                          <CheckCircle size={15} className="shrink-0 mt-0.5 text-emerald-600" />
+                          <CheckCircle size={15} className="shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
                         ) : (
-                          <AlertCircle size={15} className="shrink-0 mt-0.5 text-rose-600" />
+                          <AlertCircle size={15} className="shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
                         )}
                         <span>{testResults['mercadolibre'].message}</span>
                       </div>
@@ -589,13 +589,13 @@ export default function IntegrationsSettingsPage() {
                   </div>
 
                   {/* Mini tutorial interactivo */}
-                  <details className="mt-3 group bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-600 transition-all">
-                    <summary className="cursor-pointer font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1.5 select-none">
+                  <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
+                    <summary className="cursor-pointer font-bold text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
                       <span>¿Cómo extraer estas credenciales en Mercado Libre?</span>
                     </summary>
-                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 space-y-2 text-[11px] leading-relaxed text-slate-600">
-                      <p><strong>1. Access Token:</strong> Entra a <a href="https://developers.mercadolibre.com.mx" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-semibold">developers.mercadolibre.com.mx</a> con la cuenta del vendedor &gt; <em>Mis aplicaciones</em> &gt; <em>Crear aplicación</em>. En autenticación genera tu Access Token (inicia con <code>APP_USR-...</code>).</p>
+                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
+                      <p><strong>1. Access Token:</strong> Entra a <a href="https://developers.mercadolibre.com.mx" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline font-semibold">developers.mercadolibre.com.mx</a> con la cuenta del vendedor &gt; <em>Mis aplicaciones</em> &gt; <em>Crear aplicación</em>. En autenticación genera tu Access Token (inicia con <code>APP_USR-...</code>).</p>
                       <p><strong>2. User ID:</strong> Es tu número de cuenta de vendedor. Al dar clic en <em>Probar Conexión en Vivo</em> el sistema lo detecta y autocompleta automáticamente.</p>
                       <p><strong>3. Site ID:</strong> Escribe <code>MLM</code> para México, <code>MLA</code> para Argentina o <code>MCO</code> para Colombia.</p>
                     </div>
@@ -607,19 +607,19 @@ export default function IntegrationsSettingsPage() {
 
           {/* 3. TIKTOK SHOP */}
           {(settings.ENABLE_TIKTOK ?? true) && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between transition-colors">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold">
                       <Video size={20} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900">TikTok Shop</h3>
-                      <p className="text-xs text-slate-500">Partner Open API (202309)</p>
+                      <h3 className="font-bold text-slate-900 dark:text-white">TikTok Shop</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Partner Open API (202309)</p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">
                     {status?.tiktok?.status === 'connected' ? 'Conectado' : 'Activo'}
                   </span>
                 </div>
@@ -627,67 +627,67 @@ export default function IntegrationsSettingsPage() {
                 <div className="space-y-3 text-xs">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">App Key</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">App Key</label>
                       <input
                         type="text"
                         value={settings.TIKTOK_APP_KEY || ''}
                         onChange={(e) => handleInputChange('TIKTOK_APP_KEY', e.target.value)}
                         placeholder="6abcde123..."
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">App Secret</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">App Secret</label>
                       <input
                         type="password"
                         value={settings.TIKTOK_APP_SECRET || ''}
                         onChange={(e) => handleInputChange('TIKTOK_APP_SECRET', e.target.value)}
                         placeholder="••••••••"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1">Access Token</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Access Token</label>
                     <input
                       type="password"
                       value={settings.TIKTOK_ACCESS_TOKEN || ''}
                       onChange={(e) => handleInputChange('TIKTOK_ACCESS_TOKEN', e.target.value)}
                       placeholder="ttp_••••••••"
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">Shop ID / Cipher</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Shop ID / Cipher</label>
                       <input
                         type="text"
                         value={settings.TIKTOK_SHOP_ID || ''}
                         onChange={(e) => handleInputChange('TIKTOK_SHOP_ID', e.target.value)}
                         placeholder="7495812..."
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">Webhook Secret</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Webhook Secret</label>
                       <input
                         type="password"
                         value={settings.TIKTOK_SHOP_CIPHER || ''}
                         onChange={(e) => handleInputChange('TIKTOK_SHOP_CIPHER', e.target.value)}
                         placeholder="••••••••"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                   </div>
 
                   {/* Mini tutorial interactivo */}
-                  <details className="mt-3 group bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-600 transition-all">
-                    <summary className="cursor-pointer font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1.5 select-none">
+                  <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
+                    <summary className="cursor-pointer font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
                       <span>¿Cómo extraer estas credenciales en TikTok Shop?</span>
                     </summary>
-                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 space-y-2 text-[11px] leading-relaxed text-slate-600">
-                      <p><strong>1. App Key & App Secret:</strong> Entra a <a href="https://partner.tiktokshop.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-semibold">partner.tiktokshop.com</a> &gt; <em>App Management</em> &gt; <em>Create App</em> (categoría ERP / Inventory). Obtén tus claves API de desarrollador.</p>
+                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
+                      <p><strong>1. App Key & App Secret:</strong> Entra a <a href="https://partner.tiktokshop.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline font-semibold">partner.tiktokshop.com</a> &gt; <em>App Management</em> &gt; <em>Create App</em> (categoría ERP / Inventory). Obtén tus claves API de desarrollador.</p>
                       <p><strong>2. Shop ID / Code:</strong> En tu TikTok Shop Seller Center, ve a <em>My Account</em> &gt; <em>Account Settings</em> y copia tu código de tienda.</p>
                       <p><strong>3. Access Token:</strong> En Partner Center, autoriza tu propia tienda desde <em>Authorization Management</em> para generar el token permanente.</p>
                     </div>
@@ -699,19 +699,19 @@ export default function IntegrationsSettingsPage() {
 
           {/* 4. AMAZON */}
           {(settings.ENABLE_AMAZON ?? true) && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between transition-colors">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
                       <Globe2 size={20} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900">Amazon SP-API</h3>
-                      <p className="text-xs text-slate-500">Listings Items & FBA Inventory</p>
+                      <h3 className="font-bold text-slate-900 dark:text-white">Amazon SP-API</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Listings Items & FBA Inventory</p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
                     {status?.amazon?.status === 'connected' ? 'Conectado' : 'Activo'}
                   </span>
                 </div>
@@ -719,67 +719,67 @@ export default function IntegrationsSettingsPage() {
                 <div className="space-y-3 text-xs">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">Seller ID / Merchant</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Seller ID / Merchant</label>
                       <input
                         type="text"
                         value={settings.AMAZON_SELLER_ID || ''}
                         onChange={(e) => handleInputChange('AMAZON_SELLER_ID', e.target.value)}
                         placeholder="A1ABC23XYZ"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">Marketplace ID</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Marketplace ID</label>
                       <input
                         type="text"
                         value={settings.AMAZON_MARKETPLACE_ID || 'A1AM78C64UM0Y8'}
                         onChange={(e) => handleInputChange('AMAZON_MARKETPLACE_ID', e.target.value)}
                         placeholder="A1AM78C64UM0Y8 (México)"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1">LWA Client ID</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">LWA Client ID</label>
                     <input
                       type="text"
                       value={settings.AMAZON_CLIENT_ID || ''}
                       onChange={(e) => handleInputChange('AMAZON_CLIENT_ID', e.target.value)}
                       placeholder="amzn1.application-oa2-client.xxxx"
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">LWA Client Secret</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">LWA Client Secret</label>
                       <input
                         type="password"
                         value={settings.AMAZON_CLIENT_SECRET || ''}
                         onChange={(e) => handleInputChange('AMAZON_CLIENT_SECRET', e.target.value)}
                         placeholder="••••••••"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">LWA Refresh Token</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">LWA Refresh Token</label>
                       <input
                         type="password"
                         value={settings.AMAZON_REFRESH_TOKEN || ''}
                         onChange={(e) => handleInputChange('AMAZON_REFRESH_TOKEN', e.target.value)}
                         placeholder="Atzr|••••••••"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                   </div>
 
                   {/* Mini tutorial interactivo */}
-                  <details className="mt-3 group bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-600 transition-all">
-                    <summary className="cursor-pointer font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1.5 select-none">
+                  <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
+                    <summary className="cursor-pointer font-bold text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
                       <span>¿Cómo extraer estas credenciales en Amazon Seller Central?</span>
                     </summary>
-                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 space-y-2 text-[11px] leading-relaxed text-slate-600">
-                      <p><strong>1. Seller ID:</strong> En <a href="https://sellercentral-europe.amazon.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-semibold">sellercentral-europe.amazon.com</a> &gt; <em>Settings</em> &gt; <em>Account Info</em> &gt; <em>Merchant Token</em>.</p>
+                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
+                      <p><strong>1. Seller ID:</strong> En <a href="https://sellercentral-europe.amazon.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline font-semibold">sellercentral-europe.amazon.com</a> &gt; <em>Settings</em> &gt; <em>Account Info</em> &gt; <em>Merchant Token</em>.</p>
                       <p><strong>2. LWA Client ID & Secret:</strong> En <em>Apps & Services</em> &gt; <em>Develop Apps</em>, genera las claves de Login with Amazon (LWA).</p>
                       <p><strong>3. Marketplace IDs Europa:</strong> Alemania: <code>A1PA6795UKMFR9</code>, España: <code>A1RKKUPIHCS9HS</code>, Italia: <code>APJ6JRA9NG5V4</code>, Francia: <code>A13V1IB3VIYZZH</code>, UK: <code>A1F83G8C2ARO7P</code>, México: <code>A1AM78C64UM0Y8</code>.</p>
                     </div>
@@ -791,19 +791,19 @@ export default function IntegrationsSettingsPage() {
 
           {/* 5. EBAY ALEMANIA / EUROPA (EBAY SELL INVENTORY API) */}
           {(settings.ENABLE_EBAY ?? true) && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between transition-colors">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
                       <ShoppingBag size={20} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900">eBay Alemania / Europa</h3>
-                      <p className="text-xs text-slate-500">Sell Inventory API (OAuth2)</p>
+                      <h3 className="font-bold text-slate-900 dark:text-white">eBay Alemania / Europa</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Sell Inventory API (OAuth2)</p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
                     {status?.ebay?.status === 'connected' ? 'Conectado' : 'Alemania / DE'}
                   </span>
                 </div>
@@ -814,16 +814,16 @@ export default function IntegrationsSettingsPage() {
                     type="button"
                     onClick={() => handleTestConnection('ebay')}
                     disabled={testingChannel === 'ebay'}
-                    className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition-colors cursor-pointer border border-slate-200 disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-2 px-4 rounded-xl text-xs transition-colors cursor-pointer border border-slate-200 dark:border-slate-700 disabled:opacity-50"
                   >
                     {testingChannel === 'ebay' ? (
                       <>
-                        <RefreshCw size={14} className="animate-spin text-blue-600" />
+                        <RefreshCw size={14} className="animate-spin text-blue-600 dark:text-blue-400" />
                         <span>Verificando con eBay Developer Portal...</span>
                       </>
                     ) : (
                       <>
-                        <Activity size={14} className="text-blue-600" />
+                        <Activity size={14} className="text-blue-600 dark:text-blue-400" />
                         <span>Probar Conexión en Vivo con eBay</span>
                       </>
                     )}
@@ -832,13 +832,13 @@ export default function IntegrationsSettingsPage() {
                   {testResults['ebay'] && (
                     <div className={`mt-2 p-2.5 rounded-xl text-xs flex items-start gap-2 ${
                       testResults['ebay'].success
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                        : 'bg-rose-50 text-rose-800 border border-rose-200'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60'
+                        : 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-800/60'
                     }`}>
                       {testResults['ebay'].success ? (
-                        <Check size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                        <Check size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                       ) : (
-                        <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
+                        <AlertCircle size={16} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                       )}
                       <div>
                         <p className="font-bold">{testResults['ebay'].success ? 'Conexión Exitosa' : 'Fallo de Conexión'}</p>
@@ -850,11 +850,11 @@ export default function IntegrationsSettingsPage() {
 
                 <div className="space-y-3 text-xs">
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1">eBay Marketplace</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">eBay Marketplace</label>
                     <select
                       value={settings.EBAY_MARKETPLACE_ID || 'EBAY_DE'}
                       onChange={(e) => handleInputChange('EBAY_MARKETPLACE_ID', e.target.value)}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white font-semibold cursor-pointer"
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 font-semibold cursor-pointer transition-colors"
                     >
                       <option value="EBAY_DE">🇩🇪 eBay Alemania (EBAY_DE)</option>
                       <option value="EBAY_ES">🇪🇸 eBay España (EBAY_ES)</option>
@@ -866,47 +866,47 @@ export default function IntegrationsSettingsPage() {
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1">App ID (Client ID)</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">App ID (Client ID)</label>
                     <input
                       type="text"
                       value={settings.EBAY_CLIENT_ID || ''}
                       onChange={(e) => handleInputChange('EBAY_CLIENT_ID', e.target.value)}
                       placeholder="Tu-App-ID-Production"
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">Cert ID (Client Secret)</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Cert ID (Client Secret)</label>
                       <input
                         type="password"
                         value={settings.EBAY_CLIENT_SECRET || ''}
                         onChange={(e) => handleInputChange('EBAY_CLIENT_SECRET', e.target.value)}
                         placeholder="••••••••"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-slate-600 mb-1">OAuth2 Refresh Token</label>
+                      <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">OAuth2 Refresh Token</label>
                       <input
                         type="password"
                         value={settings.EBAY_REFRESH_TOKEN || ''}
                         onChange={(e) => handleInputChange('EBAY_REFRESH_TOKEN', e.target.value)}
                         placeholder="v^1.1#i^1#••••••••"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
                   </div>
 
                   {/* Mini tutorial interactivo */}
-                  <details className="mt-3 group bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-600 transition-all">
-                    <summary className="cursor-pointer font-bold text-blue-700 hover:text-blue-800 flex items-center gap-1.5 select-none">
+                  <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
+                    <summary className="cursor-pointer font-bold text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
                       <span>¿Cómo extraer estas credenciales en eBay Developer Portal?</span>
                     </summary>
-                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 space-y-2 text-[11px] leading-relaxed text-slate-600">
-                      <p><strong>1. Portal de Desarrollador:</strong> Ingresa a <a href="https://developer.ebay.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-semibold">developer.ebay.com</a> con tu cuenta de vendedor de eBay.</p>
+                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
+                      <p><strong>1. Portal de Desarrollador:</strong> Ingresa a <a href="https://developer.ebay.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline font-semibold">developer.ebay.com</a> con tu cuenta de vendedor de eBay.</p>
                       <p><strong>2. Production Keyset:</strong> Ve a <em>Application Keys</em> y genera tu juego de llaves de Producción (App ID y Cert ID).</p>
                       <p><strong>3. User Token (OAuth2):</strong> En <em>User Tokens</em>, selecciona el ámbito <code>https://api.ebay.com/oauth/api_scope/sell.inventory</code> y autoriza tu cuenta para obtener el <strong>Refresh Token</strong> permanente.</p>
                     </div>
@@ -918,19 +918,19 @@ export default function IntegrationsSettingsPage() {
 
           {/* 6. KAUFLAND GLOBAL MARKETPLACE (ALEMANIA / DE) */}
           {(settings.ENABLE_KAUFLAND ?? true) && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between transition-colors">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 flex items-center justify-center font-bold">
                       <Store size={20} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900">Kaufland Global Marketplace</h3>
-                      <p className="text-xs text-slate-500">Seller API v2 (Alemania / Kaufland.de)</p>
+                      <h3 className="font-bold text-slate-900 dark:text-white">Kaufland Global Marketplace</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Seller API v2 (Alemania / Kaufland.de)</p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-red-50 text-red-700 border border-red-200">
+                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/60">
                     {status?.kaufland?.status === 'connected' ? 'Conectado' : 'Alemania / DE'}
                   </span>
                 </div>
@@ -941,16 +941,16 @@ export default function IntegrationsSettingsPage() {
                     type="button"
                     onClick={() => handleTestConnection('kaufland')}
                     disabled={testingChannel === 'kaufland'}
-                    className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition-colors cursor-pointer border border-slate-200 disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-2 px-4 rounded-xl text-xs transition-colors cursor-pointer border border-slate-200 dark:border-slate-700 disabled:opacity-50"
                   >
                     {testingChannel === 'kaufland' ? (
                       <>
-                        <RefreshCw size={14} className="animate-spin text-red-600" />
+                        <RefreshCw size={14} className="animate-spin text-red-600 dark:text-red-400" />
                         <span>Verificando con Kaufland Seller API...</span>
                       </>
                     ) : (
                       <>
-                        <Activity size={14} className="text-red-600" />
+                        <Activity size={14} className="text-red-600 dark:text-red-400" />
                         <span>Probar Conexión en Vivo con Kaufland</span>
                       </>
                     )}
@@ -959,13 +959,13 @@ export default function IntegrationsSettingsPage() {
                   {testResults['kaufland'] && (
                     <div className={`mt-2 p-2.5 rounded-xl text-xs flex items-start gap-2 ${
                       testResults['kaufland'].success
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                        : 'bg-rose-50 text-rose-800 border border-rose-200'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60'
+                        : 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-800/60'
                     }`}>
                       {testResults['kaufland'].success ? (
-                        <Check size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                        <Check size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                       ) : (
-                        <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
+                        <AlertCircle size={16} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                       )}
                       <div>
                         <p className="font-bold">{testResults['kaufland'].success ? 'Conexión Exitosa' : 'Fallo de Conexión'}</p>
@@ -977,11 +977,11 @@ export default function IntegrationsSettingsPage() {
 
                 <div className="space-y-3 text-xs">
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1">País / Storefront de Kaufland</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">País / Storefront de Kaufland</label>
                     <select
                       value={settings.KAUFLAND_STOREFRONT || 'de'}
                       onChange={(e) => handleInputChange('KAUFLAND_STOREFRONT', e.target.value)}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white font-semibold cursor-pointer"
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 font-semibold cursor-pointer transition-colors"
                     >
                       <option value="de">🇩🇪 Alemania (Kaufland.de)</option>
                       <option value="pl">🇵🇱 Polonia (Kaufland.pl)</option>
@@ -992,35 +992,35 @@ export default function IntegrationsSettingsPage() {
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1">Client Key de Kaufland</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Client Key de Kaufland</label>
                     <input
                       type="text"
                       value={settings.KAUFLAND_CLIENT_KEY || ''}
                       onChange={(e) => handleInputChange('KAUFLAND_CLIENT_KEY', e.target.value)}
                       placeholder="kaufland-client-key-xxxx"
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1">Secret Key de Kaufland</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Secret Key de Kaufland</label>
                     <input
                       type="password"
                       value={settings.KAUFLAND_SECRET_KEY || ''}
                       onChange={(e) => handleInputChange('KAUFLAND_SECRET_KEY', e.target.value)}
                       placeholder="••••••••"
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                     />
                   </div>
 
                   {/* Mini tutorial interactivo */}
-                  <details className="mt-3 group bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-600 transition-all">
-                    <summary className="cursor-pointer font-bold text-red-700 hover:text-red-800 flex items-center gap-1.5 select-none">
+                  <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
+                    <summary className="cursor-pointer font-bold text-red-700 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
                       <span>¿Cómo extraer estas credenciales en Kaufland Seller Portal?</span>
                     </summary>
-                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 space-y-2 text-[11px] leading-relaxed text-slate-600">
-                      <p><strong>1. Panel de Vendedor:</strong> Ingresa a <a href="https://sellerportal.kaufland.de" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-semibold">sellerportal.kaufland.de</a>.</p>
+                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
+                      <p><strong>1. Panel de Vendedor:</strong> Ingresa a <a href="https://sellerportal.kaufland.de" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline font-semibold">sellerportal.kaufland.de</a>.</p>
                       <p><strong>2. Menú de Configuración:</strong> Ve a <em>Shop-Einstellungen</em> (Configuración de la tienda) &gt; <em>API</em>.</p>
                       <p><strong>3. Generar Claves:</strong> Haz clic en <em>Neue API-Schlüssel generieren</em> para copiar tu <strong>Client Key</strong> y tu <strong>Secret Key</strong>.</p>
                     </div>
@@ -1032,40 +1032,40 @@ export default function IntegrationsSettingsPage() {
 
           {/* 7. CONTPAQi SAE (SOLO SI ENABLE_SAE ESTÁ MARCADO) */}
           {isSAEEnabled && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between transition-colors">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
                       <Database size={20} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900">CONTPAQi SAE</h3>
-                      <p className="text-xs text-slate-500">Base de datos ERP / Catálogo Local</p>
+                      <h3 className="font-bold text-slate-900 dark:text-white">CONTPAQi SAE</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Base de datos ERP / Catálogo Local</p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
                     {settings.SAE_REPOSITORY_TYPE === 'production' ? 'SQL Server' : 'Catálogo Local'}
                   </span>
                 </div>
 
                 <div className="space-y-3 text-xs">
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1">Ruta de Catálogo / Archivo SAE</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Ruta de Catálogo / Archivo SAE</label>
                     <input
                       type="text"
                       value={settings.SAE_DATA_PATH}
                       onChange={(e) => handleInputChange('SAE_DATA_PATH', e.target.value)}
                       placeholder="data/productos.json"
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1">Modo de Operación</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Modo de Operación</label>
                     <select
                       value={settings.SAE_REPOSITORY_TYPE}
                       onChange={(e) => handleInputChange('SAE_REPOSITORY_TYPE', e.target.value)}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-800 bg-slate-50 focus:bg-white"
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors cursor-pointer"
                     >
                       <option value="mock">Catálogo Local de Productos</option>
                       <option value="production">Base de Datos SQL Server en Vivo (Producción)</option>
@@ -1073,12 +1073,12 @@ export default function IntegrationsSettingsPage() {
                   </div>
 
                   {/* Mini tutorial interactivo */}
-                  <details className="mt-3 group bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-600 transition-all">
-                    <summary className="cursor-pointer font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 select-none">
+                  <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
+                    <summary className="cursor-pointer font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
                       <span>¿Cómo conectar tus productos de CONTPAQi / SAE?</span>
                     </summary>
-                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 space-y-2 text-[11px] leading-relaxed text-slate-600">
+                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
                       <p><strong>Opción 1 (Recomendada / Sin instalaciones):</strong> En tu sistema CONTPAQi / SAE ve a <em>Inventarios</em> &gt; <em>Reporte de Existencias</em> &gt; <em>Exportar a Excel</em>. Luego ve a la pantalla de <strong>Inventario</strong> en esta plataforma y súbelo con el botón <em>Importar Excel / CSV</em>.</p>
                       <p><strong>Opción 2 (SQL Server Local):</strong> Si deseas conexión automática permanente a la base de datos de tu servidor local, selecciona <em>Base de Datos SQL Server en Vivo</em> e ingresa tu cadena de conexión ODBC.</p>
                     </div>

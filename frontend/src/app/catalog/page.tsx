@@ -249,12 +249,12 @@ export default function CatalogPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 shadow-sm border border-blue-100">
+            <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 shadow-sm border border-blue-100 dark:border-blue-800/60">
               <Sparkles size={24} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Catálogo y Preparador TikTok Shop</h1>
-              <p className="text-sm text-slate-500 mt-0.5">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Catálogo y Preparador TikTok Shop</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 Inyecta especificaciones obligatorias (medidas, peso, garantía, marca) en lote sin tener que entrar producto por producto.
               </p>
             </div>
@@ -265,14 +265,14 @@ export default function CatalogPage() {
           <button
             onClick={loadProducts}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-semibold transition-colors border border-slate-200 shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-semibold transition-colors border border-slate-200 dark:border-slate-800 shadow-sm cursor-pointer"
           >
             <RefreshCw size={16} className={loading ? 'animate-spin text-blue-600' : ''} />
             <span>Recargar</span>
           </button>
           <button
             onClick={handleExportTikTokCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm cursor-pointer"
           >
             <Download size={16} />
             <span>Exportar CSV TikTok</span>
@@ -282,50 +282,50 @@ export default function CatalogPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Productos</p>
-            <h3 className="text-2xl font-bold text-slate-800 mt-1">{totalCount}</h3>
-            <p className="text-xs text-slate-500 mt-1">Catálogo de Shopify</p>
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Total Productos</p>
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mt-1">{totalCount}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Catálogo de Shopify</p>
           </div>
-          <div className="p-3 rounded-lg bg-blue-50 text-blue-600">
+          <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
             <Package size={22} />
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Listos para TikTok</p>
-            <h3 className="text-2xl font-bold text-emerald-600 mt-1">{readyCount}</h3>
-            <p className="text-xs text-slate-500 mt-1">Con medidas y peso</p>
+            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Listos para TikTok</p>
+            <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{readyCount}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Con medidas y peso</p>
           </div>
-          <div className="p-3 rounded-lg bg-emerald-50 text-emerald-600">
+          <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 size={22} />
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider">Pendientes de Medidas</p>
-            <h3 className="text-2xl font-bold text-amber-600 mt-1">{pendingCount}</h3>
-            <p className="text-xs text-slate-500 mt-1">Faltan especificaciones</p>
+            <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Pendientes de Medidas</p>
+            <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{pendingCount}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Faltan especificaciones</p>
           </div>
-          <div className="p-3 rounded-lg bg-amber-50 text-amber-600">
+          <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
             <AlertTriangle size={22} />
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Cumplimiento TikTok</p>
-              <h3 className="text-2xl font-bold text-blue-600 mt-1">{complianceRate}%</h3>
+              <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Cumplimiento TikTok</p>
+              <h3 className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">{complianceRate}%</h3>
             </div>
-            <div className="p-3 rounded-lg bg-blue-50 text-blue-600">
+            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
               <Layers size={22} />
             </div>
           </div>
-          <div className="w-full bg-slate-100 rounded-full h-2 mt-3 overflow-hidden">
+          <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 mt-3 overflow-hidden">
             <div 
               className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
               style={{ width: `${complianceRate}%` }}
@@ -335,19 +335,19 @@ export default function CatalogPage() {
       </div>
 
       {/* Bulk Action Panel */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-5">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 border-b border-slate-100 dark:border-slate-800 pb-5">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 font-bold text-sm flex items-center justify-center border border-blue-100 shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold text-sm flex items-center justify-center border border-blue-100 dark:border-blue-800/60 shadow-sm">
               {selectedIds.length}
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                 {selectedIds.length > 0 
                   ? `${selectedIds.length} producto${selectedIds.length > 1 ? 's' : ''} seleccionado${selectedIds.length > 1 ? 's' : ''} para edición en lote`
                   : 'Edición y Asignación Masiva de Especificaciones'}
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Selecciona productos en la tabla y asigna medidas, peso y garantía de un solo golpe.
               </p>
             </div>
@@ -359,26 +359,26 @@ export default function CatalogPage() {
             <button
               onClick={handleAutoFixTikTok}
               disabled={saving}
-              className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5"
+              className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Zap size={13} />
               <span>⚡ Auto-Fix TikTok (Tope 99cm)</span>
             </button>
             <button
               onClick={() => applyPreset('joyeria')}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
             >
               ✨ Joyería / Accesorios
             </button>
             <button
               onClick={() => applyPreset('ropa')}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
             >
               👕 Ropa / Textil
             </button>
             <button
               onClick={() => applyPreset('estandar')}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
             >
               📦 Caja Estándar
             </button>
@@ -388,8 +388,8 @@ export default function CatalogPage() {
         {/* Inputs Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center gap-1.5">
-              <Tag size={13} className="text-blue-600" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
+              <Tag size={13} className="text-blue-600 dark:text-blue-400" />
               Marca / Vendor
             </label>
             <input
@@ -397,13 +397,13 @@ export default function CatalogPage() {
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
               placeholder="ej. Haros"
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center gap-1.5">
-              <Scale size={13} className="text-blue-600" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
+              <Scale size={13} className="text-blue-600 dark:text-blue-400" />
               Peso (gramos)
             </label>
             <input
@@ -411,13 +411,13 @@ export default function CatalogPage() {
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
               placeholder="ej. 150"
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center gap-1.5">
-              <Box size={13} className="text-blue-600" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
+              <Box size={13} className="text-blue-600 dark:text-blue-400" />
               Largo (cm)
             </label>
             <input
@@ -425,13 +425,13 @@ export default function CatalogPage() {
               value={length}
               onChange={(e) => setLength(e.target.value)}
               placeholder="ej. 15"
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center gap-1.5">
-              <Box size={13} className="text-blue-600" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
+              <Box size={13} className="text-blue-600 dark:text-blue-400" />
               Ancho (cm)
             </label>
             <input
@@ -439,13 +439,13 @@ export default function CatalogPage() {
               value={width}
               onChange={(e) => setWidth(e.target.value)}
               placeholder="ej. 10"
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center gap-1.5">
-              <Box size={13} className="text-blue-600" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
+              <Box size={13} className="text-blue-600 dark:text-blue-400" />
               Alto (cm)
             </label>
             <input
@@ -453,13 +453,13 @@ export default function CatalogPage() {
               value={height}
               onChange={(e) => setHeight(e.target.value)}
               placeholder="ej. 3"
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center gap-1.5">
-              <ShieldCheck size={13} className="text-blue-600" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
+              <ShieldCheck size={13} className="text-blue-600 dark:text-blue-400" />
               Garantía
             </label>
             <input
@@ -467,15 +467,15 @@ export default function CatalogPage() {
               value={warrantyPeriod}
               onChange={(e) => setWarrantyPeriod(e.target.value)}
               placeholder="ej. 30 días"
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-colors"
             />
           </div>
         </div>
 
         {/* Action Button Row */}
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <Info size={15} className="text-blue-600" />
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <Info size={15} className="text-blue-600 dark:text-blue-400" />
             <span>Al aplicar, se actualizarán las variantes en Shopify y se inyectarán los campos requeridos por TikTok Shop.</span>
           </div>
 
@@ -484,8 +484,8 @@ export default function CatalogPage() {
             disabled={saving || selectedIds.length === 0}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               selectedIds.length === 0
-                ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 active:scale-98'
+                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700'
+                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 active:scale-98 cursor-pointer'
             }`}
           >
             {saving ? (
@@ -512,37 +512,37 @@ export default function CatalogPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar por título, SKU o marca..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 shadow-sm focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={() => setStatusFilter('all')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
               statusFilter === 'all'
                 ? 'bg-blue-600 text-white shadow-sm'
-                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             Todos ({totalCount})
           </button>
           <button
             onClick={() => setStatusFilter('ready')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
               statusFilter === 'ready'
                 ? 'bg-emerald-600 text-white shadow-sm'
-                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             Listos ({readyCount})
           </button>
           <button
             onClick={() => setStatusFilter('pending')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
               statusFilter === 'pending'
                 ? 'bg-amber-600 text-white shadow-sm'
-                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             Pendientes ({pendingCount})
@@ -551,11 +551,11 @@ export default function CatalogPage() {
       </div>
 
       {/* Products Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50 text-slate-400 text-xs font-bold uppercase tracking-wider font-mono">
+              <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-400 text-xs font-bold uppercase tracking-wider font-mono">
                 <th className="p-4 w-12 text-center">
                   <input
                     type="checkbox"
@@ -573,20 +573,20 @@ export default function CatalogPage() {
                 <th className="py-4 px-4 font-semibold text-center">Estado TikTok</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">
-                    <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-blue-600" />
+                    <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-blue-600 dark:text-blue-400" />
                     <span className="text-sm">Cargando catálogo de productos...</span>
                   </td>
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">
-                    <Package size={32} className="mx-auto mb-2 text-slate-300" />
-                    <p className="text-sm font-semibold text-slate-700">Catálogo Vacío</p>
-                    <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                    <Package size={32} className="mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Catálogo Vacío</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">
                       No hay productos registrados aún. Conecta tu tienda Shopify en Configuración para sincronizar tus productos reales.
                     </p>
                   </td>
@@ -609,8 +609,8 @@ export default function CatalogPage() {
                   return (
                     <tr 
                       key={p.id}
-                      className={`hover:bg-slate-50/80 transition-colors ${
-                        isSelected ? 'bg-blue-50/40' : ''
+                      className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
+                        isSelected ? 'bg-blue-50/40 dark:bg-blue-950/30' : ''
                       }`}
                     >
                       <td className="p-4 text-center">
@@ -618,7 +618,7 @@ export default function CatalogPage() {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleToggleSelect(p.id)}
-                          className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 cursor-pointer"
                         />
                       </td>
 
@@ -628,18 +628,18 @@ export default function CatalogPage() {
                             <img
                               src={p.image_url}
                               alt={cleanTitle}
-                              className="w-10 h-10 rounded-lg object-cover bg-slate-100 border border-slate-200"
+                              className="w-10 h-10 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+                            <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400">
                               <Package size={18} />
                             </div>
                           )}
                           <div className="max-w-xs sm:max-w-md truncate">
-                            <p className="font-semibold text-slate-900 truncate text-sm">{cleanTitle}</p>
+                            <p className="font-semibold text-slate-900 dark:text-white truncate text-sm">{cleanTitle}</p>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               {p.tags.slice(0, 2).map((t, idx) => (
-                                <span key={idx} className="text-[10px] bg-slate-100 text-slate-500 font-medium px-1.5 py-0.5 rounded border border-slate-200">
+                                <span key={idx} className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                                   {t}
                                 </span>
                               ))}
@@ -649,40 +649,40 @@ export default function CatalogPage() {
                       </td>
 
                       <td className="py-4 px-4">
-                        <p className="text-xs font-mono font-semibold text-slate-800">{sku}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">{price}</p>
+                        <p className="text-xs font-mono font-semibold text-slate-800 dark:text-slate-200">{sku}</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{price}</p>
                       </td>
 
                       <td className="py-4 px-4">
-                        <span className="text-xs text-slate-700 font-medium">{p.vendor || 'Haros'}</span>
+                        <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">{p.vendor || 'Haros'}</span>
                       </td>
 
                       <td className="py-4 px-4">
-                        <span className={`text-xs font-medium ${p.weight && p.weight > 0 ? 'text-slate-800' : 'text-amber-600 font-semibold'}`}>
+                        <span className={`text-xs font-medium ${p.weight && p.weight > 0 ? 'text-slate-800 dark:text-slate-200' : 'text-amber-600 dark:text-amber-400 font-semibold'}`}>
                           {weightDisplay}
                         </span>
                       </td>
 
                       <td className="py-4 px-4">
-                        <span className={`text-xs font-medium ${dimensions !== '--' ? 'text-slate-800' : 'text-amber-600 font-semibold'}`}>
+                        <span className={`text-xs font-medium ${dimensions !== '--' ? 'text-slate-800 dark:text-slate-200' : 'text-amber-600 dark:text-amber-400 font-semibold'}`}>
                           {dimensions}
                         </span>
                       </td>
 
                       <td className="py-4 px-4">
-                        <span className="text-xs text-slate-600 truncate max-w-[140px] block" title={p.warranty || ''}>
+                        <span className="text-xs text-slate-600 dark:text-slate-400 truncate max-w-[140px] block" title={p.warranty || ''}>
                           {p.warranty || '--'}
                         </span>
                       </td>
 
                       <td className="py-4 px-4 text-center">
                         {p.tiktok_ready ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                             <CheckCircle2 size={13} />
                             Listo
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
                             <AlertTriangle size={13} />
                             Faltan datos
                           </span>
