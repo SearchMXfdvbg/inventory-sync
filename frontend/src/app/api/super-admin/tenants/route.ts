@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAllTenants, updateTenantStatus, deleteTenant, registerNewUser } from '@/lib/authStore';
+import { getAllTenants, updateTenantStatus, deleteTenant, registerNewUser, syncTenantsBatch } from '@/lib/authStore';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -12,27 +12,38 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+
+    // Check if it's a batch sync from client
+    if (body.action === 'sync' && Array.isArray(body.tenants)) {
+      const syncedList = syncTenantsBatch(body.tenants);
+      return NextResponse.json({ success: true, tenants: syncedList });
+    }
+
     const username = body.name || body.owner || `cliente_${Date.now().toString().slice(-4)}`;
     const email = body.email || `${username.toLowerCase().replace(/\s+/g, '_')}@empresa.com`;
     const password = body.password || 'ClienteSeguro2026#';
+    const plan = body.plan || 'Plan Básico (<200 SKUs)';
+    const maxSkus = body.maxSkus || 200;
+    const commission_rate = body.commission_rate || '25%';
+    const channels = body.channels || ['Shopify', 'Mercado Libre'];
 
-    const newUser = registerNewUser(username, password, email, 'empresa-a');
+    const newUser = registerNewUser(username, password, email, 'empresa-a', plan, maxSkus, commission_rate, channels);
     const newTenant = {
       id: `TNT-${newUser.id.toString().padStart(3, '0')}`,
       name: newUser.username,
       owner: body.owner || newUser.username,
       email: newUser.email,
-      plan: body.plan || 'Plan Básico (<200 SKUs)',
-      maxSkus: body.maxSkus || 200,
+      plan: newUser.plan || plan,
+      maxSkus: newUser.maxSkus || maxSkus,
       activeSkus: 0,
-      channels: body.channels || ['Shopify', 'Mercado Libre'],
-      status: 'ACTIVE' as const,
-      commission_rate: body.commission_rate || '25%',
+      channels: newUser.channels || channels,
+      status: (newUser.is_active ? 'ACTIVE' : 'SUSPENDED') as 'ACTIVE' | 'SUSPENDED',
+      commission_rate: newUser.commission_rate || commission_rate,
       created_at: newUser.created_at,
       last_sync: 'En Línea'
     };
 
-    return NextResponse.json({ success: true, tenant: newTenant });
+    return NextResponse.json({ success: true, tenant: newTenant, all: getAllTenants() });
   } catch (err: any) {
     return NextResponse.json({ detail: err.message || 'Error al crear perfil de cliente' }, { status: 400 });
   }
@@ -69,4 +80,5 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ detail: 'Error al eliminar cliente' }, { status: 500 });
   }
 }
+
 

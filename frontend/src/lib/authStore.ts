@@ -1,5 +1,8 @@
 // src/lib/authStore.ts
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 export interface UserRecord {
   id: number;
@@ -11,6 +14,25 @@ export interface UserRecord {
   tenant_id: string;
   created_at: string;
   is_active: boolean;
+  plan?: string;
+  maxSkus?: number;
+  commission_rate?: string;
+  channels?: string[];
+}
+
+export interface TenantInfo {
+  id: string;
+  name: string;
+  owner: string;
+  email: string;
+  plan: string;
+  maxSkus: number;
+  activeSkus: number;
+  channels: string[];
+  status: 'ACTIVE' | 'SUSPENDED';
+  commission_rate: string;
+  created_at: string;
+  last_sync: string;
 }
 
 function hashPassword(password: string, salt: string): string {
@@ -29,12 +51,10 @@ function createSalt(): string {
   }
 }
 
-// Base de datos de usuarios persistente en memoria del servidor
-const cristSalt = createSalt();
-const registeredUsers: Map<string, UserRecord> = new Map();
+const STORAGE_FILE = path.join(os.tmpdir(), 'inventory_sync_users_registry.json');
 
-// Usuario Super Administrador oficial
-registeredUsers.set('cristadmin', {
+const cristSalt = createSalt();
+const defaultSuperAdmin: UserRecord = {
   id: 999,
   username: 'CristAdmin',
   email: 'cristadmin@inventorysync.io',
@@ -44,9 +64,46 @@ registeredUsers.set('cristadmin', {
   tenant_id: 'global-master',
   created_at: '2026-09-01T00:00:00Z',
   is_active: true
-});
+};
+
+function readPersistedUsers(): Map<string, UserRecord> {
+  const map = new Map<string, UserRecord>();
+  map.set('cristadmin', defaultSuperAdmin);
+
+  try {
+    if (fs.existsSync(STORAGE_FILE)) {
+      const data = fs.readFileSync(STORAGE_FILE, 'utf-8');
+      const parsed: Record<string, UserRecord> = JSON.parse(data);
+      Object.keys(parsed).forEach((key) => {
+        if (key.toLowerCase() !== 'cristadmin') {
+          map.set(key.toLowerCase(), parsed[key]);
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('[authStore] Error al leer archivo persistido:', err);
+  }
+
+  return map;
+}
+
+function savePersistedUsers(map: Map<string, UserRecord>) {
+  try {
+    const obj: Record<string, UserRecord> = {};
+    map.forEach((val, key) => {
+      obj[key] = val;
+    });
+    fs.writeFileSync(STORAGE_FILE, JSON.stringify(obj, null, 2), 'utf-8');
+  } catch (err) {
+    console.warn('[authStore] Error al guardar archivo persistido:', err);
+  }
+}
+
+// In-memory + persisted store
+let registeredUsers: Map<string, UserRecord> = readPersistedUsers();
 
 export function findUserByUsername(username: string): UserRecord | undefined {
+  registeredUsers = readPersistedUsers();
   return registeredUsers.get(username.trim().toLowerCase());
 }
 
@@ -54,11 +111,25 @@ export function registerNewUser(
   username: string,
   password: string,
   email: string,
-  tenant_id: string = 'empresa-a'
+  tenant_id: string = 'empresa-a',
+  plan: string = 'Plan Básico (<200 SKUs)',
+  maxSkus: number = 200,
+  commission_rate: string = '25%',
+  channels: string[] = ['Shopify', 'Mercado Libre']
 ): UserRecord {
+  registeredUsers = readPersistedUsers();
   const cleanUsername = username.trim().toLowerCase();
-  if (registeredUsers.has(cleanUsername)) {
-    throw new Error('El nombre de usuario ya se encuentra registrado.');
+  
+  if (registeredUsers.has(cleanUsername) && cleanUsername !== 'cristadmin') {
+    const existing = registeredUsers.get(cleanUsername)!;
+    const salt = createSalt();
+    existing.passwordHash = hashPassword(password, salt);
+    existing.salt = salt;
+    existing.email = email.trim().toLowerCase();
+    existing.is_active = true;
+    registeredUsers.set(cleanUsername, existing);
+    savePersistedUsers(registeredUsers);
+    return existing;
   }
 
   const salt = createSalt();
@@ -71,10 +142,15 @@ export function registerNewUser(
     role: 'CLIENT_ADMIN',
     tenant_id,
     created_at: new Date().toISOString(),
-    is_active: true
+    is_active: true,
+    plan,
+    maxSkus,
+    commission_rate,
+    channels
   };
 
   registeredUsers.set(cleanUsername, newUser);
+  savePersistedUsers(registeredUsers);
   return newUser;
 }
 
@@ -96,23 +172,10 @@ export function verifyUserCredentials(username: string, password: string): UserR
   return null;
 }
 
-export interface TenantInfo {
-  id: string;
-  name: string;
-  owner: string;
-  email: string;
-  plan: string;
-  maxSkus: number;
-  activeSkus: number;
-  channels: string[];
-  status: 'ACTIVE' | 'SUSPENDED';
-  commission_rate: string;
-  created_at: string;
-  last_sync: string;
-}
-
 export function getAllTenants(): TenantInfo[] {
+  registeredUsers = readPersistedUsers();
   const list: TenantInfo[] = [];
+
   registeredUsers.forEach((user) => {
     if (user.role !== 'SUPER_ADMIN') {
       list.push({
@@ -120,22 +183,55 @@ export function getAllTenants(): TenantInfo[] {
         name: user.username,
         owner: user.username,
         email: user.email,
-        plan: 'Plan Básico (<200 SKUs)',
-        maxSkus: 200,
+        plan: user.plan || 'Plan Básico (<200 SKUs)',
+        maxSkus: user.maxSkus || 200,
         activeSkus: 0,
-        channels: ['Shopify', 'Mercado Libre'],
+        channels: user.channels || ['Shopify', 'Mercado Libre'],
         status: user.is_active ? 'ACTIVE' : 'SUSPENDED',
-        commission_rate: '25%',
+        commission_rate: user.commission_rate || '25%',
         created_at: user.created_at,
         last_sync: 'En Línea'
       });
     }
   });
+
   return list;
 }
 
+export function syncTenantsBatch(tenants: TenantInfo[]): TenantInfo[] {
+  registeredUsers = readPersistedUsers();
+  if (Array.isArray(tenants)) {
+    tenants.forEach((t) => {
+      const clean = (t.name || t.owner || '').trim().toLowerCase();
+      if (clean && !registeredUsers.has(clean) && clean !== 'cristadmin') {
+        const salt = createSalt();
+        const newUser: UserRecord = {
+          id: registeredUsers.size + 1,
+          username: (t.name || t.owner).trim(),
+          email: t.email?.trim().toLowerCase() || `${clean}@empresa.com`,
+          salt,
+          passwordHash: hashPassword('ClienteSeguro2026#', salt),
+          role: 'CLIENT_ADMIN',
+          tenant_id: 'empresa-a',
+          created_at: t.created_at || new Date().toISOString(),
+          is_active: t.status === 'ACTIVE',
+          plan: t.plan || 'Plan Básico (<200 SKUs)',
+          maxSkus: t.maxSkus || 200,
+          commission_rate: t.commission_rate || '25%',
+          channels: t.channels || ['Shopify', 'Mercado Libre']
+        };
+        registeredUsers.set(clean, newUser);
+      }
+    });
+    savePersistedUsers(registeredUsers);
+  }
+  return getAllTenants();
+}
+
 export function updateTenantStatus(idOrUsername: string, status: 'ACTIVE' | 'SUSPENDED'): boolean {
+  registeredUsers = readPersistedUsers();
   let found = false;
+
   registeredUsers.forEach((user, key) => {
     if (user.role !== 'SUPER_ADMIN') {
       if (`TNT-${user.id.toString().padStart(3, '0')}` === idOrUsername || user.username.toLowerCase() === idOrUsername.toLowerCase()) {
@@ -145,11 +241,17 @@ export function updateTenantStatus(idOrUsername: string, status: 'ACTIVE' | 'SUS
       }
     }
   });
+
+  if (found) {
+    savePersistedUsers(registeredUsers);
+  }
   return found;
 }
 
 export function deleteTenant(idOrUsername: string): boolean {
+  registeredUsers = readPersistedUsers();
   let toDeleteKey: string | null = null;
+
   registeredUsers.forEach((user, key) => {
     if (user.role !== 'SUPER_ADMIN') {
       if (`TNT-${user.id.toString().padStart(3, '0')}` === idOrUsername || user.username.toLowerCase() === idOrUsername.toLowerCase()) {
@@ -157,8 +259,10 @@ export function deleteTenant(idOrUsername: string): boolean {
       }
     }
   });
+
   if (toDeleteKey) {
     registeredUsers.delete(toDeleteKey);
+    savePersistedUsers(registeredUsers);
     return true;
   }
   return false;

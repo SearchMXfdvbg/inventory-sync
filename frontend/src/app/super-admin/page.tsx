@@ -94,11 +94,55 @@ export default function SuperAdminPage() {
   const loadData = async () => {
     try {
       setLoading(true);
+
+      // 1. Read local storage cache first
+      let localTenants: Tenant[] = [];
+      if (typeof window !== 'undefined') {
+        try {
+          const stored = localStorage.getItem('inventory_sync_tenants_v2');
+          if (stored) {
+            localTenants = JSON.parse(stored);
+          }
+        } catch {}
+      }
+
+      // 2. Fetch server tenants
       const [tenantsRes, configRes] = await Promise.all([
         fetch('/api/super-admin/tenants').then(r => r.json()).catch(() => []),
         fetch('/api/super-admin/system').then(r => r.json()).catch(() => null)
       ]);
-      setTenants(Array.isArray(tenantsRes) ? tenantsRes : []);
+
+      const serverList: Tenant[] = Array.isArray(tenantsRes) ? tenantsRes : [];
+
+      // 3. Merge uniquely by username / name
+      const tenantMap = new Map<string, Tenant>();
+      serverList.forEach(t => {
+        if (t.name?.toLowerCase() !== 'cristadmin') {
+          tenantMap.set(t.name.toLowerCase(), t);
+        }
+      });
+      localTenants.forEach(t => {
+        if (t.name?.toLowerCase() !== 'cristadmin' && !tenantMap.has(t.name.toLowerCase())) {
+          tenantMap.set(t.name.toLowerCase(), t);
+        }
+      });
+
+      const mergedTenants = Array.from(tenantMap.values());
+
+      // 4. If we have local tenants not yet synced to the server, push them
+      if (mergedTenants.length > serverList.length) {
+        fetch('/api/super-admin/tenants', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'sync', tenants: mergedTenants })
+        }).catch(() => {});
+      }
+
+      // 5. Save back to localStorage and update state
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(mergedTenants));
+      }
+      setTenants(mergedTenants);
       setSystemConfig(configRes);
     } catch (e) {
       console.error(e);
@@ -115,7 +159,30 @@ export default function SuperAdminPage() {
     }
 
     try {
-      const res = await fetch('/api/super-admin/tenants', {
+      const newTenantObj: Tenant = {
+        id: `TNT-${(tenants.length + 1).toString().padStart(3, '0')}`,
+        name: newClientName.trim(),
+        owner: newClientOwner.trim() || newClientName.trim(),
+        email: newClientEmail.trim(),
+        plan: newClientPlan,
+        maxSkus: Number(newClientMaxSkus),
+        activeSkus: 0,
+        channels: selectedChannels,
+        status: 'ACTIVE',
+        commission_rate: newClientCommission,
+        created_at: new Date().toISOString(),
+        last_sync: 'En Línea'
+      };
+
+      // Add to local state and localStorage immediately
+      const updatedList = [newTenantObj, ...tenants.filter(t => t.name.toLowerCase() !== newTenantObj.name.toLowerCase())];
+      setTenants(updatedList);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(updatedList));
+      }
+
+      // Send to server
+      await fetch('/api/super-admin/tenants', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -128,14 +195,13 @@ export default function SuperAdminPage() {
           channels: selectedChannels
         })
       });
-      if (res.ok) {
-        showToast('¡Perfil de cliente empresarial creado exitosamente!');
-        setIsModalOpen(false);
-        setNewClientName('');
-        setNewClientOwner('');
-        setNewClientEmail('');
-        loadData();
-      }
+
+      showToast('¡Perfil de cliente empresarial creado exitosamente!');
+      setIsModalOpen(false);
+      setNewClientName('');
+      setNewClientOwner('');
+      setNewClientEmail('');
+      loadData();
     } catch (err) {
       showToast('Error al crear perfil');
     }
@@ -143,16 +209,19 @@ export default function SuperAdminPage() {
 
   const toggleTenantStatus = async (id: string, currentStatus: string) => {
     const nextStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    const updatedList = tenants.map(t => t.id === id ? { ...t, status: nextStatus as 'ACTIVE' | 'SUSPENDED' } : t);
+    setTenants(updatedList);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(updatedList));
+    }
+
     try {
-      const res = await fetch('/api/super-admin/tenants', {
+      await fetch('/api/super-admin/tenants', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: nextStatus })
       });
-      if (res.ok) {
-        showToast(`Estado de cuenta actualizado a: ${nextStatus}`);
-        loadData();
-      }
+      showToast(`Estado de cuenta actualizado a: ${nextStatus}`);
     } catch (err) {
       showToast('Error al actualizar');
     }
@@ -160,12 +229,15 @@ export default function SuperAdminPage() {
 
   const handleDeleteTenant = async (id: string) => {
     if (!confirm('¿Está seguro de eliminar este perfil de cliente y revocar todas sus conexiones?')) return;
+    const updatedList = tenants.filter(t => t.id !== id);
+    setTenants(updatedList);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(updatedList));
+    }
+
     try {
-      const res = await fetch(`/api/super-admin/tenants?id=${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        showToast('Perfil de cliente eliminado');
-        loadData();
-      }
+      await fetch(`/api/super-admin/tenants?id=${id}`, { method: 'DELETE' });
+      showToast('Perfil de cliente eliminado');
     } catch (err) {
       showToast('Error al eliminar');
     }

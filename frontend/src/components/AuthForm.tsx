@@ -68,11 +68,35 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
 
       try {
         setLoading(true);
-        await register(username.trim(), password, email.trim(), 'empresa-a');
+        const regRes = await register(username.trim(), password, email.trim(), 'empresa-a');
         setSuccess('¡Cuenta empresarial creada con éxito! Redirigiendo...');
         setDemoMode(false);
         setTenantId('empresa-a');
         localStorage.setItem('logged_in', 'true');
+
+        try {
+          const stored = localStorage.getItem('inventory_sync_tenants_v2');
+          const list = stored ? JSON.parse(stored) : [];
+          const exists = list.some((item: any) => item.name?.toLowerCase() === username.trim().toLowerCase());
+          if (!exists && username.trim().toLowerCase() !== 'cristadmin') {
+            list.push({
+              id: `TNT-${(list.length + 1).toString().padStart(3, '0')}`,
+              name: username.trim(),
+              owner: username.trim(),
+              email: email.trim(),
+              plan: 'Plan Básico (<200 SKUs)',
+              maxSkus: 200,
+              activeSkus: 0,
+              channels: ['Shopify', 'Mercado Libre'],
+              status: 'ACTIVE',
+              commission_rate: '25%',
+              created_at: new Date().toISOString(),
+              last_sync: 'En Línea'
+            });
+            localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(list));
+          }
+        } catch {}
+
         setTimeout(() => {
           window.location.href = '/dashboard';
         }, 500);

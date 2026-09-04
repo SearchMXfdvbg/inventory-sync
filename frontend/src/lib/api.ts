@@ -271,13 +271,39 @@ export const register = async (
   }
 
   const data: RegisterResponse = await response.json();
-  if (data.access_token && typeof window !== 'undefined') {
-    localStorage.setItem('auth_token', data.access_token);
-    localStorage.setItem('logged_in', 'true');
-    localStorage.setItem('user_session', JSON.stringify(data.user || { username: cleanUsername, email }));
+  if (typeof window !== 'undefined') {
+    if (data.access_token) {
+      localStorage.setItem('auth_token', data.access_token);
+      localStorage.setItem('logged_in', 'true');
+      localStorage.setItem('user_session', JSON.stringify(data.user || { username: cleanUsername, email }));
+    }
+
+    try {
+      const stored = localStorage.getItem('inventory_sync_tenants_v2');
+      const list = stored ? JSON.parse(stored) : [];
+      const exists = list.some((item: any) => item.name?.toLowerCase() === cleanUsername.toLowerCase());
+      if (!exists && cleanUsername.toLowerCase() !== 'cristadmin') {
+        list.push({
+          id: `TNT-${(list.length + 1).toString().padStart(3, '0')}`,
+          name: cleanUsername,
+          owner: cleanUsername,
+          email: email.trim(),
+          plan: 'Plan Básico (<200 SKUs)',
+          maxSkus: 200,
+          activeSkus: 0,
+          channels: ['Shopify', 'Mercado Libre'],
+          status: 'ACTIVE',
+          commission_rate: '25%',
+          created_at: new Date().toISOString(),
+          last_sync: 'En Línea'
+        });
+        localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(list));
+      }
+    } catch {}
   }
   return data;
 };
+
 
 export interface VerifyCodeResponse {
   message: string;
