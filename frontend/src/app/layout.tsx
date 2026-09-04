@@ -196,26 +196,32 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 transition-colors" suppressHydrationWarning>
-        {showAppChrome ? (
-          isRestrictedClient ? (
-            <AccessGate user={currentUser!} onRefresh={() => setMounted(false)} />
-          ) : (
-            <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950">
-              <Sidebar />
-
-              <div className="flex-1 flex flex-col pl-64 bg-slate-50 dark:bg-slate-950 min-h-screen">
-                <Topbar title={topbarTitle} />
-
-                <main className="flex-1 p-8 pt-24 min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
-                  {children}
-                </main>
-              </div>
-            </div>
-          )
-        ) : (
+        {isPublicPage ? (
           <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
             {children}
           </main>
+        ) : !mounted ? (
+          <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+          </div>
+        ) : !isAuthenticated ? (
+          <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+          </div>
+        ) : isRestrictedClient ? (
+          <AccessGate user={currentUser!} onRefresh={() => setMounted(false)} />
+        ) : (
+          <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950">
+            <Sidebar />
+
+            <div className="flex-1 flex flex-col pl-64 bg-slate-50 dark:bg-slate-950 min-h-screen">
+              <Topbar title={topbarTitle} />
+
+              <main className="flex-1 p-8 pt-24 min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
+                {children}
+              </main>
+            </div>
+          </div>
         )}
       </body>
     </html>

@@ -14,11 +14,13 @@ import {
 import { getInventory, getSales, Product, Venta, isDemoMode } from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
+import AccessGate from '@/components/AccessGate';
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Venta[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [stats, setStats] = useState({
     totalStock: 0,
     lowStockCount: 0,
@@ -34,6 +36,35 @@ export default function DashboardPage() {
         window.location.href = '/login';
         return;
       }
+
+      try {
+        const session = localStorage.getItem('user_session');
+        if (session) {
+          const u = JSON.parse(session);
+          let plan = u.plan || 'Plan Guest';
+          let active = u.is_active ?? true;
+          let reason = u.suspension_reason || '';
+
+          const stored = localStorage.getItem('inventory_sync_tenants_v2');
+          if (stored && u.username) {
+            const list = JSON.parse(stored);
+            const found = list.find((t: any) => t.name?.toLowerCase() === u.username.toLowerCase());
+            if (found) {
+              plan = found.plan || plan;
+              active = found.status === 'ACTIVE';
+              reason = found.suspension_reason || reason;
+            }
+          }
+
+          setCurrentUser({
+            username: u.username,
+            role: u.role || 'CLIENT_ADMIN',
+            plan: u.username?.toLowerCase() === 'cristadmin' ? 'Enterprise (39,000 SKUs)' : plan,
+            is_active: u.username?.toLowerCase() === 'cristadmin' ? true : active,
+            suspension_reason: reason
+          });
+        }
+      } catch {}
     }
 
     const fetchData = async () => {
@@ -72,6 +103,10 @@ export default function DashboardPage() {
 
     fetchData();
   }, []);
+
+  if (currentUser && currentUser.username.toLowerCase() !== 'cristadmin' && (currentUser.is_active === false || currentUser.plan === 'Plan Guest' || currentUser.plan?.toLowerCase().includes('guest'))) {
+    return <AccessGate user={currentUser} />;
+  }
 
   if (loading) {
     return (
