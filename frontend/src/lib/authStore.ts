@@ -81,7 +81,7 @@ export function verifyUserCredentials(username: string, password: string): UserR
   }
 
   const computedHash = hashPassword(password, user.salt);
-  if (crypto.timingSafeEqual(Buffer.from(computedHash), Buffer.from(user.passwordHash))) {
+  if (computedHash === user.passwordHash) {
     return user;
   }
 
