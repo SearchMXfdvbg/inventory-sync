@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { findUserByUsername, verifyUserCredentials } from '@/lib/authStore';
 
 export async function POST(request: Request) {
   try {
@@ -7,55 +8,56 @@ export async function POST(request: Request) {
 
     if (!username || !password) {
       return NextResponse.json(
-        { detail: 'Usuario y contraseña requeridos' },
+        { detail: 'Por favor, ingrese su usuario y contraseña.' },
         { status: 400 }
       );
     }
 
     const cleanUser = username.trim();
 
-    // Verificación de Super Administrador
-    if (cleanUser.toLowerCase() === 'cristadmin') {
-      if (password !== 'ROAC060718#') {
+    // 1. Verificar si el usuario existe
+    const existingUser = findUserByUsername(cleanUser);
+    if (!existingUser) {
+      return NextResponse.json(
+        { detail: 'Usuario no registrado. Debe crear una cuenta antes de iniciar sesión.' },
+        { status: 401 }
+      );
+    }
+
+    // 2. Verificar contraseña con hash criptográfico
+    try {
+      const validUser = verifyUserCredentials(cleanUser, password);
+      if (!validUser) {
         return NextResponse.json(
-          { detail: 'Credenciales de Super Administrador inválidas.' },
+          { detail: 'Contraseña incorrecta. Verifique sus credenciales.' },
           { status: 401 }
         );
       }
 
-      const token = `jwt_superadmin_${Buffer.from(cleanUser + ':' + Date.now()).toString('base64')}`;
+      // Token firmado
+      const token = `jwt_${validUser.role.toLowerCase()}_${Buffer.from(validUser.username + ':' + Date.now()).toString('base64')}`;
+
       return NextResponse.json({
         access_token: token,
         token_type: 'bearer',
         user: {
-          id: 999,
-          username: 'CristAdmin',
-          email: 'cristadmin@inventorysync.io',
-          role: 'SUPER_ADMIN',
-          tenant_id: 'global-master',
-          is_active: true
+          id: validUser.id,
+          username: validUser.username,
+          email: validUser.email,
+          role: validUser.role,
+          tenant_id: validUser.tenant_id,
+          is_active: validUser.is_active
         }
       });
+    } catch (authErr: any) {
+      return NextResponse.json(
+        { detail: authErr.message || 'Error de autenticación' },
+        { status: 403 }
+      );
     }
-
-    // Token seguro para usuarios y clientes comerciales
-    const token = `jwt_is_eu_${Buffer.from(cleanUser + ':' + Date.now()).toString('base64')}`;
-
-    return NextResponse.json({
-      access_token: token,
-      token_type: 'bearer',
-      user: {
-        id: 1,
-        username: cleanUser,
-        email: `${cleanUser}@enterprise.io`,
-        role: 'CLIENT_ADMIN',
-        tenant_id: `tenant_${cleanUser.toLowerCase()}`,
-        is_active: true
-      }
-    });
   } catch (err: any) {
     return NextResponse.json(
-      { detail: 'Error al procesar la autenticación' },
+      { detail: 'Error al procesar la solicitud de autenticación' },
       { status: 500 }
     );
   }

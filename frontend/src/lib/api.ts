@@ -201,40 +201,33 @@ export interface LoginResponse {
 }
 
 export const login = async (username: string, password: string): Promise<LoginResponse> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Tenant-ID': getTenantId(),
-      },
-      body: JSON.stringify({ username, password }),
-    });
+  const cleanUsername = username.trim();
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Tenant-ID': getTenantId(),
+    },
+    body: JSON.stringify({ username: cleanUsername, password }),
+  });
 
-    if (response.ok) {
-      const data: LoginResponse = await response.json();
-      const token = data.access_token || (data as any).token;
-      if (token && typeof window !== 'undefined') {
-        localStorage.setItem('auth_token', token);
-      }
-      return data;
-    }
-  } catch (err) {
-    console.warn('Backend offline o inaccesible desde la nube, iniciando sesión empresarial local:', err);
+  if (!response.ok) {
+    let errorDetail = 'Credenciales inválidas. Verifique su usuario y contraseña.';
+    try {
+      const errJson = await response.json();
+      if (errJson.detail) errorDetail = errJson.detail;
+    } catch {}
+    throw new Error(errorDetail);
   }
 
-  // Fallback garantizado para demostración en Vercel
-  const token = 'bearer_token_eu_' + Date.now();
-  if (typeof window !== 'undefined') {
+  const data: LoginResponse = await response.json();
+  const token = data.access_token || (data as any).token;
+  if (token && typeof window !== 'undefined') {
     localStorage.setItem('auth_token', token);
     localStorage.setItem('logged_in', 'true');
-    localStorage.setItem('user_session', JSON.stringify({ username, email: `${username}@enterprise.de` }));
+    localStorage.setItem('user_session', JSON.stringify(data.user || { username: cleanUsername }));
   }
-  return {
-    access_token: token,
-    token_type: 'bearer',
-    user: { username, email: `${username}@enterprise.de`, role: 'admin' }
-  };
+  return data;
 };
 
 export interface RegisterResponse {
@@ -253,46 +246,37 @@ export const register = async (
   email: string,
   tenant_id: string = 'empresa-a'
 ): Promise<RegisterResponse> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Tenant-ID': tenant_id,
-      },
-      body: JSON.stringify({
-        username: username.trim(),
-        password,
-        email: email.trim(),
-        tenant_id,
-      }),
-    });
+  const cleanUsername = username.trim();
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Tenant-ID': tenant_id,
+    },
+    body: JSON.stringify({
+      username: cleanUsername,
+      password,
+      email: email.trim(),
+      tenant_id,
+    }),
+  });
 
-    if (response.ok) {
-      const data: RegisterResponse = await response.json();
-      if (data.access_token && typeof window !== 'undefined') {
-        localStorage.setItem('auth_token', data.access_token);
-      }
-      return data;
-    }
-  } catch (err) {
-    console.warn('Backend offline o inaccesible desde la nube, creando cuenta empresarial local:', err);
+  if (!response.ok) {
+    let errorDetail = 'Error al registrar la cuenta.';
+    try {
+      const errJson = await response.json();
+      if (errJson.detail) errorDetail = errJson.detail;
+    } catch {}
+    throw new Error(errorDetail);
   }
 
-  const token = 'bearer_token_eu_' + Date.now();
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('auth_token', token);
+  const data: RegisterResponse = await response.json();
+  if (data.access_token && typeof window !== 'undefined') {
+    localStorage.setItem('auth_token', data.access_token);
     localStorage.setItem('logged_in', 'true');
-    localStorage.setItem('user_session', JSON.stringify({ username, email: email.trim() }));
+    localStorage.setItem('user_session', JSON.stringify(data.user || { username: cleanUsername, email }));
   }
-  return {
-    message: 'Cuenta creada exitosamente',
-    verification_required: false,
-    email: email.trim(),
-    access_token: token,
-    token_type: 'bearer',
-    user: { username, email: email.trim(), role: 'admin' }
-  };
+  return data;
 };
 
 export interface VerifyCodeResponse {
