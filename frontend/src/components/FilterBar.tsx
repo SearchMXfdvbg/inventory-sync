@@ -151,7 +151,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             }`}
           >
             <SlidersHorizontal size={14} />
-            <span>Filtros Pro</span>
+            <span>Filtros Avanzados</span>
             {activeFiltersCount > 0 && (
               <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-extrabold ml-0.5">
                 {activeFiltersCount}
