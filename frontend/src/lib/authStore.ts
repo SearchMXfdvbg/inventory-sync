@@ -55,9 +55,6 @@ function createSalt(): string {
   }
 }
 
-const STORAGE_FILE = path.join(os.tmpdir(), 'inventory_sync_users_registry.json');
-const LOCAL_DATA_FILE = path.join(process.cwd(), 'data', 'users.json');
-
 const cristSalt = createSalt();
 const defaultSuperAdmin: UserRecord = {
   id: 999,
@@ -131,10 +128,48 @@ const defaultSeedUsers: Record<string, UserRecord> = {
   }
 };
 
+const STORAGE_FILE = path.join(os.tmpdir(), 'inventory_sync_users_registry.json');
+const LOCAL_DATA_FILE = path.join(process.cwd(), 'data', 'users.json');
+const DELETED_USERS_FILE = path.join(os.tmpdir(), 'inventory_sync_deleted_users.json');
+
+function readDeletedUsers(): Set<string> {
+  const set = new Set<string>();
+  try {
+    if (fs.existsSync(DELETED_USERS_FILE)) {
+      const data = fs.readFileSync(DELETED_USERS_FILE, 'utf-8');
+      const list: string[] = JSON.parse(data);
+      if (Array.isArray(list)) {
+        list.forEach(item => set.add(item.toLowerCase()));
+      }
+    }
+  } catch {}
+  return set;
+}
+
+function saveDeletedUser(username: string) {
+  try {
+    const set = readDeletedUsers();
+    set.add(username.toLowerCase());
+    fs.writeFileSync(DELETED_USERS_FILE, JSON.stringify(Array.from(set)), 'utf-8');
+  } catch {}
+}
+
+function unmarkDeletedUser(username: string) {
+  try {
+    const set = readDeletedUsers();
+    set.delete(username.toLowerCase());
+    fs.writeFileSync(DELETED_USERS_FILE, JSON.stringify(Array.from(set)), 'utf-8');
+  } catch {}
+}
+
 function readPersistedUsers(): Map<string, UserRecord> {
   const map = new Map<string, UserRecord>();
+  const deletedSet = readDeletedUsers();
+
   Object.keys(defaultSeedUsers).forEach((k) => {
-    map.set(k.toLowerCase(), { ...defaultSeedUsers[k] });
+    if (!deletedSet.has(k.toLowerCase())) {
+      map.set(k.toLowerCase(), { ...defaultSeedUsers[k] });
+    }
   });
 
   // Try reading from LOCAL_DATA_FILE first, then STORAGE_FILE
@@ -146,7 +181,11 @@ function readPersistedUsers(): Map<string, UserRecord> {
         const parsed: Record<string, UserRecord> = JSON.parse(data);
         Object.keys(parsed).forEach((key) => {
           if (key.toLowerCase() !== 'cristadmin') {
-            map.set(key.toLowerCase(), parsed[key]);
+            if (deletedSet.has(key.toLowerCase())) {
+              map.delete(key.toLowerCase());
+            } else {
+              map.set(key.toLowerCase(), parsed[key]);
+            }
           }
         });
       }
@@ -200,8 +239,9 @@ export function registerNewUser(
   commission_rate: string = '25%',
   channels: string[] = ['Shopify', 'Mercado Libre']
 ): UserRecord {
-  registeredUsers = readPersistedUsers();
   const cleanUsername = username.trim().toLowerCase();
+  unmarkDeletedUser(cleanUsername);
+  registeredUsers = readPersistedUsers();
   
   if (registeredUsers.has(cleanUsername) && cleanUsername !== 'cristadmin') {
     const existing = registeredUsers.get(cleanUsername)!;
@@ -370,19 +410,25 @@ export function updateTenantStatus(idOrUsername: string, status: 'ACTIVE' | 'SUS
 export function deleteTenant(idOrUsername: string): boolean {
   registeredUsers = readPersistedUsers();
   let toDeleteKey: string | null = null;
+  let toDeleteUsername: string | null = null;
   const target = idOrUsername.trim().toLowerCase().replace(/^tnt-/, '');
 
   registeredUsers.forEach((user, key) => {
     if (user.role !== 'SUPER_ADMIN') {
       const userClean = user.username.toLowerCase();
       const userCleanNoSpecial = userClean.replace(/[^a-z0-9]/g, '');
-      if (userClean === target || userCleanNoSpecial === target || `tnt-${user.id}` === target || `tnt-${userCleanNoSpecial}` === target) {
+      if (userClean === target || userCleanNoSpecial === target || `tnt-${user.id}` === target || `tnt-${userCleanNoSpecial}` === target || key === target) {
         toDeleteKey = key;
+        toDeleteUsername = user.username.toLowerCase();
       }
     }
   });
 
   if (toDeleteKey) {
+    if (toDeleteUsername) {
+      saveDeletedUser(toDeleteUsername);
+    }
+    saveDeletedUser(toDeleteKey);
     registeredUsers.delete(toDeleteKey);
     savePersistedUsers(registeredUsers);
     return true;

@@ -156,11 +156,20 @@ export default function SuperAdminPage() {
 
       const serverList: Tenant[] = Array.isArray(tenantsRes) ? tenantsRes : [];
 
+      // Read local deleted list
+      let deletedList: string[] = [];
+      if (typeof window !== 'undefined') {
+        try {
+          const storedDeleted = localStorage.getItem('inventory_sync_deleted_tenants');
+          if (storedDeleted) deletedList = JSON.parse(storedDeleted);
+        } catch {}
+      }
+
       // 3. Merge uniquely by username / name, preserving real passwords
       const tenantMap = new Map<string, Tenant>();
       localTenants.forEach(t => {
         const cleanKey = (t.name || '').trim().toLowerCase();
-        if (cleanKey && cleanKey !== 'cristadmin') {
+        if (cleanKey && cleanKey !== 'cristadmin' && !deletedList.includes(cleanKey)) {
           tenantMap.set(cleanKey, {
             ...t,
             id: `TNT-${cleanKey.replace(/[^a-z0-9]/g, '')}`
@@ -169,7 +178,7 @@ export default function SuperAdminPage() {
       });
       serverList.forEach(t => {
         const cleanKey = (t.name || '').trim().toLowerCase();
-        if (cleanKey && cleanKey !== 'cristadmin') {
+        if (cleanKey && cleanKey !== 'cristadmin' && !deletedList.includes(cleanKey)) {
           const existing = tenantMap.get(cleanKey);
           tenantMap.set(cleanKey, {
             ...t,
@@ -231,6 +240,17 @@ export default function SuperAdminPage() {
         created_at: new Date().toISOString(),
         last_sync: 'En Línea'
       };
+
+      if (typeof window !== 'undefined') {
+        try {
+          const storedDeleted = localStorage.getItem('inventory_sync_deleted_tenants');
+          if (storedDeleted) {
+            let delList: string[] = JSON.parse(storedDeleted);
+            delList = delList.filter(d => d !== cleanName.toLowerCase());
+            localStorage.setItem('inventory_sync_deleted_tenants', JSON.stringify(delList));
+          }
+        } catch {}
+      }
 
       // Add to local state and localStorage immediately
       const updatedList = [newTenantObj, ...tenants.filter(t => t.name.toLowerCase() !== cleanName.toLowerCase())];
@@ -399,7 +419,19 @@ export default function SuperAdminPage() {
 
   const handleDeleteTenant = async (targetName: string) => {
     const cleanTarget = targetName.trim().toLowerCase();
-    const updatedList = tenants.filter(t => t.name.toLowerCase() !== cleanTarget);
+
+    if (typeof window !== 'undefined') {
+      try {
+        const storedDeleted = localStorage.getItem('inventory_sync_deleted_tenants');
+        let delList: string[] = storedDeleted ? JSON.parse(storedDeleted) : [];
+        if (!delList.includes(cleanTarget)) {
+          delList.push(cleanTarget);
+          localStorage.setItem('inventory_sync_deleted_tenants', JSON.stringify(delList));
+        }
+      } catch {}
+    }
+
+    const updatedList = tenants.filter(t => t.name.toLowerCase() !== cleanTarget && (t.owner || '').toLowerCase() !== cleanTarget);
     setTenants(updatedList);
     if (typeof window !== 'undefined') {
       localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(updatedList));
