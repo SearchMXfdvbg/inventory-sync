@@ -26,24 +26,27 @@ export async function POST(request: Request) {
     let headerRowIndex = 0;
     let headerColumns: string[] = [];
 
-    for (let r = 0; r < Math.min(rawRows.length, 10); r++) {
+    for (let r = 0; r < Math.min(rawRows.length, 15); r++) {
       const row = rawRows[r];
       if (!Array.isArray(row)) continue;
 
-      const rowStrings = row.map((cell: any) => String(cell || '').trim().toLowerCase());
-      const hasSku = rowStrings.some(c => c === 'sku' || c === 'codigo' || c === 'clave' || c === 'id' || c === 'referencia' || c === 'item');
-      const hasName = rowStrings.some(c => c.includes('nom') || c.includes('prod') || c.includes('desc') || c.includes('titul'));
-      const hasStock = rowStrings.some(c => c.includes('stock') || c.includes('exist') || c.includes('cant') || c.includes('qty'));
+      const nonNullCells = row.filter((c: any) => c !== null && c !== undefined && String(c).trim() !== '');
+      if (nonNullCells.length < 2) continue;
 
-      if ((hasSku && hasName) || (hasSku && hasStock) || (hasName && hasStock) || hasSku) {
+      const cleanCells = nonNullCells.map((c: any) => String(c).trim().toLowerCase());
+      const hasSku = cleanCells.some(c => c === 'sku' || c === 'codigo' || c === 'código' || c === 'clave' || c === 'id' || c === 'referencia' || c === 'articulo' || c === 'artículo' || c === 'item' || c.startsWith('sku'));
+      const hasName = cleanCells.some(c => c.includes('nom') || c.includes('prod') || c.includes('desc') || c.includes('titul'));
+      const hasStock = cleanCells.some(c => c.includes('stock') || c.includes('exist') || c.includes('cant') || c.includes('qty'));
+
+      if (hasSku && (hasName || hasStock)) {
         headerRowIndex = r;
-        headerColumns = row.map((cell: any) => String(cell || '').trim());
+        headerColumns = row.map((cell: any) => (cell !== null && cell !== undefined ? String(cell).trim() : ''));
         break;
       }
     }
 
     if (headerColumns.length === 0) {
-      headerColumns = rawRows[0].map((cell: any) => String(cell || '').trim());
+      headerColumns = rawRows[0].map((cell: any) => (cell !== null && cell !== undefined ? String(cell).trim() : ''));
     }
 
     const findColumnIndex = (possibleNames: string[]): number => {
@@ -60,7 +63,7 @@ export async function POST(request: Request) {
     };
 
     const skuCol = findColumnIndex(['sku', 'codigo', 'clave', 'referencia', 'articulo', 'item', 'id']);
-    const nombreCol = findColumnIndex(['nombre', 'descripcion', 'producto', 'titulo', 'name', 'description', 'title']);
+    const nombreCol = findColumnIndex(['nombredelproducto', 'nombre', 'descripcion', 'producto', 'titulo', 'name', 'description', 'title']);
     const stockCol = findColumnIndex(['stock', 'existencias', 'cantidad', 'cant', 'qty', 'inventory', 'unidades', 'disponible']);
     const shopifyIdCol = findColumnIndex(['shopify_inventory_item_id', 'shopifyid', 'inventoryitemid', 'shopifyitemid', 'shopify']);
     const locationIdCol = findColumnIndex(['shopify_location_id', 'locationid', 'shopifylocation', 'location']);
@@ -76,9 +79,9 @@ export async function POST(request: Request) {
       if (!Array.isArray(row) || row.length === 0) continue;
 
       let skuRaw = '';
-      if (skuCol >= 0 && row[skuCol] !== undefined) {
+      if (skuCol >= 0 && row[skuCol] !== undefined && row[skuCol] !== null) {
         skuRaw = String(row[skuCol]).trim();
-      } else if (row[0] !== undefined) {
+      } else if (row[0] !== undefined && row[0] !== null) {
         skuRaw = String(row[0]).trim();
       }
 
@@ -92,26 +95,23 @@ export async function POST(request: Request) {
         cleanSkuUpper.includes('GENERADO') || 
         cleanSkuUpper.includes('PRODUCTOS UNICOS') ||
         cleanSkuUpper.includes('FACTURACION') ||
-        cleanSkuUpper.length > 50
+        cleanSkuUpper.includes('CATALOGO') ||
+        cleanSkuUpper.length > 40
       ) {
         continue;
       }
 
       let nombreRaw = '';
-      if (nombreCol >= 0 && row[nombreCol] !== undefined && String(row[nombreCol]).trim()) {
+      if (nombreCol >= 0 && row[nombreCol] !== undefined && row[nombreCol] !== null && String(row[nombreCol]).trim()) {
         nombreRaw = String(row[nombreCol]).trim();
-      } else if (skuCol !== 1 && row[1] !== undefined && String(row[1]).trim() && !String(row[1]).toUpperCase().includes('GENERADO')) {
-        nombreRaw = String(row[1]).trim();
       } else {
         nombreRaw = `Producto ${skuRaw}`;
       }
 
-      let stock = 10;
-      if (stockCol >= 0 && row[stockCol] !== undefined) {
-        const parsedNum = parseInt(String(row[stockCol]).replace(/[^0-9\-]/g, ''), 10);
-        if (!isNaN(parsedNum)) stock = Math.max(0, parsedNum);
-      } else if (row[2] !== undefined) {
-        const parsedNum = parseInt(String(row[2]).replace(/[^0-9\-]/g, ''), 10);
+      let stock = 0;
+      if (stockCol >= 0 && row[stockCol] !== undefined && row[stockCol] !== null) {
+        const valStr = String(row[stockCol]).replace(/,/g, '').trim();
+        const parsedNum = parseInt(valStr, 10);
         if (!isNaN(parsedNum)) stock = Math.max(0, parsedNum);
       }
 
