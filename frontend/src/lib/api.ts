@@ -4,15 +4,27 @@ import * as XLSX from 'xlsx';
 export interface Product {
   sku: string;
   nombre: string;
-  stock: number; // Stock central
-  shopify_inventory_item_id: string;
-  shopify_location_id: string;
-  ml_item_id: string;
+  stock: number; // Stock central / Almacén Local
+  categoria?: string;
+  subcategoria?: string;
+  marca?: string;
+  precio?: number;
+  costo?: number;
+  margen?: number;
+  codigo_barras?: string;
+  estado?: string;
+  shopify_inventory_item_id?: string;
+  shopify_location_id?: string;
+  ml_item_id?: string;
+  amazon_asin?: string;
+  ebay_item_id?: string;
+  kaufland_offer_id?: string;
   shopify_stock?: number;
   ml_stock?: number;
   amazon_stock?: number;
   ebay_stock?: number;
   kaufland_stock?: number;
+  sync_status?: 'MATCH' | 'DESYNC' | 'PENDING' | 'LOCAL_ONLY' | 'UNLINKED';
 }
 
 export interface Venta {
@@ -812,6 +824,14 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
   const skuCol = findColumnIndex(['sku', 'codigo', 'clave', 'referencia', 'articulo', 'item', 'id']);
   const nombreCol = findColumnIndex(['nombredelproducto', 'nombre', 'descripcion', 'producto', 'titulo', 'name', 'description', 'title']);
   const stockCol = findColumnIndex(['stock', 'existencias', 'cantidad', 'cant', 'qty', 'inventory', 'unidades', 'disponible']);
+  const categoriaCol = findColumnIndex(['categoria', 'category', 'departamento', 'rubro']);
+  const subcategoriaCol = findColumnIndex(['subcategoria', 'subcategory', 'subrubro']);
+  const marcaCol = findColumnIndex(['marcaproveedor', 'marca', 'proveedor', 'brand', 'vendor', 'fabricante']);
+  const precioCol = findColumnIndex(['precioventausd', 'precioventa', 'precio', 'price', 'pvp', 'venta']);
+  const costoCol = findColumnIndex(['costounitariousd', 'costounitario', 'costo', 'cost']);
+  const margenCol = findColumnIndex(['margen', 'margenporcentaje', 'margin']);
+  const codigoBarrasCol = findColumnIndex(['codigodebarrasean13', 'codigodebarras', 'codigobarras', 'barcode', 'ean13', 'ean', 'upc']);
+  const estadoCol = findColumnIndex(['estado', 'status', 'situacion', 'state']);
   const shopifyIdCol = findColumnIndex(['shopify_inventory_item_id', 'shopifyid', 'inventoryitemid', 'shopifyitemid', 'shopify']);
   const locationIdCol = findColumnIndex(['shopify_location_id', 'locationid', 'shopifylocation', 'location']);
   const mlIdCol = findColumnIndex(['ml_item_id', 'mlid', 'mercadolibreid', 'idml', 'mercadolibre', 'ml']);
@@ -867,10 +887,36 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
       if (!isNaN(parsedNum)) stock = Math.max(0, parsedNum);
     }
 
+    // Extraer campos adicionales de catálogo
+    const categoria = (categoriaCol >= 0 && row[categoriaCol]) ? String(row[categoriaCol]).trim() : undefined;
+    const subcategoria = (subcategoriaCol >= 0 && row[subcategoriaCol]) ? String(row[subcategoriaCol]).trim() : undefined;
+    const marca = (marcaCol >= 0 && row[marcaCol]) ? String(row[marcaCol]).trim() : undefined;
+    
+    let precio: number | undefined = undefined;
+    if (precioCol >= 0 && row[precioCol] !== undefined && row[precioCol] !== null) {
+      const pNum = parseFloat(String(row[precioCol]).replace(/[^0-9.]/g, ''));
+      if (!isNaN(pNum)) precio = pNum;
+    }
+
+    let costo: number | undefined = undefined;
+    if (costoCol >= 0 && row[costoCol] !== undefined && row[costoCol] !== null) {
+      const cNum = parseFloat(String(row[costoCol]).replace(/[^0-9.]/g, ''));
+      if (!isNaN(cNum)) costo = cNum;
+    }
+
+    let margen: number | undefined = undefined;
+    if (margenCol >= 0 && row[margenCol] !== undefined && row[margenCol] !== null) {
+      const mNum = parseFloat(String(row[margenCol]).replace(/[^0-9.]/g, ''));
+      if (!isNaN(mNum)) margen = mNum;
+    }
+
+    const codigoBarras = (codigoBarrasCol >= 0 && row[codigoBarrasCol]) ? String(row[codigoBarrasCol]).trim() : undefined;
+    const estado = (estadoCol >= 0 && row[estadoCol]) ? String(row[estadoCol]).trim() : 'Activo';
+
     // Extraer IDs opcionales
-    const shopifyId = (shopifyIdCol >= 0 && row[shopifyIdCol]) ? String(row[shopifyIdCol]).trim() : `gid://shopify/InventoryItem/${100000000 + products.length}`;
-    const locationId = (locationIdCol >= 0 && row[locationIdCol]) ? String(row[locationIdCol]).trim() : 'gid://shopify/Location/89123456';
-    const mlId = (mlIdCol >= 0 && row[mlIdCol]) ? String(row[mlIdCol]).trim() : `MLM${200000000 + products.length}`;
+    const shopifyId = (shopifyIdCol >= 0 && row[shopifyIdCol]) ? String(row[shopifyIdCol]).trim() : undefined;
+    const locationId = (locationIdCol >= 0 && row[locationIdCol]) ? String(row[locationIdCol]).trim() : undefined;
+    const mlId = (mlIdCol >= 0 && row[mlIdCol]) ? String(row[mlIdCol]).trim() : undefined;
     const amazonAsin = (amazonCol >= 0 && row[amazonCol]) ? String(row[amazonCol]).trim() : undefined;
     const ebayId = (ebayCol >= 0 && row[ebayCol]) ? String(row[ebayCol]).trim() : undefined;
     const kauflandId = (kauflandCol >= 0 && row[kauflandCol]) ? String(row[kauflandCol]).trim() : undefined;
@@ -879,14 +925,26 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
       sku: skuRaw,
       nombre: nombreRaw,
       stock,
+      categoria,
+      subcategoria,
+      marca,
+      precio,
+      costo,
+      margen,
+      codigo_barras: codigoBarras,
+      estado,
       shopify_inventory_item_id: shopifyId,
       shopify_location_id: locationId,
       ml_item_id: mlId,
-      shopify_stock: stock,
-      ml_stock: stock,
-      amazon_stock: amazonAsin ? stock : stock,
-      ebay_stock: ebayId ? stock : stock,
-      kaufland_stock: kauflandId ? stock : stock,
+      amazon_asin: amazonAsin,
+      ebay_item_id: ebayId,
+      kaufland_offer_id: kauflandId,
+      shopify_stock: shopifyId ? stock : undefined,
+      ml_stock: mlId ? stock : undefined,
+      amazon_stock: amazonAsin ? stock : undefined,
+      ebay_stock: ebayId ? stock : undefined,
+      kaufland_stock: kauflandId ? stock : undefined,
+      sync_status: 'LOCAL_ONLY'
     });
   }
 
@@ -938,5 +996,54 @@ export const downloadInventoryTemplate = async (): Promise<void> => {
   a.click();
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
+};
+
+export const isChannelConfigured = (channel: string, settings: SystemSettings | null): boolean => {
+  if (!settings) return false;
+  switch (channel.toLowerCase()) {
+    case 'shopify':
+      return Boolean(settings.ENABLE_SHOPIFY && settings.SHOP_DOMAIN && !settings.SHOP_DOMAIN.includes('example') && settings.SHOPIFY_ACCESS_TOKEN && !settings.SHOPIFY_ACCESS_TOKEN.startsWith('shpat_•••') && settings.SHOPIFY_ACCESS_TOKEN.length > 10);
+    case 'mercadolibre':
+    case 'ml':
+      return Boolean(settings.ENABLE_MERCADOLIBRE && settings.ML_ACCESS_TOKEN && !settings.ML_ACCESS_TOKEN.startsWith('•••') && settings.ML_USER_ID > 0);
+    case 'amazon':
+      return Boolean(settings.ENABLE_AMAZON && settings.AMAZON_SELLER_ID && !settings.AMAZON_SELLER_ID.includes('XXXX') && settings.AMAZON_REFRESH_TOKEN && !settings.AMAZON_REFRESH_TOKEN.startsWith('Atzr|•••') && settings.AMAZON_REFRESH_TOKEN.length > 10);
+    case 'ebay':
+      return Boolean(settings.ENABLE_EBAY && settings.EBAY_CLIENT_ID && !settings.EBAY_CLIENT_ID.includes('••••') && settings.EBAY_REFRESH_TOKEN && !settings.EBAY_REFRESH_TOKEN.startsWith('v^1.1#•••') && settings.EBAY_REFRESH_TOKEN.length > 10);
+    case 'kaufland':
+      return Boolean(settings.ENABLE_KAUFLAND && settings.KAUFLAND_CLIENT_KEY && !settings.KAUFLAND_CLIENT_KEY.includes('••••') && settings.KAUFLAND_CLIENT_KEY.length > 5);
+    case 'tiktok':
+      return Boolean(settings.ENABLE_TIKTOK && settings.TIKTOK_APP_KEY && settings.TIKTOK_ACCESS_TOKEN);
+    case 'sae':
+      return Boolean(settings.ENABLE_SAE !== false);
+    default:
+      return false;
+  }
+};
+
+export const exportProductsToExcel = (products: Product[], filename: string = 'inventario_exportado.xlsx'): void => {
+  const exportData = products.map(p => ({
+    'SKU': p.sku,
+    'Nombre del Producto': p.nombre,
+    'Categoría': p.categoria || 'Sin Categoría',
+    'Subcategoría': p.subcategoria || '',
+    'Marca / Proveedor': p.marca || 'N/A',
+    'Stock Central (Local)': p.stock,
+    'Stock Shopify': p.shopify_stock ?? 'No vinculado',
+    'Stock Mercado Libre': p.ml_stock ?? 'No vinculado',
+    'Stock Amazon EU': p.amazon_stock ?? 'No vinculado',
+    'Stock eBay DE': p.ebay_stock ?? 'No vinculado',
+    'Stock Kaufland DE': p.kaufland_stock ?? 'No vinculado',
+    'Precio ($ USD)': p.precio !== undefined ? p.precio : '',
+    'Costo Unitario ($ USD)': p.costo !== undefined ? p.costo : '',
+    'Código de Barras': p.codigo_barras || '',
+    'Estado': p.estado || 'Activo',
+    'Estado de Sincronización': p.sync_status === 'MATCH' ? 'Sincronizado' : p.sync_status === 'DESYNC' ? 'Desincronizado' : 'Almacén Local'
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventario');
+  XLSX.writeFile(workbook, filename);
 };
 

@@ -26,12 +26,22 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       label = 'Fallido';
       break;
     case 'MATCH':
-      bgColor = 'bg-green-100 text-green-800 border border-green-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60';
+      bgColor = 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60';
       label = 'Sincronizado';
       break;
     case 'DESYNC':
-      bgColor = 'bg-rose-100 text-rose-800 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60';
+      bgColor = 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60';
       label = 'Desincronizado';
+      break;
+    case 'LOCAL_ONLY':
+    case 'SOLO_LOCAL':
+    case 'UNLINKED':
+      bgColor = 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700';
+      label = 'Almacén Local';
+      break;
+    case 'DISCONNECTED':
+      bgColor = 'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700/60';
+      label = 'Desconectado';
       break;
     case 'HIGH':
       bgColor = 'bg-red-100 text-red-800 border border-red-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60';
