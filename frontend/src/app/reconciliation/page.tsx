@@ -1067,7 +1067,7 @@ export default function ReconciliationPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                  {currentRule.mode === 'percentage' ? 'Porcentaje de Stock a Enviar (%)' : 'Unidades de Colchón Fijo (Buffer)'}
+                  {currentRule.mode === 'percentage' ? 'Porcentaje de Stock a Enviar (%)' : 'Unidades de Reserva Fija (Buffer)'}
                 </label>
                 <div className="flex items-center gap-3">
                   <input
@@ -1193,7 +1193,7 @@ export default function ReconciliationPage() {
 
             <form onSubmit={handleApplyConflictResolution} className="p-6 space-y-4">
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                Cuando hay una discrepancia entre almacén central y tiendas externas (ej. una tienda vendió offline), elige cuál stock debe ser la <strong>Fuente de la Verdad</strong> para sobreescribir a todos los canales.
+                Cuando hay una discrepancia entre almacén central y tiendas externas (ej. una tienda vendió offline), elige cuál stock debe ser el <strong>Inventario Maestro de Referencia</strong> para sobreescribir a todos los canales.
               </p>
 
               <div className="space-y-2">

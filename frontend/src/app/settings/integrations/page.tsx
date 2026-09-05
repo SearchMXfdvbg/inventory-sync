@@ -254,7 +254,7 @@ export default function IntegrationsSettingsPage() {
             {/* Selector de Inventario Principal */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-2">
-                Inventario Principal (Fuente de la Verdad)
+                Inventario Principal (Sistema Maestro de Referencia)
               </label>
               <select
                 value={settings.INVENTARIO_PRINCIPAL || 'shopify'}
@@ -270,7 +270,7 @@ export default function IntegrationsSettingsPage() {
                 <option value="sae">🖥️ CONTPAQi SAE / Excel (Bodega Física o ERP Administrativo)</option>
               </select>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
-                Cuando caiga una venta en cualquier canal, este inventario maestro será la fuente de la verdad para actualizar en cascada a todos los demás.
+                Cuando ocurra una venta en cualquier canal, este inventario maestro será el sistema de referencia para actualizar en cascada a todos los demás.
               </p>
             </div>
 

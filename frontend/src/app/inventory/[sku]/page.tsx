@@ -58,7 +58,7 @@ export default function ProductDetailPage({ params }: PageProps) {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
   const [syncing, setSyncing] = useState(false);
 
-  // Colchón de seguridad (Safety Stock Buffer)
+  // Stock de Seguridad (Buffer de Reserva)
   const [safetyBuffer, setSafetyBuffer] = useState<number>(2);
   const [isBufferSaved, setIsBufferSaved] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
@@ -119,7 +119,7 @@ export default function ProductDetailPage({ params }: PageProps) {
 
   const masterChannel = settings?.INVENTARIO_PRINCIPAL || 'shopify';
 
-  // Cálculos de Stock con Colchón
+  // Cálculos de Stock con Buffer de Reserva
   const physicalStock = product?.stock ?? 0;
   const effectiveBuffer = Math.min(safetyBuffer, physicalStock);
   const publishedStock = Math.max(0, physicalStock - effectiveBuffer);
@@ -132,7 +132,7 @@ export default function ProductDetailPage({ params }: PageProps) {
     }
     setIsBufferSaved(true);
     setTimeout(() => setIsBufferSaved(false), 2500);
-    addToast(`Colchón de seguridad actualizado a ${val} piezas. Stock publicado ajustado a ${Math.max(0, physicalStock - val)}.`, 'success');
+    addToast(`Stock de seguridad actualizado a ${val} piezas. Stock disponible publicado: ${Math.max(0, physicalStock - val)} uds.`, 'success');
   };
 
   const handleReconcile = async () => {
@@ -250,7 +250,7 @@ export default function ProductDetailPage({ params }: PageProps) {
             </div>
             <p className="text-xs text-rose-700 dark:text-rose-300 mt-1 leading-relaxed">
               Si publicas simultáneamente estas {physicalStock} piezas en Amazon, eBay y Shopify, corres el riesgo de recibir compras al mismo segundo y generar reclamos por falta de existencias. 
-              <strong> El colchón de seguridad activo protege {effectiveBuffer} {effectiveBuffer === 1 ? 'unidad' : 'unidades'} y publica solo {publishedStock} piezas a los canales.</strong>
+              <strong> El buffer de reserva activo protege {effectiveBuffer} {effectiveBuffer === 1 ? 'unidad' : 'unidades'} y publica solo {publishedStock} piezas a los canales.</strong>
             </p>
           </div>
         </div>
@@ -331,16 +331,16 @@ export default function ProductDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* SECCIÓN 1: Colchón de Seguridad (Safety Stock Buffer) & Stock Publicado */}
+      {/* SECCIÓN 1: Stock de Seguridad (Buffer de Reserva) & Stock Publicado */}
       <div className="bg-gradient-to-br from-slate-900 to-slate-950 text-white rounded-2xl p-6 shadow-xl border border-slate-800">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-1 max-w-xl">
             <div className="flex items-center gap-2">
               <ShieldCheck className="text-blue-400" size={20} />
-              <h3 className="text-base font-extrabold text-white">Gestión de Colchón de Seguridad (Anti-Overselling)</h3>
+              <h3 className="text-base font-extrabold text-white">Stock de Seguridad y Margen de Reserva (Anti-Overselling)</h3>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Define cuántas unidades físicas mantienes reservadas en almacén para evitar ventas simultáneas que no puedas surtir. Las tiendas externas recibirán únicamente el <strong>Stock Publicado</strong>.
+              Define cuántas unidades físicas mantienes reservadas en almacén para prevenir discrepancias en ventas de alta velocidad. Los canales externos sincronizarán únicamente el <strong>Stock Disponible</strong>.
             </p>
           </div>
 
@@ -352,7 +352,7 @@ export default function ProductDetailPage({ params }: PageProps) {
             </div>
 
             <div className="text-center px-2 border-x border-slate-700">
-              <span className="text-[10px] uppercase font-bold text-amber-400 block">Colchón</span>
+              <span className="text-[10px] uppercase font-bold text-amber-400 block">Reserva</span>
               <div className="flex items-center justify-center gap-1 mt-0.5">
                 <input
                   type="number"
@@ -363,7 +363,7 @@ export default function ProductDetailPage({ params }: PageProps) {
                   className="w-14 px-1.5 py-0.5 text-center text-base font-extrabold font-mono bg-slate-900 border border-amber-500/60 rounded-lg text-amber-300 focus:outline-none focus:ring-1 focus:ring-amber-400"
                 />
               </div>
-              <span className="text-[9px] text-amber-300/80">Protegidas</span>
+              <span className="text-[9px] text-amber-300/80">Buffer</span>
             </div>
 
             <div className="text-center px-2">
@@ -386,7 +386,7 @@ export default function ProductDetailPage({ params }: PageProps) {
           </div>
           
           <div className="text-xs text-slate-500 dark:text-slate-400">
-            Fuente Maestra: <strong className="text-blue-600 dark:text-blue-400 font-bold uppercase">{masterChannel === 'shopify' ? '🛍️ Shopify' : '🖥️ CONTPAQi SAE / Almacén Central'}</strong>
+            Inventario Maestro: <strong className="text-blue-600 dark:text-blue-400 font-bold uppercase">{masterChannel === 'shopify' ? '🛍️ Shopify' : '🖥️ Almacén Central'}</strong>
           </div>
         </div>
 
@@ -400,11 +400,11 @@ export default function ProductDetailPage({ params }: PageProps) {
                 </div>
                 <div>
                   <h4 className="font-bold text-slate-800 dark:text-white text-sm">Almacén Central</h4>
-                  <p className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold">Fuente Core (Física)</p>
+                  <p className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold">Sistema Central</p>
                 </div>
               </div>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200">
-                Maestro Core
+                Inventario Maestro
               </span>
             </div>
             <div>
@@ -413,7 +413,7 @@ export default function ProductDetailPage({ params }: PageProps) {
                 <span className="text-xs text-slate-500 font-medium">unidades físicas</span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                Colchón reservado: <strong>{effectiveBuffer}</strong> • Publicable: <strong>{publishedStock}</strong>
+                Reserva activa: <strong>{effectiveBuffer}</strong> • Publicable: <strong>{publishedStock}</strong>
               </p>
             </div>
           </div>
@@ -561,7 +561,7 @@ export default function ProductDetailPage({ params }: PageProps) {
           <div className="bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-1">
             <span className="font-bold text-slate-800 dark:text-slate-200 block">👑 ¿Quién es el Canal Maestro?</span>
             <p>
-              <strong>{masterChannel === 'shopify' ? 'Shopify' : 'Almacén Central'}</strong> está establecido como la Fuente de Verdad. Cualquier modificación manual de catálogo o stock base toma como referencia este canal.
+              <strong>{masterChannel === 'shopify' ? 'Shopify' : 'Almacén Central'}</strong> está establecido como el <strong>Inventario Maestro</strong>. Cualquier modificación manual de catálogo o stock base toma como referencia este canal.
             </p>
           </div>
           <div className="bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-1">
@@ -603,7 +603,7 @@ export default function ProductDetailPage({ params }: PageProps) {
             </div>
           ))}
 
-          {/* Evento de Colchón */}
+          {/* Evento de Stock de Seguridad */}
           <div className="relative pl-8">
             <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-amber-500 border-4 border-white dark:border-slate-900 shadow-sm" />
             <div className="bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-800">
@@ -611,10 +611,10 @@ export default function ProductDetailPage({ params }: PageProps) {
                 {lastSyncTime.toLocaleDateString()} {lastSyncTime.toLocaleTimeString()}
               </span>
               <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block mt-0.5">
-                🛡️ Regla de Colchón de Seguridad Aplicada
+                🛡️ Regla de Stock de Seguridad (Buffer) Aplicada
               </span>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Stock físico: <strong>{physicalStock}</strong> • Colchón reservado: <strong>{effectiveBuffer}</strong> • Stock disponible publicado a canales: <strong>{publishedStock}</strong>.
+                Stock físico: <strong>{physicalStock}</strong> • Reserva protegida: <strong>{effectiveBuffer}</strong> • Stock disponible publicado a canales: <strong>{publishedStock}</strong>.
               </p>
             </div>
           </div>
