@@ -1285,4 +1285,88 @@ export const resolveStockConflict = async (
   return products[idx];
 };
 
+export const syncAllProductsToChannels = async (
+  onProgress?: (progress: { current: number; total: number; percent: number; statusText: string }) => void
+): Promise<{ updatedCount: number; channels: string[] }> => {
+  const products = await getInventory();
+  const settings = await getSettings().catch(() => null);
+  const total = products.length;
+  if (total === 0) return { updatedCount: 0, channels: [] };
+
+  const activeChannels: string[] = [];
+  if (isChannelConfigured('shopify', settings)) activeChannels.push('shopify');
+  if (isChannelConfigured('amazon', settings)) activeChannels.push('amazon');
+  if (isChannelConfigured('ebay', settings)) activeChannels.push('ebay');
+  if (isChannelConfigured('kaufland', settings)) activeChannels.push('kaufland');
+  if (isChannelConfigured('mercadolibre', settings)) activeChannels.push('mercadolibre');
+
+  // Procesamiento por lotes simulado/real para evitar saturación de memoria
+  const batchSize = 25;
+  for (let i = 0; i < total; i += batchSize) {
+    const end = Math.min(i + batchSize, total);
+    
+    // Actualizar lote
+    for (let j = i; j < end; j++) {
+      const p = products[j];
+      const masterStock = p.stock;
+      p.sync_status = 'MATCH';
+      
+      // Aplicar reglas de canal
+      if (activeChannels.includes('shopify')) {
+        const rule = getChannelRule('shopify');
+        p.shopify_stock = rule.active && rule.mode === 'percentage' 
+          ? Math.floor(masterStock * (rule.value / 100)) 
+          : (rule.active ? Math.max(0, masterStock - rule.value) : masterStock);
+      }
+      if (activeChannels.includes('amazon')) {
+        const rule = getChannelRule('amazon');
+        p.amazon_stock = rule.active && rule.mode === 'percentage' 
+          ? Math.floor(masterStock * (rule.value / 100)) 
+          : (rule.active ? Math.max(0, masterStock - rule.value) : masterStock);
+      }
+      if (activeChannels.includes('ebay')) {
+        const rule = getChannelRule('ebay');
+        p.ebay_stock = rule.active && rule.mode === 'percentage' 
+          ? Math.floor(masterStock * (rule.value / 100)) 
+          : (rule.active ? Math.max(0, masterStock - rule.value) : masterStock);
+      }
+      if (activeChannels.includes('kaufland')) {
+        const rule = getChannelRule('kaufland');
+        p.kaufland_stock = rule.active && rule.mode === 'percentage' 
+          ? Math.floor(masterStock * (rule.value / 100)) 
+          : (rule.active ? Math.max(0, masterStock - rule.value) : masterStock);
+      }
+      if (activeChannels.includes('mercadolibre')) {
+        const rule = getChannelRule('mercadolibre');
+        p.ml_stock = rule.active && rule.mode === 'percentage' 
+          ? Math.floor(masterStock * (rule.value / 100)) 
+          : (rule.active ? Math.max(0, masterStock - rule.value) : masterStock);
+      }
+    }
+
+    if (onProgress) {
+      const percent = Math.round((end / total) * 100);
+      onProgress({
+        current: end,
+        total,
+        percent,
+        statusText: `Sincronizando lote ${Math.ceil(end / batchSize)} de ${Math.ceil(total / batchSize)} (${end}/${total} SKUs)...`
+      });
+    }
+
+    // Pequeño delay para permitir que la UI pinte la barra suavemente
+    await new Promise(r => setTimeout(r, 40));
+  }
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('is_products', JSON.stringify(products));
+  }
+
+  return {
+    updatedCount: total,
+    channels: activeChannels
+  };
+};
+
+
 

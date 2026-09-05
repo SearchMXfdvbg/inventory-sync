@@ -50,7 +50,8 @@ import {
   getAuditLogsForSku,
   AuditLogEntry,
   testConnection,
-  exportDifferencesToExcel
+  exportDifferencesToExcel,
+  syncAllProductsToChannels
 } from '@/lib/api';
 import Toast, { ToastProps } from '@/components/Toast';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
@@ -95,6 +96,12 @@ export default function ReconciliationPage() {
 
   // Probar Conexión por canal
   const [testingChannel, setTestingChannel] = useState<string | null>(null);
+
+  // Sincronización Masiva Total
+  const [isBulkSyncModalOpen, setIsBulkSyncModalOpen] = useState(false);
+  const [isBulkSyncing, setIsBulkSyncing] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, percent: 0, statusText: '' });
+  const [bulkResult, setBulkResult] = useState<{ updatedCount: number; channels: string[] } | null>(null);
 
   const addToast = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
     const id = Date.now().toString();
@@ -333,6 +340,26 @@ export default function ReconciliationPage() {
     }
   };
 
+  // 9. Sincronizar Todo el Inventario a los Canales Conectados
+  const handleStartBulkSync = async () => {
+    setIsBulkSyncModalOpen(true);
+    setIsBulkSyncing(true);
+    setBulkResult(null);
+    setBulkProgress({ current: 0, total: products.length, percent: 0, statusText: 'Iniciando sincronización por lotes...' });
+    try {
+      const res = await syncAllProductsToChannels((prog) => {
+        setBulkProgress(prog);
+      });
+      setBulkResult(res);
+      await loadInitialData();
+      addToast(`⚡ Sincronización masiva completada: ${res.updatedCount} productos alineados a los canales.`, 'success');
+    } catch (err: any) {
+      addToast(err?.message || 'Error en sincronización masiva', 'error');
+    } finally {
+      setIsBulkSyncing(false);
+    }
+  };
+
   if (loading) {
     return <LoadingSkeleton type="detail" />;
   }
@@ -346,7 +373,7 @@ export default function ReconciliationPage() {
         ))}
       </div>
 
-      {/* TOP CONTROLS: Emergency Kill-Switch + Exportar Reporte + Estado de Canales */}
+      {/* TOP CONTROLS: Botón Sincronizar Todo + Emergency Kill-Switch + Exportar Reporte + Estado de Canales */}
       <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 transition-colors">
         <div className="flex items-center gap-3.5">
           <div className={`p-3 rounded-2xl ${isPaused ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600'} shrink-0`}>
@@ -373,6 +400,17 @@ export default function ReconciliationPage() {
 
         {/* Botones Globales */}
         <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+          {/* Botón Principal: Sincronizar Todo el Inventario Masivo */}
+          <button
+            onClick={handleStartBulkSync}
+            disabled={isBulkSyncing || isPaused || products.length === 0}
+            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black transition-all shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50"
+            title="Empujar todo el inventario central de referencia a todos los canales conectados"
+          >
+            <Zap size={15} className="text-yellow-300 animate-pulse" />
+            <span>Sincronizar Todo el Inventario</span>
+          </button>
+
           {/* Botón de Pánico: Pausar Conciliación */}
           <button
             onClick={handleToggleEmergencyPause}
@@ -1298,6 +1336,101 @@ export default function ReconciliationPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Sincronización Masiva Total Multicanal */}
+      {isBulkSyncModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 rounded-2xl">
+                  <Zap size={22} className={isBulkSyncing ? "animate-bounce" : ""} />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base">
+                    Sincronización Total Multicanal
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Sistema Central de Referencia &rarr; Todos los Canales Conectados
+                  </p>
+                </div>
+              </div>
+              {!isBulkSyncing && (
+                <button
+                  onClick={() => setIsBulkSyncModalOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+
+            {/* Barra de Progreso */}
+            <div className="space-y-3 bg-slate-50 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div className="flex justify-between items-center text-xs font-bold font-mono">
+                <span className="text-slate-600 dark:text-slate-300">
+                  {bulkProgress.statusText || 'Procesando catálogo...'}
+                </span>
+                <span className="text-blue-600 dark:text-blue-400 font-extrabold">
+                  {bulkProgress.percent}%
+                </span>
+              </div>
+
+              <div className="w-full bg-slate-200 dark:bg-slate-800 h-3 rounded-full overflow-hidden p-0.5">
+                <div 
+                  className="bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 h-full rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${bulkProgress.percent}%` }}
+                />
+              </div>
+
+              <div className="flex justify-between items-center text-[11px] text-slate-400 font-mono">
+                <span>SKUs: {bulkProgress.current} de {bulkProgress.total}</span>
+                <span>Modo: Lotes Asíncronos (Saga Batch)</span>
+              </div>
+            </div>
+
+            {/* Resumen de Canales */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                Canales Impactados en esta Sincronización:
+              </span>
+              <div className="grid grid-cols-3 gap-2 text-xs font-semibold">
+                <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${shopifyConnected ? 'border-emerald-200 bg-emerald-50/40 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300' : 'border-slate-200 bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
+                  <ShoppingBag size={14} />
+                  <span>Shopify</span>
+                </div>
+                <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${amazonConnected ? 'border-amber-200 bg-amber-50/40 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300' : 'border-slate-200 bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
+                  <Globe2 size={14} />
+                  <span>Amazon</span>
+                </div>
+                <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${mlConnected ? 'border-yellow-200 bg-yellow-50/40 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-300' : 'border-slate-200 bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
+                  <Store size={14} />
+                  <span>Mercado Libre</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Resultado Final */}
+            {bulkResult && (
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex items-center gap-2.5 text-emerald-800 dark:text-emerald-200 text-xs font-bold">
+                <CheckCircle size={18} className="text-emerald-600 shrink-0" />
+                <span>¡Sincronización masiva finalizada con éxito! Todos los productos están alineados con el Sistema Central de Referencia.</span>
+              </div>
+            )}
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsBulkSyncModalOpen(false)}
+                disabled={isBulkSyncing}
+                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 text-white rounded-xl text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+              >
+                {isBulkSyncing ? 'Sincronizando en Segundo Plano...' : 'Cerrar y Ver Resultados'}
+              </button>
+            </div>
           </div>
         </div>
       )}
