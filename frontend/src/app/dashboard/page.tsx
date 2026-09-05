@@ -11,7 +11,7 @@ import {
   ChevronRight, 
   ArrowUpRight 
 } from 'lucide-react';
-import { getInventory, getSales, Product, Venta, isDemoMode } from '@/lib/api';
+import { getInventory, getSales, getSettings, Product, Venta, isDemoMode, isChannelConfigured, SystemSettings } from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 import AccessGate from '@/components/AccessGate';
@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Venta[]>([]);
+  const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [stats, setStats] = useState({
     totalStock: 0,
@@ -56,11 +57,15 @@ export default function DashboardPage() {
 
     const fetchData = async () => {
       try {
-        const prodData = await getInventory();
-        const salesData = await getSales();
+        const [prodData, salesData, settData] = await Promise.all([
+          getInventory(),
+          getSales(),
+          getSettings()
+        ]);
         
         setProducts(prodData);
         setSales(salesData);
+        setSettings(settData);
 
         const totalStock = prodData.reduce((acc, p) => acc + p.stock, 0);
         const lowStockCount = prodData.filter(p => p.stock < 5).length;
@@ -68,10 +73,19 @@ export default function DashboardPage() {
         const dayAgo = Date.now() - 3600000 * 24;
         const salesToday = salesData.filter(s => new Date(s.created_at).getTime() > dayAgo).length;
 
+        const shopifyOk = isChannelConfigured('shopify', settData);
+        const mlOk = isChannelConfigured('mercadolibre', settData);
+        const amazonOk = isChannelConfigured('amazon', settData);
+        const ebayOk = isChannelConfigured('ebay', settData);
+        const kauflandOk = isChannelConfigured('kaufland', settData);
+
         const desyncCount = prodData.filter(p => {
-          if (isDemoMode()) {
-            return p.stock !== p.shopify_stock || p.stock !== p.ml_stock;
-          }
+          if (!shopifyOk && !mlOk && !amazonOk && !ebayOk && !kauflandOk) return false;
+          if (shopifyOk && p.shopify_stock !== undefined && p.stock !== p.shopify_stock) return true;
+          if (mlOk && p.ml_stock !== undefined && p.stock !== p.ml_stock) return true;
+          if (amazonOk && p.amazon_stock !== undefined && p.stock !== p.amazon_stock) return true;
+          if (ebayOk && p.ebay_stock !== undefined && p.stock !== p.ebay_stock) return true;
+          if (kauflandOk && p.kaufland_stock !== undefined && p.stock !== p.kaufland_stock) return true;
           return false;
         }).length;
 
@@ -148,18 +162,58 @@ export default function DashboardPage() {
         sku: p.sku
       });
     }
-    if (isDemoMode() && (p.stock !== p.shopify_stock || p.stock !== p.ml_stock)) {
+    const shopifyOk = isChannelConfigured('shopify', settings);
+    const mlOk = isChannelConfigured('mercadolibre', settings);
+    const amazonOk = isChannelConfigured('amazon', settings);
+    const ebayOk = isChannelConfigured('ebay', settings);
+    const kauflandOk = isChannelConfigured('kaufland', settings);
+
+    if ((shopifyOk && p.shopify_stock !== undefined && p.stock !== p.shopify_stock) ||
+        (mlOk && p.ml_stock !== undefined && p.stock !== p.ml_stock) ||
+        (amazonOk && p.amazon_stock !== undefined && p.stock !== p.amazon_stock) ||
+        (ebayOk && p.ebay_stock !== undefined && p.stock !== p.ebay_stock) ||
+        (kauflandOk && p.kaufland_stock !== undefined && p.stock !== p.kaufland_stock)) {
       quickAlerts.push({
         type: 'desync',
-        message: `Desincronización en ${p.sku}: SAE (${p.stock}) vs Shopify (${p.shopify_stock}) vs ML (${p.ml_stock})`,
+        message: `Desincronización en ${p.sku}: Stock central (${p.stock}) difiere de tus canales activos.`,
         severity: 'HIGH',
         sku: p.sku
       });
     }
   });
 
+  const shopifyConnected = isChannelConfigured('shopify', settings);
+  const mlConnected = isChannelConfigured('mercadolibre', settings);
+  const amazonConnected = isChannelConfigured('amazon', settings);
+  const ebayConnected = isChannelConfigured('ebay', settings);
+  const kauflandConnected = isChannelConfigured('kaufland', settings);
+  const connectedChannelsCount = [shopifyConnected, mlConnected, amazonConnected, ebayConnected, kauflandConnected].filter(Boolean).length;
+
   return (
     <div className="space-y-8">
+      {/* Banner informativo de canales no vinculados */}
+      {connectedChannelsCount === 0 && (
+        <div className="bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-800 dark:text-amber-200">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-sm shrink-0">
+              ⚪
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-800 dark:text-white">Almacén Local (Sin Marketplaces Vinculados)</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
+                El sistema está operando sobre tu inventario local/SAE. Para activar la sincronización automática con Shopify, Mercado Libre, Amazon o eBay, vincula tus credenciales.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/settings/integrations"
+            className="text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white px-3.5 py-1.5 rounded-lg shrink-0 transition-colors shadow-xs"
+          >
+            Vincular Canales
+          </Link>
+        </div>
+      )}
+
       {/* Tarjetas de Estadísticas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">

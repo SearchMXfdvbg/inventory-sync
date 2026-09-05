@@ -508,24 +508,40 @@ export const getIntegrationStatus = async (): Promise<IntegrationStatus> => {
     if (response.ok) return await response.json();
   } catch (err) {}
 
+  let currentSettings: SystemSettings = DEFAULT_SETTINGS_ENTERPRISE;
+  if (typeof window !== 'undefined') {
+    try {
+      const local = localStorage.getItem('is_settings');
+      if (local) currentSettings = JSON.parse(local);
+    } catch {}
+  }
+
+  const shopify = isChannelConfigured('shopify', currentSettings);
+  const ml = isChannelConfigured('mercadolibre', currentSettings);
+  const tiktok = isChannelConfigured('tiktok', currentSettings);
+  const amazon = isChannelConfigured('amazon', currentSettings);
+  const ebay = isChannelConfigured('ebay', currentSettings);
+  const kaufland = isChannelConfigured('kaufland', currentSettings);
+  const sae = isChannelConfigured('sae', currentSettings);
+
   return {
-    inventario_principal: 'shopify',
+    inventario_principal: currentSettings?.INVENTARIO_PRINCIPAL || 'local',
     active_channels: {
-      sae: true,
-      shopify: true,
-      mercadolibre: false,
-      tiktok: false,
-      amazon: true,
-      ebay: true,
-      kaufland: true,
+      sae,
+      shopify,
+      mercadolibre: ml,
+      tiktok,
+      amazon,
+      ebay,
+      kaufland,
     },
-    sae: { status: 'connected', enabled: true },
-    shopify: { status: 'connected', domain: 'de-tech-store.myshopify.com', enabled: true },
-    mercadolibre: { status: 'offline', site_id: 'MLM', enabled: false },
-    tiktok: { status: 'offline', shop_id: '', enabled: false },
-    amazon: { status: 'connected', marketplace_id: 'A1PA6795UKMFR9 (Alemania/DE)', enabled: true },
-    ebay: { status: 'connected', marketplace_id: 'EBAY_DE (Alemania)', enabled: true },
-    kaufland: { status: 'connected', storefront: 'de (Kaufland.de)', enabled: true }
+    sae: { status: sae ? 'connected' : 'offline', enabled: sae },
+    shopify: { status: shopify ? 'connected' : 'offline', domain: currentSettings?.SHOP_DOMAIN || '', enabled: shopify },
+    mercadolibre: { status: ml ? 'connected' : 'offline', site_id: currentSettings?.ML_SITE_ID || 'MLM', enabled: ml },
+    tiktok: { status: tiktok ? 'connected' : 'offline', shop_id: currentSettings?.TIKTOK_SHOP_ID || '', enabled: tiktok },
+    amazon: { status: amazon ? 'connected' : 'offline', marketplace_id: currentSettings?.AMAZON_MARKETPLACE_ID || '', enabled: amazon },
+    ebay: { status: ebay ? 'connected' : 'offline', marketplace_id: currentSettings?.EBAY_MARKETPLACE_ID || '', enabled: ebay },
+    kaufland: { status: kaufland ? 'connected' : 'offline', storefront: currentSettings?.KAUFLAND_STOREFRONT || '', enabled: kaufland }
   };
 };
 
@@ -613,37 +629,37 @@ export interface SystemSettings {
 }
 
 const DEFAULT_SETTINGS_ENTERPRISE: SystemSettings = {
-  DATABASE_URL: 'postgresql://master:••••••••@aws-eu-central-1.rds.amazonaws.com:5432/inventory_sync',
+  DATABASE_URL: '',
   SAE_DATA_PATH: 'data/productos.json',
-  SAE_REPOSITORY_TYPE: 'database',
-  SHOP_DOMAIN: 'de-tech-store.myshopify.com',
-  SHOPIFY_ACCESS_TOKEN: 'shpat_••••••••••••••••••••••••••••••',
+  SAE_REPOSITORY_TYPE: 'mock',
+  SHOP_DOMAIN: '',
+  SHOPIFY_ACCESS_TOKEN: '',
   SHOPIFY_API_VERSION: '2026-07',
-  SHOPIFY_LOCATION_ID: 'gid://shopify/Location/89123456',
-  SHOPIFY_API_SECRET: 'shpss_•••••••••••••••••••••••••••••',
-  ML_ACCESS_TOKEN: '••••••••',
-  ML_USER_ID: 123456789,
+  SHOPIFY_LOCATION_ID: '',
+  SHOPIFY_API_SECRET: '',
+  ML_ACCESS_TOKEN: '',
+  ML_USER_ID: 0,
   ML_SITE_ID: 'MLM',
-  INVENTARIO_PRINCIPAL: 'shopify',
+  INVENTARIO_PRINCIPAL: 'local',
   ENABLE_SAE: true,
-  ENABLE_SHOPIFY: true,
+  ENABLE_SHOPIFY: false,
   ENABLE_MERCADOLIBRE: false,
   ENABLE_TIKTOK: false,
-  ENABLE_AMAZON: true,
-  ENABLE_EBAY: true,
-  ENABLE_KAUFLAND: true,
-  AMAZON_SELLER_ID: 'A21XXXXXXXXXX',
-  AMAZON_CLIENT_ID: 'amzn1.application-oa2-client.••••••••',
-  AMAZON_CLIENT_SECRET: 'amzn1.oa2-cs.v1.••••••••••••••••',
-  AMAZON_REFRESH_TOKEN: 'Atzr|••••••••••••••••••••••••••••',
-  AMAZON_MARKETPLACE_ID: 'A1PA6795UKMFR9',
-  EBAY_CLIENT_ID: 'EbayApp-••••••••••••••••',
-  EBAY_CLIENT_SECRET: 'PRD-••••••••••••••••••••',
-  EBAY_REFRESH_TOKEN: 'v^1.1#••••••••••••••••••',
-  EBAY_MARKETPLACE_ID: 'EBAY_DE',
-  KAUFLAND_CLIENT_KEY: 'KFL_CLI_••••••••••••••••',
-  KAUFLAND_SECRET_KEY: 'KFL_SEC_••••••••••••••••',
-  KAUFLAND_STOREFRONT: 'de'
+  ENABLE_AMAZON: false,
+  ENABLE_EBAY: false,
+  ENABLE_KAUFLAND: false,
+  AMAZON_SELLER_ID: '',
+  AMAZON_CLIENT_ID: '',
+  AMAZON_CLIENT_SECRET: '',
+  AMAZON_REFRESH_TOKEN: '',
+  AMAZON_MARKETPLACE_ID: '',
+  EBAY_CLIENT_ID: '',
+  EBAY_CLIENT_SECRET: '',
+  EBAY_REFRESH_TOKEN: '',
+  EBAY_MARKETPLACE_ID: '',
+  KAUFLAND_CLIENT_KEY: '',
+  KAUFLAND_SECRET_KEY: '',
+  KAUFLAND_STOREFRONT: ''
 };
 
 export const getSettings = async (): Promise<SystemSettings> => {

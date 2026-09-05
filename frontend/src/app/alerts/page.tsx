@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { 
   CheckCircle2
 } from 'lucide-react';
-import { getInventory, getSales, Product, Venta, isDemoMode } from '@/lib/api';
+import { getInventory, getSales, getSettings, Product, Venta, isDemoMode, isChannelConfigured, SystemSettings } from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 
 interface AlertItem {
   id: string;
-  type: 'stock_bajo' | 'desync' | 'sync_fail';
+  type: 'stock_bajo' | 'desync' | 'sync_fail' | 'disconnected_channel';
   title: string;
   description: string;
   severity: 'HIGH' | 'MEDIUM' | 'LOW';
@@ -23,25 +23,50 @@ interface AlertItem {
 export default function AlertsPage() {
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [settings, setSettings] = useState<SystemSettings | null>(null);
 
   useEffect(() => {
     const loadAlerts = async () => {
       try {
-        const products = await getInventory();
-        const sales = await getSales();
+        const [products, sales, settData] = await Promise.all([
+          getInventory(),
+          getSales(),
+          getSettings()
+        ]);
+        setSettings(settData);
         
         const tempAlerts: AlertItem[] = [];
+
+        const shopifyOk = isChannelConfigured('shopify', settData);
+        const mlOk = isChannelConfigured('mercadolibre', settData);
+        const amazonOk = isChannelConfigured('amazon', settData);
+        const ebayOk = isChannelConfigured('ebay', settData);
+        const kauflandOk = isChannelConfigured('kaufland', settData);
+
+        const hasAnyConfigured = shopifyOk || mlOk || amazonOk || ebayOk || kauflandOk;
+
+        if (!hasAnyConfigured) {
+          tempAlerts.push({
+            id: 'no-channels-connected',
+            type: 'disconnected_channel',
+            title: 'Marketplaces Externos No Vinculados',
+            description: 'El inventario opera en modo Almacén Central Local. No hay sincronización externa activa con Shopify, Mercado Libre, Amazon o eBay.',
+            severity: 'LOW',
+            source: 'Sistema Central',
+            date: new Date().toISOString()
+          });
+        }
 
         products.forEach((p) => {
           if (p.stock === 0) {
             tempAlerts.push({
               id: `low-stock-zero-${p.sku}`,
               type: 'stock_bajo',
-              title: 'Stock Agotado en CONTPAQi SAE',
+              title: 'Stock Agotado en Almacén Central',
               description: `El stock físico para el producto "${p.nombre}" llegó a 0. Sincronización bloqueada.`,
               severity: 'HIGH',
               sku: p.sku,
-              source: 'SAE',
+              source: 'Almacén Central',
               date: new Date().toISOString()
             });
           } else if (p.stock < 5) {
@@ -52,35 +77,43 @@ export default function AlertsPage() {
               description: `Quedan únicamente ${p.stock} unidades de "${p.nombre}" en almacén central.`,
               severity: 'MEDIUM',
               sku: p.sku,
-              source: 'SAE',
+              source: 'Almacén Central',
               date: new Date().toISOString()
             });
           }
-        });
 
-        if (isDemoMode()) {
-          products.forEach((p) => {
-            const hasShopifyDesync = p.stock !== p.shopify_stock;
-            const hasMlDesync = p.stock !== p.ml_stock;
+          if (hasAnyConfigured) {
+            const desyncedChannels: string[] = [];
+            if (shopifyOk && p.shopify_stock !== undefined && p.shopify_stock !== p.stock) {
+              desyncedChannels.push(`Shopify (${p.shopify_stock} uds)`);
+            }
+            if (mlOk && p.ml_stock !== undefined && p.ml_stock !== p.stock) {
+              desyncedChannels.push(`Mercado Libre (${p.ml_stock} uds)`);
+            }
+            if (amazonOk && p.amazon_stock !== undefined && p.amazon_stock !== p.stock) {
+              desyncedChannels.push(`Amazon EU (${p.amazon_stock} uds)`);
+            }
+            if (ebayOk && p.ebay_stock !== undefined && p.ebay_stock !== p.stock) {
+              desyncedChannels.push(`eBay DE (${p.ebay_stock} uds)`);
+            }
+            if (kauflandOk && p.kaufland_stock !== undefined && p.kaufland_stock !== p.stock) {
+              desyncedChannels.push(`Kaufland DE (${p.kaufland_stock} uds)`);
+            }
 
-            if (hasShopifyDesync || hasMlDesync) {
-              const channels = [];
-              if (hasShopifyDesync) channels.push(`Shopify (${p.shopify_stock} uds)`);
-              if (hasMlDesync) channels.push(`Mercado Libre (${p.ml_stock} uds)`);
-
+            if (desyncedChannels.length > 0) {
               tempAlerts.push({
                 id: `desync-${p.sku}`,
                 type: 'desync',
-                title: 'Desalineamiento de Stock en Canales',
-                description: `El stock maestro en SAE es de ${p.stock} unidades, pero difiere en: ${channels.join(' y ')}.`,
+                title: 'Desalineamiento de Stock en Canales Conectados',
+                description: `El stock maestro es de ${p.stock} unidades, pero difiere en: ${desyncedChannels.join(', ')}.`,
                 severity: 'HIGH',
                 sku: p.sku,
                 source: 'API Sync',
                 date: new Date().toISOString()
               });
             }
-          });
-        }
+          }
+        });
 
         sales.forEach((s) => {
           if (s.status === 'FAILED') {
@@ -88,7 +121,7 @@ export default function AlertsPage() {
               id: `fail-sale-${s.id}`,
               type: 'sync_fail',
               title: 'Error Crítico en Flujo de Transacción Saga',
-              description: `Venta ${s.external_id} falló al propagarse en Shopify/ML. Error: ${s.last_error || 'Desconocido'}`,
+              description: `Venta ${s.external_id} falló al propagarse en canales. Error: ${s.last_error || 'Desconocido'}`,
               severity: 'HIGH',
               sku: s.sku,
               source: s.origen,
