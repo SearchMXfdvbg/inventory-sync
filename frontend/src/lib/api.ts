@@ -1063,3 +1063,226 @@ export const exportProductsToExcel = (products: Product[], filename: string = 'i
   XLSX.writeFile(workbook, filename);
 };
 
+export const exportDifferencesToExcel = (products: Product[], filename: string = 'reporte_diferencias_stock.xlsx'): void => {
+  const desynced = products.filter(p => {
+    const s = p.stock;
+    return (
+      (p.shopify_stock !== undefined && p.shopify_stock !== s) ||
+      (p.amazon_stock !== undefined && p.amazon_stock !== s) ||
+      (p.ebay_stock !== undefined && p.ebay_stock !== s) ||
+      (p.kaufland_stock !== undefined && p.kaufland_stock !== s) ||
+      (p.ml_stock !== undefined && p.ml_stock !== s)
+    );
+  });
+
+  const listToExport = desynced.length > 0 ? desynced : products;
+
+  const exportData = listToExport.map(p => ({
+    'SKU': p.sku,
+    'Nombre del Producto': p.nombre,
+    'Stock Central (Físico SAE)': p.stock,
+    'Stock Shopify': p.shopify_stock ?? 'N/A',
+    'Dif. Shopify': p.shopify_stock !== undefined ? p.shopify_stock - p.stock : 0,
+    'Stock Amazon EU': p.amazon_stock ?? 'N/A',
+    'Dif. Amazon': p.amazon_stock !== undefined ? p.amazon_stock - p.stock : 0,
+    'Stock eBay DE': p.ebay_stock ?? 'N/A',
+    'Dif. eBay': p.ebay_stock !== undefined ? p.ebay_stock - p.stock : 0,
+    'Stock Kaufland DE': p.kaufland_stock ?? 'N/A',
+    'Dif. Kaufland': p.kaufland_stock !== undefined ? p.kaufland_stock - p.stock : 0,
+    'Stock Mercado Libre': p.ml_stock ?? 'N/A',
+    'Dif. Mercado Libre': p.ml_stock !== undefined ? p.ml_stock - p.stock : 0,
+    'Estado': p.sync_status === 'DESYNC' ? 'DESALINEADO' : 'ALINEADO',
+    'Fecha de Reporte': new Date().toLocaleString()
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Diferencias de Stock');
+  XLSX.writeFile(workbook, filename);
+};
+
+export interface ChannelRule {
+  channel: string;
+  mode: 'percentage' | 'fixed_buffer';
+  value: number; // e.g. 90 for 90%, or 2 for -2 units buffer
+  active: boolean;
+}
+
+export const getChannelRule = (channel: string): ChannelRule => {
+  if (typeof window !== 'undefined') {
+    const raw = localStorage.getItem(`channel_rule_${channel.toLowerCase()}`);
+    if (raw) {
+      try {
+        return JSON.parse(raw);
+      } catch {}
+    }
+  }
+  return {
+    channel,
+    mode: 'percentage',
+    value: 100,
+    active: true
+  };
+};
+
+export const saveChannelRule = (channel: string, rule: ChannelRule): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(`channel_rule_${channel.toLowerCase()}`, JSON.stringify(rule));
+  }
+};
+
+export const isSyncAutomationPaused = (): boolean => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('is_sync_automation_paused') === 'true';
+  }
+  return false;
+};
+
+export const setSyncAutomationPaused = (paused: boolean): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('is_sync_automation_paused', paused ? 'true' : 'false');
+  }
+};
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  sku: string;
+  action: string;
+  previousStock: number;
+  newStock: number;
+  source: string;
+  user: string;
+  reason?: string;
+  status: 'SUCCESS' | 'ERROR' | 'WARNING';
+}
+
+export const getAuditLogsForSku = (sku: string): AuditLogEntry[] => {
+  if (typeof window !== 'undefined') {
+    const raw = localStorage.getItem(`audit_logs_${sku}`);
+    if (raw) {
+      try {
+        return JSON.parse(raw);
+      } catch {}
+    }
+  }
+  return [];
+};
+
+export const addAuditLogEntry = (sku: string, entry: Partial<AuditLogEntry>): void => {
+  if (typeof window !== 'undefined') {
+    const current = getAuditLogsForSku(sku);
+    const newEntry: AuditLogEntry = {
+      id: 'log_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      timestamp: new Date().toISOString(),
+      sku,
+      action: entry.action || 'Ajuste de Stock',
+      previousStock: entry.previousStock ?? 0,
+      newStock: entry.newStock ?? 0,
+      source: entry.source || 'Manual',
+      user: entry.user || 'Administrador',
+      reason: entry.reason || 'Actualización de inventario',
+      status: entry.status || 'SUCCESS'
+    };
+    const updated = [newEntry, ...current].slice(0, 50);
+    localStorage.setItem(`audit_logs_${sku}`, JSON.stringify(updated));
+  }
+};
+
+export const updateCentralStock = async (sku: string, newStock: number, reason: string = 'Ajuste manual de stock central'): Promise<Product> => {
+  const products = await getInventory();
+  const idx = products.findIndex(p => p.sku === sku);
+  if (idx < 0) throw new Error(`Producto ${sku} no encontrado`);
+
+  const prevStock = products[idx].stock;
+  products[idx].stock = newStock;
+  products[idx].sync_status = 'MATCH';
+  // Si los canales están alineados:
+  if (products[idx].shopify_stock !== undefined) products[idx].shopify_stock = newStock;
+  if (products[idx].amazon_stock !== undefined) products[idx].amazon_stock = newStock;
+  if (products[idx].ebay_stock !== undefined) products[idx].ebay_stock = newStock;
+  if (products[idx].kaufland_stock !== undefined) products[idx].kaufland_stock = newStock;
+  if (products[idx].ml_stock !== undefined) products[idx].ml_stock = newStock;
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('is_products', JSON.stringify(products));
+  }
+
+  addAuditLogEntry(sku, {
+    action: 'Ajuste Stock Central (Físico)',
+    previousStock: prevStock,
+    newStock,
+    source: 'Almacén Central (SAE)',
+    reason,
+    status: 'SUCCESS'
+  });
+
+  return products[idx];
+};
+
+export const reconcileSingleChannel = async (sku: string, channel: string): Promise<Product> => {
+  const products = await getInventory();
+  const idx = products.findIndex(p => p.sku === sku);
+  if (idx < 0) throw new Error(`Producto ${sku} no encontrado`);
+
+  const targetStock = products[idx].stock;
+  const ch = channel.toLowerCase();
+  
+  if (ch === 'shopify') products[idx].shopify_stock = targetStock;
+  else if (ch === 'amazon') products[idx].amazon_stock = targetStock;
+  else if (ch === 'ebay') products[idx].ebay_stock = targetStock;
+  else if (ch === 'kaufland') products[idx].kaufland_stock = targetStock;
+  else if (ch === 'mercadolibre' || ch === 'ml') products[idx].ml_stock = targetStock;
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('is_products', JSON.stringify(products));
+  }
+
+  addAuditLogEntry(sku, {
+    action: `Conciliación Forzada Canal ${channel.toUpperCase()}`,
+    previousStock: products[idx].stock,
+    newStock: targetStock,
+    source: channel.toUpperCase(),
+    reason: `Sincronización puntual solicitada para canal ${channel.toUpperCase()}`,
+    status: 'SUCCESS'
+  });
+
+  return products[idx];
+};
+
+export const resolveStockConflict = async (
+  sku: string, 
+  masterSource: string, 
+  targetStock: number, 
+  reason: string = 'Resolución manual de conflicto'
+): Promise<Product> => {
+  const products = await getInventory();
+  const idx = products.findIndex(p => p.sku === sku);
+  if (idx < 0) throw new Error(`Producto ${sku} no encontrado`);
+
+  const prev = products[idx].stock;
+  products[idx].stock = targetStock;
+  products[idx].shopify_stock = targetStock;
+  products[idx].amazon_stock = targetStock;
+  products[idx].ebay_stock = targetStock;
+  products[idx].kaufland_stock = targetStock;
+  products[idx].ml_stock = targetStock;
+  products[idx].sync_status = 'MATCH';
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('is_products', JSON.stringify(products));
+  }
+
+  addAuditLogEntry(sku, {
+    action: `Resolución Conflicto Manual (Fuente: ${masterSource})`,
+    previousStock: prev,
+    newStock: targetStock,
+    source: masterSource,
+    reason,
+    status: 'SUCCESS'
+  });
+
+  return products[idx];
+};
+
+
