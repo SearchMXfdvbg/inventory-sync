@@ -56,7 +56,14 @@ export default function InventoryPage() {
         getInventory(),
         getSettings().catch(() => null)
       ]);
-      setProducts(invData);
+      const cleanInv = Array.isArray(invData) ? invData.filter(p => {
+        const u = (p.sku || '').toUpperCase();
+        return u && u !== 'SKU' && u !== 'CODIGO' && !u.includes('GENERADO') && !u.includes('PRODUCTOS UNICOS') && u.length <= 50;
+      }) : [];
+      setProducts(cleanInv);
+      if (typeof window !== 'undefined' && Array.isArray(invData) && invData.length !== cleanInv.length) {
+        localStorage.setItem('is_products', JSON.stringify(cleanInv));
+      }
       if (settingsData) {
         setSettings(settingsData);
       }

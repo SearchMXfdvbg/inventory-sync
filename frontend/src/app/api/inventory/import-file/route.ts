@@ -17,60 +17,123 @@ export async function POST(request: Request) {
     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
     const firstSheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[firstSheetName];
-    const jsonRows: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+    const rawRows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
 
-    if (!jsonRows || jsonRows.length === 0) {
+    if (!rawRows || rawRows.length === 0) {
       return NextResponse.json({ detail: 'El archivo está vacío' }, { status: 400 });
     }
 
-    const products: any[] = [];
+    let headerRowIndex = 0;
+    let headerColumns: string[] = [];
 
-    for (let i = 0; i < jsonRows.length; i++) {
-      const row = jsonRows[i];
-      const keys = Object.keys(row);
+    for (let r = 0; r < Math.min(rawRows.length, 10); r++) {
+      const row = rawRows[r];
+      if (!Array.isArray(row)) continue;
 
-      const findVal = (possibleNames: string[]): any => {
-        for (const k of keys) {
-          const cleanK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
-          for (const target of possibleNames) {
-            const cleanTarget = target.toLowerCase().replace(/[^a-z0-9]/g, '');
-            if (cleanK === cleanTarget || cleanK.includes(cleanTarget)) {
-              return row[k];
-            }
+      const rowStrings = row.map((cell: any) => String(cell || '').trim().toLowerCase());
+      const hasSku = rowStrings.some(c => c === 'sku' || c === 'codigo' || c === 'clave' || c === 'id' || c === 'referencia' || c === 'item');
+      const hasName = rowStrings.some(c => c.includes('nom') || c.includes('prod') || c.includes('desc') || c.includes('titul'));
+      const hasStock = rowStrings.some(c => c.includes('stock') || c.includes('exist') || c.includes('cant') || c.includes('qty'));
+
+      if ((hasSku && hasName) || (hasSku && hasStock) || (hasName && hasStock) || hasSku) {
+        headerRowIndex = r;
+        headerColumns = row.map((cell: any) => String(cell || '').trim());
+        break;
+      }
+    }
+
+    if (headerColumns.length === 0) {
+      headerColumns = rawRows[0].map((cell: any) => String(cell || '').trim());
+    }
+
+    const findColumnIndex = (possibleNames: string[]): number => {
+      for (let c = 0; c < headerColumns.length; c++) {
+        const cleanHeader = headerColumns[c].toLowerCase().replace(/[^a-z0-9]/g, '');
+        for (const target of possibleNames) {
+          const cleanTarget = target.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (cleanHeader === cleanTarget || cleanHeader.includes(cleanTarget)) {
+            return c;
           }
         }
-        return '';
-      };
+      }
+      return -1;
+    };
 
-      const skuRaw = findVal(['sku', 'codigo', 'clave', 'id', 'referencia', 'articulo', 'item']);
-      const nombreRaw = findVal(['nombre', 'descripcion', 'producto', 'titulo', 'name', 'description', 'title', 'articulo']);
-      const stockRaw = findVal(['stock', 'existencias', 'cantidad', 'cant', 'qty', 'inventory', 'unidades', 'disponible']);
-      const shopifyIdRaw = findVal(['shopify_inventory_item_id', 'shopifyid', 'inventoryitemid', 'shopifyitemid', 'shopify']);
-      const locationIdRaw = findVal(['shopify_location_id', 'locationid', 'shopifylocation', 'location']);
-      const mlIdRaw = findVal(['ml_item_id', 'mlid', 'mercadolibreid', 'idml', 'mercadolibre', 'ml']);
-      const amazonAsinRaw = findVal(['amazon_asin', 'amazon', 'asin']);
-      const ebayIdRaw = findVal(['ebay_item_id', 'ebayid', 'ebay']);
-      const kauflandIdRaw = findVal(['kaufland_offer_id', 'kauflandid', 'kaufland']);
+    const skuCol = findColumnIndex(['sku', 'codigo', 'clave', 'referencia', 'articulo', 'item', 'id']);
+    const nombreCol = findColumnIndex(['nombre', 'descripcion', 'producto', 'titulo', 'name', 'description', 'title']);
+    const stockCol = findColumnIndex(['stock', 'existencias', 'cantidad', 'cant', 'qty', 'inventory', 'unidades', 'disponible']);
+    const shopifyIdCol = findColumnIndex(['shopify_inventory_item_id', 'shopifyid', 'inventoryitemid', 'shopifyitemid', 'shopify']);
+    const locationIdCol = findColumnIndex(['shopify_location_id', 'locationid', 'shopifylocation', 'location']);
+    const mlIdCol = findColumnIndex(['ml_item_id', 'mlid', 'mercadolibreid', 'idml', 'mercadolibre', 'ml']);
+    const amazonCol = findColumnIndex(['amazon_asin', 'amazon', 'asin']);
+    const ebayCol = findColumnIndex(['ebay_item_id', 'ebayid', 'ebay']);
+    const kauflandCol = findColumnIndex(['kaufland_offer_id', 'kauflandid', 'kaufland']);
 
-      const sku = String(skuRaw || `SKU-${(i + 1).toString().padStart(4, '0')}`).trim();
-      if (!sku) continue;
+    const products: any[] = [];
 
-      const parsedStockNum = parseInt(String(stockRaw).replace(/[^0-9\-]/g, ''), 10);
-      const stock = isNaN(parsedStockNum) ? 10 : Math.max(0, parsedStockNum);
-      const nombre = String(nombreRaw || `Producto ${sku}`).trim();
+    for (let r = headerRowIndex + 1; r < rawRows.length; r++) {
+      const row = rawRows[r];
+      if (!Array.isArray(row) || row.length === 0) continue;
+
+      let skuRaw = '';
+      if (skuCol >= 0 && row[skuCol] !== undefined) {
+        skuRaw = String(row[skuCol]).trim();
+      } else if (row[0] !== undefined) {
+        skuRaw = String(row[0]).trim();
+      }
+
+      if (!skuRaw) continue;
+      const cleanSkuUpper = skuRaw.toUpperCase();
+      if (
+        cleanSkuUpper === 'SKU' || 
+        cleanSkuUpper === 'CODIGO' || 
+        cleanSkuUpper === 'CLAVE' || 
+        cleanSkuUpper === 'ID' || 
+        cleanSkuUpper.includes('GENERADO') || 
+        cleanSkuUpper.includes('PRODUCTOS UNICOS') ||
+        cleanSkuUpper.includes('FACTURACION') ||
+        cleanSkuUpper.length > 50
+      ) {
+        continue;
+      }
+
+      let nombreRaw = '';
+      if (nombreCol >= 0 && row[nombreCol] !== undefined && String(row[nombreCol]).trim()) {
+        nombreRaw = String(row[nombreCol]).trim();
+      } else if (skuCol !== 1 && row[1] !== undefined && String(row[1]).trim() && !String(row[1]).toUpperCase().includes('GENERADO')) {
+        nombreRaw = String(row[1]).trim();
+      } else {
+        nombreRaw = `Producto ${skuRaw}`;
+      }
+
+      let stock = 10;
+      if (stockCol >= 0 && row[stockCol] !== undefined) {
+        const parsedNum = parseInt(String(row[stockCol]).replace(/[^0-9\-]/g, ''), 10);
+        if (!isNaN(parsedNum)) stock = Math.max(0, parsedNum);
+      } else if (row[2] !== undefined) {
+        const parsedNum = parseInt(String(row[2]).replace(/[^0-9\-]/g, ''), 10);
+        if (!isNaN(parsedNum)) stock = Math.max(0, parsedNum);
+      }
+
+      const shopifyId = (shopifyIdCol >= 0 && row[shopifyIdCol]) ? String(row[shopifyIdCol]).trim() : `gid://shopify/InventoryItem/${100000000 + products.length}`;
+      const locationId = (locationIdCol >= 0 && row[locationIdCol]) ? String(row[locationIdCol]).trim() : 'gid://shopify/Location/89123456';
+      const mlId = (mlIdCol >= 0 && row[mlIdCol]) ? String(row[mlIdCol]).trim() : `MLM${200000000 + products.length}`;
+      const amazonAsin = (amazonCol >= 0 && row[amazonCol]) ? String(row[amazonCol]).trim() : undefined;
+      const ebayId = (ebayCol >= 0 && row[ebayCol]) ? String(row[ebayCol]).trim() : undefined;
+      const kauflandId = (kauflandCol >= 0 && row[kauflandCol]) ? String(row[kauflandCol]).trim() : undefined;
 
       products.push({
-        sku,
-        nombre,
+        sku: skuRaw,
+        nombre: nombreRaw,
         stock,
-        shopify_inventory_item_id: String(shopifyIdRaw || `gid://shopify/InventoryItem/${100000000 + i}`),
-        shopify_location_id: String(locationIdRaw || 'gid://shopify/Location/89123456'),
-        ml_item_id: String(mlIdRaw || `MLM${200000000 + i}`),
+        shopify_inventory_item_id: shopifyId,
+        shopify_location_id: locationId,
+        ml_item_id: mlId,
         shopify_stock: stock,
         ml_stock: stock,
-        amazon_stock: amazonAsinRaw ? stock : stock,
-        ebay_stock: ebayIdRaw ? stock : stock,
-        kaufland_stock: kauflandIdRaw ? stock : stock,
+        amazon_stock: amazonAsin ? stock : stock,
+        ebay_stock: ebayId ? stock : stock,
+        kaufland_stock: kauflandId ? stock : stock,
       });
     }
 
