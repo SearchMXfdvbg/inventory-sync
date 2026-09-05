@@ -72,9 +72,70 @@ const defaultSuperAdmin: UserRecord = {
   is_active: true
 };
 
+const fernandaSalt = 'salt_fernanda_2026';
+const techStoreSalt = 'salt_techstore_2026';
+const modaSalt = 'salt_moda_2026';
+
+const defaultSeedUsers: Record<string, UserRecord> = {
+  cristadmin: defaultSuperAdmin,
+  fernanda: {
+    id: 101,
+    username: 'Fernanda',
+    email: 'fernanda@empresa.com',
+    salt: fernandaSalt,
+    passwordHash: hashPassword('123456', fernandaSalt),
+    rawPassword: '123456',
+    role: 'CLIENT_ADMIN',
+    tenant_id: 'empresa-a',
+    created_at: '2026-09-02T10:00:00Z',
+    is_active: false,
+    plan: 'Enterprise (39,000 SKUs)',
+    maxSkus: 39000,
+    commission_rate: '25%',
+    channels: ['Shopify', 'Mercado Libre'],
+    suspension_reason: 'Falta de pago de mensualidad'
+  },
+  techstorede: {
+    id: 102,
+    username: 'TechStore Germany GmbH',
+    email: 'h.weber@techstore-de.com',
+    salt: techStoreSalt,
+    passwordHash: hashPassword('ClienteSeguro2026#', techStoreSalt),
+    rawPassword: 'ClienteSeguro2026#',
+    role: 'CLIENT_ADMIN',
+    tenant_id: 'empresa-b',
+    created_at: '2026-09-01T12:00:00Z',
+    is_active: true,
+    plan: 'Enterprise (39,000 SKUs)',
+    maxSkus: 39000,
+    commission_rate: '25%',
+    channels: ['Shopify', 'Amazon DE', 'eBay DE', 'Kaufland DE'],
+    suspension_reason: ''
+  },
+  modaexpress: {
+    id: 103,
+    username: 'ModaExpress Online',
+    email: 'contacto@modaexpress.com',
+    salt: modaSalt,
+    passwordHash: hashPassword('ClienteSeguro2026#', modaSalt),
+    rawPassword: 'ClienteSeguro2026#',
+    role: 'CLIENT_ADMIN',
+    tenant_id: 'empresa-c',
+    created_at: '2026-09-03T15:30:00Z',
+    is_active: true,
+    plan: 'Plan Básico (<200 SKUs)',
+    maxSkus: 200,
+    commission_rate: '25%',
+    channels: ['Shopify', 'Mercado Libre'],
+    suspension_reason: ''
+  }
+};
+
 function readPersistedUsers(): Map<string, UserRecord> {
   const map = new Map<string, UserRecord>();
-  map.set('cristadmin', defaultSuperAdmin);
+  Object.keys(defaultSeedUsers).forEach((k) => {
+    map.set(k.toLowerCase(), { ...defaultSeedUsers[k] });
+  });
 
   // Try reading from LOCAL_DATA_FILE first, then STORAGE_FILE
   const filesToTry = [LOCAL_DATA_FILE, STORAGE_FILE];
