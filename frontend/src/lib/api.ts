@@ -993,7 +993,7 @@ export const importInventoryFile = async (file: File): Promise<ImportInventoryRe
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetchApi(`${BASE_URL}/inventory/import-file`, {
+    const response = await fetchApi('/inventory/import-file', {
       method: 'POST',
       body: formData,
     });
