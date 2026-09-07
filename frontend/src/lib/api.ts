@@ -990,31 +990,30 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
 
 export const importInventoryFile = async (file: File): Promise<ImportInventoryResponse> => {
   try {
-    const parsedProducts = await parseInventoryFile(file);
+    const formData = new FormData();
+    formData.append('file', file);
 
-    // 1. Guardar en localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('is_products', JSON.stringify(parsedProducts));
+    const response = await fetchApi(`${BASE_URL}/inventory/import-file`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Error al subir el archivo al servidor');
     }
 
-    // 2. Guardar en la API del servidor
-    try {
-      await fetchApi(`${BASE_URL}/inventory`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsedProducts)
-      });
-    } catch {}
+    const data = await response.json();
 
     return {
-      success: true,
-      total_rows: parsedProducts.length,
-      created_count: parsedProducts.length,
-      updated_count: 0,
-      message: `¡${parsedProducts.length} productos importados con éxito con su stock exacto!`
+      success: data.success,
+      total_rows: data.total_rows,
+      created_count: data.created_count,
+      updated_count: data.updated_count,
+      message: data.message
     };
   } catch (err: any) {
-    throw new Error(err?.message || 'Error al procesar el archivo Excel / CSV.');
+    throw new Error(err?.message || 'Error critico al procesar el archivo Excel.');
   }
 };
 
