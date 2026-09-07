@@ -191,7 +191,7 @@ def verify_shopify_hmac(raw_body: bytes, hmac_header: str, secret: str) -> bool:
     return hmac.compare_digest(computed_hmac, hmac_header)
 
 @app.post("/webhook/shopify")
-async def webhook_shopify(request: Request, db: Session = Depends(get_db)):
+async def webhook_shopify(request: Request, user_id: int = 1, db: Session = Depends(get_db)):
     # 1. Leer raw body
     raw_body = await request.body()
     
@@ -241,6 +241,7 @@ async def webhook_shopify(request: Request, db: Session = Depends(get_db)):
         # Crear registro de Venta en status PENDING
         venta = Venta(
             external_id=external_id,
+            user_id=user_id,
             origen="shopify",
             sku=sku,
             cantidad=quantity,
@@ -338,6 +339,7 @@ def verify_ml_signature(raw_body: bytes, headers: dict, secret: str) -> bool:
 async def webhook_ml(
     request: Request,
     webhook_data: MercadoLibreWebhook, 
+    user_id: int = 1,
     db: Session = Depends(get_db)
 ):
     # 1. Validar firma o secret token si está configurado en settings (Vulnerabilidad #5)
@@ -420,6 +422,7 @@ async def webhook_ml(
             # Crear registro de Venta en status PENDING
             venta = Venta(
                 external_id=external_id,
+            user_id=user_id,
                 origen="mercadolibre",
                 sku=sku,
                 cantidad=quantity,
@@ -450,7 +453,7 @@ async def webhook_ml(
 
 
 @app.post("/webhook/tiktok")
-async def webhook_tiktok(request: Request, db: Session = Depends(get_db)):
+async def webhook_tiktok(request: Request, user_id: int = 1, db: Session = Depends(get_db)):
     """
     Endpoint para recibir webhooks de órdenes de TikTok Shop.
     """
@@ -486,6 +489,7 @@ async def webhook_tiktok(request: Request, db: Session = Depends(get_db)):
 
         venta = Venta(
             external_id=external_id,
+            user_id=user_id,
             origen="tiktok",
             sku=sku,
             cantidad=qty,
@@ -510,7 +514,7 @@ async def webhook_tiktok(request: Request, db: Session = Depends(get_db)):
 
 
 @app.post("/webhook/amazon")
-async def webhook_amazon(request: Request, db: Session = Depends(get_db)):
+async def webhook_amazon(request: Request, user_id: int = 1, db: Session = Depends(get_db)):
     """
     Endpoint para recibir notificaciones de órdenes de Amazon SP-API.
     """
@@ -546,6 +550,7 @@ async def webhook_amazon(request: Request, db: Session = Depends(get_db)):
 
         venta = Venta(
             external_id=external_id,
+            user_id=user_id,
             origen="amazon",
             sku=sku,
             cantidad=qty,
@@ -570,7 +575,7 @@ async def webhook_amazon(request: Request, db: Session = Depends(get_db)):
 
 
 @app.post("/webhook/ebay")
-async def webhook_ebay(request: Request, db: Session = Depends(get_db)):
+async def webhook_ebay(request: Request, user_id: int = 1, db: Session = Depends(get_db)):
     """
     Endpoint para recibir notificaciones de órdenes de eBay Alemania / Europa.
     """
@@ -606,6 +611,7 @@ async def webhook_ebay(request: Request, db: Session = Depends(get_db)):
 
         venta = Venta(
             external_id=external_id,
+            user_id=user_id,
             origen="ebay",
             sku=sku,
             cantidad=qty,
@@ -632,7 +638,7 @@ async def webhook_ebay(request: Request, db: Session = Depends(get_db)):
 
 
 @app.post("/webhook/kaufland")
-async def webhook_kaufland(request: Request, db: Session = Depends(get_db)):
+async def webhook_kaufland(request: Request, user_id: int = 1, db: Session = Depends(get_db)):
     """
     Endpoint para recibir notificaciones de órdenes de Kaufland Alemania.
     """
@@ -668,6 +674,7 @@ async def webhook_kaufland(request: Request, db: Session = Depends(get_db)):
 
         venta = Venta(
             external_id=external_id,
+            user_id=user_id,
             origen="kaufland",
             sku=sku,
             cantidad=qty,
@@ -831,7 +838,7 @@ def get_inventory(db: Session = Depends(get_db), current_user: dict = Depends(ge
             }
             for p in user_prods
         ]
-    return sae_repo.get_all_products()
+    return []  # FIX: Aislamiento de Tenant. No se exponen productos globales.
 
 
 @app.get("/inventory/template")
