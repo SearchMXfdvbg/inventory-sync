@@ -140,8 +140,25 @@ export const getAuthToken = (): string | null => {
 
 export const clearSession = (): void => {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem('auth_token');
-  localStorage.removeItem('logged_in');
+  const keysToRemove = [
+    'auth_token',
+    'logged_in',
+    'user_session',
+    'tenant_id',
+    'is_products',
+    'is_sales',
+    'is_settings',
+    'demo_mode',
+    'is_sync_automation_paused'
+  ];
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+
+  const allKeys = Object.keys(localStorage);
+  allKeys.forEach(key => {
+    if (key.startsWith('channel_rule_') || key.startsWith('audit_logs_')) {
+      localStorage.removeItem(key);
+    }
+  });
 };
 
 export const handleUnauthorized = (): void => {
