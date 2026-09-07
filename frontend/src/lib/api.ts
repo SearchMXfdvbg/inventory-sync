@@ -1005,6 +1005,12 @@ export const importInventoryFile = async (file: File): Promise<ImportInventoryRe
 
     const data = await response.json();
 
+    // Guardar temporalmente en localStorage para que el UI (Dashboard) los pueda renderizar de inmediato.
+    // Como Vercel no tiene base de datos persistente, dependemos del caché del navegador para la demo.
+    if (typeof window !== 'undefined' && data.products) {
+      localStorage.setItem('is_products', JSON.stringify(data.products));
+    }
+
     return {
       success: data.success,
       total_rows: data.total_rows,
