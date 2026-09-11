@@ -10,3 +10,4 @@ pytest-asyncio
 pyjwt>=2.8.0
 openpyxl>=3.1.0
 python-multipart>=0.0.9
+psycopg2-binary>=2.9.9
