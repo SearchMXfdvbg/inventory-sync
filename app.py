@@ -331,7 +331,8 @@ app.add_middleware(SecurityHeadersMiddleware)
 # 3. CORS Restringido (Vulnerabilidad #14: allow_headers sin '*')
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=['http://localhost:3000', 'http://127.0.0.1:3000'],
+    allow_origin_regex='https://.*\.vercel\.app',
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=[
@@ -374,4 +375,5 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 # Import main at the end to register all endpoint routes on the app object
 import main
+
 
