@@ -227,7 +227,7 @@ export default function IntegrationsSettingsPage() {
           {activeConnections.length > 0 ? (
             activeConnections.map(conn => (
               <div key={conn.name} className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-full">
-                <span className={w-2 h-2 rounded-full  animate-pulse}></span>
+                <span className={`w-2 h-2 rounded-full ${conn.color} animate-pulse`}></span>
                 <span className="text-slate-200 text-xs font-semibold">{conn.name}</span>
               </div>
             ))
@@ -1142,6 +1142,7 @@ export default function IntegrationsSettingsPage() {
     </div>
   );
 }
+
 
 
 
