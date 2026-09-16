@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import os
 import re
 import time
@@ -18,14 +18,14 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from config import settings
 from database import engine, Base
 
-# --- CONFIGURACIÓN DE LOGGING CON SANEAMIENTO ---
+# --- CONFIGURACIÃ“N DE LOGGING CON SANEAMIENTO ---
 
 class SensitiveDataFilter(logging.Filter):
     def __init__(self, name: str = ""):
         super().__init__(name)
         self.sensitive_patterns = []
         
-        # Cargamos los tokens del archivo de configuración
+        # Cargamos los tokens del archivo de configuraciÃ³n
         tokens = [
             (settings.SHOPIFY_ACCESS_TOKEN, "[SHOPIFY_ACCESS_TOKEN_REDACTED]"),
             (settings.SHOPIFY_API_SECRET, "[SHOPIFY_API_SECRET_REDACTED]"),
@@ -34,12 +34,12 @@ class SensitiveDataFilter(logging.Filter):
             (getattr(settings, "ADMIN_API_KEY", None), "[ADMIN_API_KEY_REDACTED]")
         ]
         
-        # Agregar tokens específicos si están configurados
+        # Agregar tokens especÃ­ficos si estÃ¡n configurados
         for token, label in tokens:
             if token and len(str(token)) > 5:
                 self.sensitive_patterns.append((re.escape(str(token)), label))
                 
-        # Patrones genéricos robustos para enmascarar datos sensibles automáticamente (Vulnerabilidad #16)
+        # Patrones genÃ©ricos robustos para enmascarar datos sensibles automÃ¡ticamente (Vulnerabilidad #16)
         self.sensitive_patterns.extend([
             # Tokens Bearer (Bearer [A-Za-z0-9\-\._~\+\/]+=*)
             (r"(?i)\bBearer\s+[A-Za-z0-9\-\._~\+\/]+=*", "Bearer [BEARER_TOKEN_REDACTED]"),
@@ -48,7 +48,7 @@ class SensitiveDataFilter(logging.Filter):
             (r"\bshpss_[a-zA-Z0-9_\-]+", "[SHOPIFY_API_SECRET_REDACTED]"),
             # Tokens de Mercado Libre (APP_USR-)
             (r"\bAPP_USR-[a-zA-Z0-9\-_]+", "[ML_ACCESS_TOKEN_REDACTED]"),
-            # Parámetros sensibles en logs (password, client_secret, access_token, etc.)
+            # ParÃ¡metros sensibles en logs (password, client_secret, access_token, etc.)
             (r"""(?i)(["']?(?:password|client_secret|access_token|api_secret|secret_token|refresh_token|api_key)["']?\s*[:=]\s*)(["'])(?:(?!\2)[^\\]|\\.)*(\2)""", r"\1\2[REDACTED]\3"),
             (r"""(?i)(["']?(?:password|client_secret|access_token|api_secret|secret_token|refresh_token|api_key)["']?\s*[:=]\s*)([^\s,"'&\}]+)""", r"\1[REDACTED]")
         ])
@@ -121,7 +121,7 @@ def setup_logging():
     file_handler.setFormatter(file_formatter)
     file_handler.addFilter(sensitive_filter)
     
-    # Manejador de consola para depuración local
+    # Manejador de consola para depuraciÃ³n local
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_formatter = SanitizedFormatter(
@@ -138,21 +138,21 @@ def setup_logging():
 setup_logging()
 logger = logging.getLogger("inventory_sync.app")
 
-# --- LIFESPAN DE LA APLICACIÓN ---
+# --- LIFESPAN DE LA APLICACIÃ“N ---
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Inicialización de la base de datos y migración al arranque
+    # InicializaciÃ³n de la base de datos y migraciÃ³n al arranque
     logger.info("Inicializando la base de datos...")
     from database import init_db_and_migrate
     init_db_and_migrate()
     logger.info("Base de datos inicializada y migrada correctamente.")
     yield
-    logger.info("Apagando la aplicación...")
+    logger.info("Apagando la aplicaciÃ³n...")
 
-# --- CREACIÓN DE LA APP FASTAPI ---
+# --- CREACIÃ“N DE LA APP FASTAPI ---
 
-# Vulnerabilidad #11: Deshabilitar Swagger UI /docs, /redoc y /openapi.json en producción
+# Vulnerabilidad #11: Deshabilitar Swagger UI /docs, /redoc y /openapi.json en producciÃ³n
 is_dev_env = (getattr(settings, "ENVIRONMENT", "development") == "development")
 
 app = FastAPI(
@@ -168,7 +168,7 @@ app = FastAPI(
 
 class SecurityHeadersMiddleware:
     """
-    Middleware ASGI para inyectar cabeceras de seguridad HTTP estándar
+    Middleware ASGI para inyectar cabeceras de seguridad HTTP estÃ¡ndar
     en todas las respuestas HTTP (Vulnerabilidades #10 y #13).
     - X-Content-Type-Options: nosniff
     - X-Frame-Options: DENY
@@ -204,10 +204,10 @@ _rate_limiter_instance: "RateLimitMiddleware | None" = None
 
 class RateLimitMiddleware:
     """
-    Middleware ASGI de Rate Limiting en memoria por IP usando ventana móvil (Vulnerabilidad #15).
+    Middleware ASGI de Rate Limiting en memoria por IP usando ventana mÃ³vil (Vulnerabilidad #15).
     - 120 peticiones por minuto por IP para endpoints generales.
-    - 30 peticiones por minuto por IP para webhooks (/webhook/...) y autenticación (/login, /auth/...).
-    Retorna HTTP 429 Too Many Requests si se excede el límite.
+    - 30 peticiones por minuto por IP para webhooks (/webhook/...) y autenticaciÃ³n (/login, /auth/...).
+    Retorna HTTP 429 Too Many Requests si se excede el lÃ­mite.
     """
     def __init__(
         self,
@@ -227,7 +227,7 @@ class RateLimitMiddleware:
         _rate_limiter_instance = self
 
     def reset(self):
-        """Reinicia los registros de rate limit (útil para pruebas)."""
+        """Reinicia los registros de rate limit (Ãºtil para pruebas)."""
         self.general_records.clear()
         self.strict_records.clear()
 
@@ -259,13 +259,13 @@ class RateLimitMiddleware:
         records = self.strict_records[ip] if is_strict else self.general_records[ip]
         limit = self.strict_limit if is_strict else self.general_limit
 
-        # Filtrar timestamps dentro de la ventana móvil
+        # Filtrar timestamps dentro de la ventana mÃ³vil
         valid_timestamps = [t for t in records if t > cutoff]
 
         if len(valid_timestamps) >= limit:
             logger.warning(
                 f"Rate limit excedido para IP {ip} en {path} "
-                f"({'strict' if is_strict else 'general'}, límite={limit}/min)"
+                f"({'strict' if is_strict else 'general'}, lÃ­mite={limit}/min)"
             )
             response = JSONResponse(
                 status_code=429,
@@ -281,7 +281,7 @@ class RateLimitMiddleware:
         else:
             self.general_records[ip] = valid_timestamps
 
-        # Limpieza periódica cada 500 peticiones para evitar crecimiento en memoria
+        # Limpieza periÃ³dica cada 500 peticiones para evitar crecimiento en memoria
         self._cleanup_counter += 1
         if self._cleanup_counter > 500:
             self._cleanup(cutoff)
@@ -309,7 +309,7 @@ class RateLimitMiddleware:
 
 
 def reset_rate_limits():
-    """Función de utilidad para limpiar los registros de rate limit."""
+    """FunciÃ³n de utilidad para limpiar los registros de rate limit."""
     global _rate_limiter_instance
     if _rate_limiter_instance:
         _rate_limiter_instance.reset()
@@ -325,13 +325,13 @@ app.add_middleware(
     window_seconds=60.0
 )
 
-# 2. Inyección de Cabeceras de Seguridad HTTP (nosniff, DENY, CSP, etc.)
+# 2. InyecciÃ³n de Cabeceras de Seguridad HTTP (nosniff, DENY, CSP, etc.)
 app.add_middleware(SecurityHeadersMiddleware)
 
 # 3. CORS Restringido (Vulnerabilidad #14: allow_headers sin '*')
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=[
@@ -349,7 +349,7 @@ app.add_middleware(
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    logger.warning(f"Excepción HTTP en {request.method} {request.url.path}: {exc.status_code} - {exc.detail}")
+    logger.warning(f"ExcepciÃ³n HTTP en {request.method} {request.url.path}: {exc.status_code} - {exc.detail}")
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail}
@@ -357,7 +357,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    logger.warning(f"Error de validación en {request.method} {request.url.path}: {exc.errors()}")
+    logger.warning(f"Error de validaciÃ³n en {request.method} {request.url.path}: {exc.errors()}")
     return JSONResponse(
         status_code=422,
         content={"detail": jsonable_encoder(exc.errors())}
@@ -365,11 +365,11 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
-    # No se expone el stack trace en producción
-    logger.exception(f"Excepción no controlada en {request.method} {request.url.path}: {exc}")
+    # No se expone el stack trace en producciÃ³n
+    logger.exception(f"ExcepciÃ³n no controlada en {request.method} {request.url.path}: {exc}")
     return JSONResponse(
         status_code=500,
-        content={"detail": "Ocurrió un error interno en el servidor."}
+        content={"detail": "OcurriÃ³ un error interno en el servidor."}
     )
 
 # Import main at the end to register all endpoint routes on the app object
