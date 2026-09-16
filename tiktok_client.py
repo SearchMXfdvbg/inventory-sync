@@ -50,14 +50,7 @@ class TikTokClient:
         logger.info(f"Actualizando stock en TikTok Shop para Product={product_id}, SKU={sku_id} -> Cantidad={quantity}")
 
         if not self.is_configured:
-            # Modo simulado / desarrollo
-            self._mock_stocks[sku_id] = quantity
-            logger.info(f"[MOCK TIKTOK] Stock actualizado exitosamente para {sku_id}: {quantity} unidades.")
-            return {
-                "code": 0,
-                "message": "Success (Simulated)",
-                "data": {"sku_id": sku_id, "available_stock": quantity}
-            }
+            raise TikTokClientError("TikTok Shop is not configured. Real connection required.")
 
         timestamp = int(time.time())
         path = "/product/202309/skus/inventory/update"
@@ -108,7 +101,7 @@ class TikTokClient:
         Consulta la cantidad disponible de inventario en TikTok Shop.
         """
         if not self.is_configured:
-            return self._mock_stocks.get(sku_id, 10)
+            raise TikTokClientError("TikTok Shop is not configured. Real connection required.")
 
         timestamp = int(time.time())
         path = f"/product/202309/products/{product_id}"
@@ -143,18 +136,7 @@ class TikTokClient:
         Obtiene el detalle de una orden de TikTok Shop para procesar la venta y sus SKUs.
         """
         if not self.is_configured:
-            return {
-                "id": order_id,
-                "status": "AWAITING_SHIPMENT",
-                "line_items": [
-                    {
-                        "product_id": "TT_PROD_001",
-                        "sku_id": "SKU001",
-                        "seller_sku": "SKU001",
-                        "quantity": 1
-                    }
-                ]
-            }
+            raise TikTokClientError("TikTok Shop is not configured. Real connection required.")
 
         timestamp = int(time.time())
         path = f"/order/202309/orders/{order_id}"

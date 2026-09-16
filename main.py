@@ -726,16 +726,16 @@ def get_cola(db: Session = Depends(get_db), current_user: dict = Depends(get_cur
 
 @app.post("/reconcile/{sku}")
 async def reconcile_sku(sku: str, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    # 1. Obtener producto de SAE Mock para encontrar IDs asociados
+    # 1. Obtener producto de SAE para encontrar IDs asociados
     try:
         product = sae_repo.get_product(sku)
     except ProductNotFoundError:
         raise HTTPException(
             status_code=404,
-            detail=f"Producto con SKU '{sku}' no encontrado en el sistema SAE Mock"
+            detail=f"Producto con SKU '{sku}' no encontrado en el sistema SAE"
         )
     except Exception as e:
-        logger.error(f"Error al leer SAE Mock para SKU {sku}: {e}", exc_info=True)
+        logger.error(f"Error al leer SAE para SKU {sku}: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="Error interno al consultar el inventario local. Consulte los registros del sistema."
@@ -762,7 +762,7 @@ async def reconcile_sku(sku: str, db: Session = Depends(get_db), current_user: d
     try:
         sae_stock = sae_repo.get_stock(sku)
     except Exception as e:
-        logger.error(f"Error al obtener stock de SAE Mock para SKU {sku}: {e}", exc_info=True)
+        logger.error(f"Error al obtener stock de SAE para SKU {sku}: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="Error interno al obtener stock del inventario local. Consulte los registros del sistema."
@@ -1049,12 +1049,12 @@ def get_status(request: Request, db: Session = Depends(get_db)):
         pass
 
     if t_settings:
-        shopify_status = "connected" if (t_settings.shopify_access_token and "shpat_" in t_settings.shopify_access_token) else "connected_mock"
-        ml_status = "connected" if (t_settings.ml_access_token and "APP_USR-" in t_settings.ml_access_token) else "connected_mock"
-        tiktok_status = "connected" if (t_settings.tiktok_access_token and t_settings.tiktok_shop_id) else "connected_mock"
-        amazon_status = "connected" if (t_settings.amazon_refresh_token and t_settings.amazon_seller_id) else "connected_mock"
-        ebay_status = "connected" if (t_settings.ebay_refresh_token and t_settings.ebay_client_id) else "connected_mock"
-        kaufland_status = "connected" if (t_settings.kaufland_client_key and t_settings.kaufland_secret_key) else "connected_mock"
+        shopify_status = "connected" if (t_settings.shopify_access_token and "shpat_" in t_settings.shopify_access_token) else "disconnected"
+        ml_status = "connected" if (t_settings.ml_access_token and "APP_USR-" in t_settings.ml_access_token) else "disconnected"
+        tiktok_status = "connected" if (t_settings.tiktok_access_token and t_settings.tiktok_shop_id) else "disconnected"
+        amazon_status = "connected" if (t_settings.amazon_refresh_token and t_settings.amazon_seller_id) else "disconnected"
+        ebay_status = "connected" if (t_settings.ebay_refresh_token and t_settings.ebay_client_id) else "disconnected"
+        kaufland_status = "connected" if (t_settings.kaufland_client_key and t_settings.kaufland_secret_key) else "disconnected"
         sae_status = t_settings.sae_repository_type
 
         return {
@@ -1104,25 +1104,25 @@ def get_status(request: Request, db: Session = Depends(get_db)):
             }
         }
 
-    if settings.SAE_REPOSITORY_TYPE == "production":
+    if True:
         sae_status = "production"
     else:
-        sae_status = "mock"
+        sae_status = "error"
         
     if settings.SHOP_DOMAIN == "your-shop.myshopify.com" or settings.SHOPIFY_ACCESS_TOKEN == "shpat_xxxx":
-        shopify_status = "connected_mock"
+        shopify_status = "disconnected"
     else:
         shopify_status = "connected"
         
     if settings.ML_ACCESS_TOKEN == "APP_USR-xxxx" or str(settings.ML_USER_ID) == "123456789":
-        ml_status = "connected_mock"
+        ml_status = "disconnected"
     else:
         ml_status = "connected"
 
-    tiktok_status = "connected" if tiktok_client.is_configured else "connected_mock"
-    amazon_status = "connected" if amazon_client.is_configured else "connected_mock"
-    ebay_status = "connected" if ebay_client.is_configured else "connected_mock"
-    kaufland_status = "connected" if kaufland_client.is_configured else "connected_mock"
+    tiktok_status = "connected" if tiktok_client.is_configured else "disconnected"
+    amazon_status = "connected" if amazon_client.is_configured else "disconnected"
+    ebay_status = "connected" if ebay_client.is_configured else "disconnected"
+    kaufland_status = "connected" if kaufland_client.is_configured else "disconnected"
         
     return {
         "inventario_principal": getattr(settings, "INVENTARIO_PRINCIPAL", "shopify"),
@@ -1423,7 +1423,7 @@ async def test_channel_connection(
         return await ml_client.test_connection(access_token=token)
 
     elif channel == "sae":
-        repo_type = payload.get("repository_type") or (t_settings.sae_repository_type if t_settings else "mock")
+        repo_type = payload.get("repository_type") or (t_settings.sae_repository_type if t_settings else "production")
         if repo_type == "production":
             return {"success": True, "status_code": 200, "message": "Conexión a base de datos de CONTPAQi SAE validada correctamente."}
         return {"success": True, "status_code": 200, "message": "Catálogo local de CONTPAQi SAE activo y listo."}
@@ -1514,8 +1514,7 @@ async def get_catalog_products(db: Session = Depends(get_db), current_user: dict
             )
         return items
 
-    is_mock = (settings.SHOP_DOMAIN == "your-shop.myshopify.com" or settings.SHOPIFY_ACCESS_TOKEN.startswith("shpat_xxxx"))
-    if not is_mock:
+    if True:
         try:
             products = await shopify_client.get_catalog_products()
             if products:
@@ -1531,8 +1530,7 @@ async def bulk_update_catalog(payload: BulkCatalogUpdateRequest, current_user: d
     """
     Aplica en bloque especificaciones (marca, peso, dimensiones, garantía) a productos y variantes seleccionados.
     """
-    is_mock = (settings.SHOP_DOMAIN == "your-shop.myshopify.com" or settings.SHOPIFY_ACCESS_TOKEN.startswith("shpat_xxxx"))
-    if not is_mock:
+    if True:
         try:
             res = await shopify_client.bulk_update_attributes(payload.model_dump())
             return BulkCatalogUpdateResponse(

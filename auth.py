@@ -439,15 +439,7 @@ async def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-    # 2. Si no se proporcionó token, verificar bypass de Demo Mode
-    if request is not None:
-        demo_header = request.headers.get("x-demo-mode", "").lower()
-        if demo_header in ("true", "1", "yes"):
-            return {
-                "username": "demo_user",
-                "role": "admin",
-                "is_demo": True
-            }
+    # Demo Mode Bypass Removed
 
     # 3. Fallback seguro para entorno de testing / TestClient
     env = (getattr(settings, "ENVIRONMENT", "") or os.environ.get("ENVIRONMENT", "")).lower()

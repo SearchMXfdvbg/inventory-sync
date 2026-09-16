@@ -131,18 +131,18 @@ async def run_iteration(db: Session) -> bool:
             f"Origin: {venta.origen}, External ID: {venta.external_id}, Attempt: {venta.attempts})"
         )
 
-        # 3. Load product data in SAE Mock
+        # 3. Load product data in SAE
         try:
             product = sae.get_product(venta.sku)
         except ProductNotFoundError as e:
-            logger.error(f"SKU '{venta.sku}' does not exist in SAE Mock. Marking Venta ID {venta.id} as FAILED.")
+            logger.error(f"SKU '{venta.sku}' does not exist in SAE. Marking Venta ID {venta.id} as FAILED.")
             venta.status = "FAILED"
             venta.last_error = f"ProductNotFoundError: {str(e)}"
             db.commit()
             any_processed = True
             continue
         except Exception as e:
-            logger.exception(f"Temporary error loading product '{venta.sku}' from SAE Mock for Venta ID {venta.id}: {e}")
+            logger.exception(f"Temporary error loading product '{venta.sku}' from SAE for Venta ID {venta.id}: {e}")
             handle_temp_error(db, venta, f"SAEProductLoadError: {str(e)}")
             return False
 
