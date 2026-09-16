@@ -202,6 +202,49 @@ export default function IntegrationsSettingsPage() {
     );
   }
 
+  // Calculate active connections for the badge
+  const activeConnections = [];
+  if (status?.shopify_connected && settings.ENABLE_SHOPIFY) activeConnections.push({ name: 'Shopify', color: 'bg-green-500' });
+  if (status?.ml_connected && settings.ENABLE_MERCADOLIBRE) activeConnections.push({ name: 'Mercado Libre', color: 'bg-yellow-500' });
+  if (settings.ENABLE_AMAZON && settings.AMAZON_CLIENT_ID && settings.AMAZON_REFRESH_TOKEN) activeConnections.push({ name: 'Amazon SP-API', color: 'bg-orange-500' });
+  if (settings.ENABLE_TIKTOK && settings.TIKTOK_APP_KEY) activeConnections.push({ name: 'TikTok Shop', color: 'bg-pink-500' });
+  if (settings.ENABLE_EBAY && settings.EBAY_CLIENT_ID) activeConnections.push({ name: 'eBay', color: 'bg-blue-500' });
+  if (settings.ENABLE_KAUFLAND && settings.KAUFLAND_CLIENT_KEY) activeConnections.push({ name: 'Kaufland', color: 'bg-red-500' });
+  if (status?.sae_connected && settings.ENABLE_SAE) activeConnections.push({ name: 'Aspel SAE', color: 'bg-indigo-500' });
+
+  return (
+    <div className="space-y-6">
+      {/* Active Connections Badge Panel */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <Activity className="text-emerald-400" size={20} />
+            Conexiones Activas
+          </h2>
+          <p className="text-slate-400 text-sm mt-1">Sistemas actualmente vinculados a tu Hub de Sincronización.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {activeConnections.length > 0 ? (
+            activeConnections.map(conn => (
+              <div key={conn.name} className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-full">
+                <span className={w-2 h-2 rounded-full  animate-pulse}></span>
+                <span className="text-slate-200 text-xs font-semibold">{conn.name}</span>
+              </div>
+            ))
+          ) : (
+            <div className="flex items-center gap-1.5 bg-slate-950 border border-red-900/50 px-3 py-1.5 rounded-full">
+                <XCircle size={14} className="text-red-400" />
+                <span className="text-red-400 text-xs font-semibold">Ninguna conexión activa</span>
+            </div>
+          )}
+        </div>
+      </div>
+        <LoadingSkeleton variant="card" />
+        <LoadingSkeleton variant="table" />
+      </div>
+    );
+  }
+
   const isSAEEnabled = settings.ENABLE_SAE ?? true;
 
   return (
@@ -1106,4 +1149,5 @@ export default function IntegrationsSettingsPage() {
     </div>
   );
 }
+
 
