@@ -103,9 +103,7 @@ export default function InventoryPage() {
         return u && u !== 'SKU' && u !== 'CODIGO' && !u.includes('GENERADO') && !u.includes('PRODUCTOS UNICOS') && u.length <= 50;
       }) : [];
       setProducts(cleanInv);
-      if (typeof window !== 'undefined' && Array.isArray(invData) && invData.length !== cleanInv.length) {
-        localStorage.setItem('is_products', JSON.stringify(cleanInv));
-      }
+
       if (settingsData) {
         setSettings(settingsData);
       }

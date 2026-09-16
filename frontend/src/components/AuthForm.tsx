@@ -13,7 +13,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
-import { setDemoMode, setTenantId, login, register } from '@/lib/api';
+import { setTenantId, login, register } from '@/lib/api';
 
 export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'login' | 'register' }) {
   const router = useRouter();
@@ -70,7 +70,6 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
         setLoading(true);
         const regRes = await register(username.trim(), password, email.trim(), 'empresa-a');
         setSuccess('¡Cuenta empresarial creada con éxito! Redirigiendo...');
-        setDemoMode(false);
         setTenantId('empresa-a');
         localStorage.setItem('logged_in', 'true');
 
@@ -164,7 +163,6 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
           localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(tList));
         }
       } catch {}
-      setDemoMode(false);
       setTenantId(isSuper ? 'global-master' : 'empresa-a');
       setSuccess(isSuper ? '¡Acceso Maestro de Super Administrador Concedido!' : '¡Credenciales verificadas! Iniciando sesión...');
       setTimeout(() => {

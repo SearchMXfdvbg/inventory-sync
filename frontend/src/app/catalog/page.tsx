@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -604,7 +604,7 @@ export default function CatalogPage() {
                     ? `${p.weight} ${p.weight_unit || 'g'}` 
                     : '--';
 
-                  const cleanTitle = p.title.replace(/\s*\(Demo\)/gi, '').replace(/-Demo/gi, '').replace(/\s+Demo/gi, '');
+                  const cleanTitle = p.title;
 
                   return (
                     <tr 

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { 
   CheckCircle2
 } from 'lucide-react';
-import { getInventory, getSales, getSettings, Product, Venta, isDemoMode, isChannelConfigured, SystemSettings } from '@/lib/api';
+import { getInventory, getSales, getSettings, Product, Venta, isChannelConfigured, SystemSettings } from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 

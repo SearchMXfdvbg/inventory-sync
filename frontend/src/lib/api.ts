@@ -1,4 +1,4 @@
-﻿// src/lib/api.ts
+// src/lib/api.ts
 import * as XLSX from 'xlsx';
 
 export interface Product {
@@ -116,13 +116,6 @@ export interface IntegrationStatus {
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 const BASE_URL = API_BASE_URL;
 
-export const isDemoMode = (): boolean => false;
-
-export const setDemoMode = (_enabled: boolean): void => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem('demo_mode', 'false');
-};
-
 export const getTenantId = (): string => {
   if (typeof window === 'undefined') return 'empresa-a';
   return localStorage.getItem('tenant_id') || 'empresa-a';
@@ -148,7 +141,6 @@ export const clearSession = (): void => {
     'is_products',
     'is_sales',
     'is_settings',
-    'demo_mode',
     'is_sync_automation_paused'
   ];
   keysToRemove.forEach(key => localStorage.removeItem(key));
@@ -168,10 +160,7 @@ export const handleUnauthorized = (): void => {
   }
 };
 
-// Catálogo real vacío por defecto hasta que el cliente importe sus productos
-const ENTERPRISE_INITIAL_PRODUCTS: Product[] = [];
 
-const ENTERPRISE_INITIAL_SALES: Venta[] = [];
 
 export const getHeaders = (customHeaders?: HeadersInit): HeadersInit => {
   const headers: Record<string, string> = {
@@ -429,137 +418,48 @@ export const resendVerificationCode = async (email: string): Promise<{ message: 
   return { message: 'Código de verificación reenviado exitosamente.' };
 };
 
-// API calls centralizadas con fallback empresarial para Vercel
 export const getInventory = async (): Promise<Product[]> => {
-  try {
-    const response = await fetchApi(`${BASE_URL}/inventory`);
-    if (response.ok) {
-      const data = await response.json();
-      if (Array.isArray(data) && data.length > 0) return data;
-    }
-  } catch (err) {
-    // Fallback
+  const response = await fetchApi(`${BASE_URL}/inventory`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch inventory');
   }
-
-  if (typeof window !== 'undefined') {
-    const local = localStorage.getItem('is_products');
-    if (local) return JSON.parse(local);
-    localStorage.setItem('is_products', JSON.stringify(ENTERPRISE_INITIAL_PRODUCTS));
-  }
-  return ENTERPRISE_INITIAL_PRODUCTS;
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
 };
 
 export const getInventoryItem = async (sku: string): Promise<Product> => {
-  try {
-    const response = await fetchApi(`${BASE_URL}/inventory/${sku}`);
-    if (response.ok) return await response.json();
-  } catch (err) {}
-
-  const products = await getInventory();
-  const item = products.find((p) => p.sku === sku);
-  if (item) return item;
-  throw new Error(`Producto ${sku} no encontrado`);
+  const response = await fetchApi(`${BASE_URL}/inventory/${sku}`);
+  if (!response.ok) throw new Error(`Producto ${sku} no encontrado`);
+  return await response.json();
 };
 
 export const getSales = async (): Promise<Venta[]> => {
-  try {
-    const response = await fetchApi(`${BASE_URL}/sales`);
-    if (response.ok) {
-      const data = await response.json();
-      if (Array.isArray(data) && data.length > 0) return data;
-    }
-  } catch (err) {}
-
-  if (typeof window !== 'undefined') {
-    const local = localStorage.getItem('is_sales');
-    if (local) return JSON.parse(local);
-    localStorage.setItem('is_sales', JSON.stringify(ENTERPRISE_INITIAL_SALES));
+  const response = await fetchApi(`${BASE_URL}/sales`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch sales');
   }
-  return ENTERPRISE_INITIAL_SALES;
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
 };
 
 export const getQueue = async (): Promise<Venta[]> => {
-  try {
-    const response = await fetchApi(`${BASE_URL}/cola`);
-    if (response.ok) return await response.json();
-  } catch (err) {}
-
-  const sales = await getSales();
-  return sales.filter((s) => s.status === 'PENDING' || s.status === 'PROCESSING');
+  const response = await fetchApi(`${BASE_URL}/cola`);
+  if (!response.ok) throw new Error('Failed to fetch queue');
+  return await response.json();
 };
 
 export const reconcileProduct = async (sku: string): Promise<ReconcileResponse> => {
-  try {
-    const response = await fetchApi(`${BASE_URL}/reconcile/${sku}`, {
-      method: 'POST',
-    });
-    if (response.ok) return await response.json();
-  } catch (err) {}
-
-  const products = await getInventory();
-  const item = products.find((p) => p.sku === sku) || products[0];
-
-  return {
-    sku: item.sku,
-    status: 'MATCH',
-    sae_stock: item.stock,
-    shopify_stock: item.shopify_stock ?? item.stock,
-    ml_stock: item.ml_stock ?? item.stock,
-    amazon_stock: item.amazon_stock ?? item.stock,
-    ebay_stock: item.ebay_stock ?? item.stock,
-    kaufland_stock: item.kaufland_stock ?? item.stock,
-    stocks: {
-      sae: item.stock,
-      shopify: item.shopify_stock ?? item.stock,
-      mercadolibre: item.ml_stock ?? item.stock,
-      amazon: item.amazon_stock ?? item.stock,
-      ebay: item.ebay_stock ?? item.stock,
-      kaufland: item.kaufland_stock ?? item.stock,
-    }
-  };
+  const response = await fetchApi(`${BASE_URL}/reconcile/${sku}`, {
+    method: 'POST',
+  });
+  if (!response.ok) throw new Error('Error al conciliar');
+  return await response.json();
 };
 
 export const getIntegrationStatus = async (): Promise<IntegrationStatus> => {
-  try {
-    const response = await fetchApi(`${BASE_URL}/status`);
-    if (response.ok) return await response.json();
-  } catch (err) {}
-
-  let currentSettings: SystemSettings = DEFAULT_SETTINGS_ENTERPRISE;
-  if (typeof window !== 'undefined') {
-    try {
-      const local = localStorage.getItem('is_settings');
-      if (local) currentSettings = JSON.parse(local);
-    } catch {}
-  }
-
-  const shopify = isChannelConfigured('shopify', currentSettings);
-  const ml = isChannelConfigured('mercadolibre', currentSettings);
-  const tiktok = isChannelConfigured('tiktok', currentSettings);
-  const amazon = isChannelConfigured('amazon', currentSettings);
-  const ebay = isChannelConfigured('ebay', currentSettings);
-  const kaufland = isChannelConfigured('kaufland', currentSettings);
-  const sae = isChannelConfigured('sae', currentSettings);
-
-  return {
-    inventario_principal: currentSettings?.INVENTARIO_PRINCIPAL || 'local',
-    active_channels: {
-      sae,
-      shopify,
-      mercadolibre: ml,
-      tiktok,
-      amazon,
-      ebay,
-      kaufland,
-    },
-    sae: { status: sae ? 'connected' : 'offline', enabled: sae },
-    shopify: { status: shopify ? 'connected' : 'offline', domain: currentSettings?.SHOP_DOMAIN || '', enabled: shopify },
-    mercadolibre: { status: ml ? 'connected' : 'offline', site_id: currentSettings?.ML_SITE_ID || 'MLM', enabled: ml },
-    tiktok: { status: tiktok ? 'connected' : 'offline', shop_id: currentSettings?.TIKTOK_SHOP_ID || '', enabled: tiktok },
-    amazon: { status: amazon ? 'connected' : 'offline', marketplace_id: currentSettings?.AMAZON_MARKETPLACE_ID || '', enabled: amazon },
-    ebay: { status: ebay ? 'connected' : 'offline', marketplace_id: currentSettings?.EBAY_MARKETPLACE_ID || '', enabled: ebay },
-    kaufland: { status: kaufland ? 'connected' : 'offline', storefront: currentSettings?.KAUFLAND_STOREFRONT || '', enabled: kaufland }
-  };
+  const response = await fetchApi(`${BASE_URL}/status`);
+  if (!response.ok) throw new Error('Error al obtener estado');
+  return await response.json();
 };
 
 export interface TestConnectionResponse {
@@ -570,34 +470,12 @@ export interface TestConnectionResponse {
 }
 
 export const testConnection = async (channel: string, payload?: Record<string, any>): Promise<TestConnectionResponse> => {
-  try {
-    const response = await fetchApi(`${BASE_URL}/connections/test/${channel}`, {
-      method: 'POST',
-      body: payload ? JSON.stringify(payload) : undefined
-    });
-    if (response.ok) return await response.json();
-  } catch (err) {}
-
-  const channelNames: Record<string, string> = {
-    ebay: 'eBay Alemania (EBAY_DE)',
-    kaufland: 'Kaufland Global Marketplace (Kaufland.de)',
-    amazon: 'Amazon SP-API Europa (11 países)',
-    shopify: 'Shopify Admin GraphQL API',
-    tiktok: 'TikTok Shop Partner API',
-    mercadolibre: 'Mercado Libre API',
-    sae: 'CONTPAQi SAE / Base de Datos Central'
-  };
-
-  return {
-    success: true,
-    channel,
-    message: `Conexión verificada exitosamente con los servidores de ${channelNames[channel] || channel}. Latencia: 24ms. Estado: Operativo y autenticado.`,
-    details: {
-      status: 'AUTHENTICATED',
-      endpoint_ping_ms: 24,
-      token_valid: true
-    }
-  };
+  const response = await fetchApi(`${BASE_URL}/connections/test/${channel}`, {
+    method: 'POST',
+    body: payload ? JSON.stringify(payload) : undefined
+  });
+  if (!response.ok) throw new Error('Test de conexión falló');
+  return await response.json();
 };
 
 export interface SystemSettings {
@@ -680,34 +558,18 @@ const DEFAULT_SETTINGS_ENTERPRISE: SystemSettings = {
 };
 
 export const getSettings = async (): Promise<SystemSettings> => {
-  try {
-    const response = await fetchApi(`${BASE_URL}/settings`);
-    if (response.ok) return await response.json();
-  } catch (err) {}
-
-  if (typeof window !== 'undefined') {
-    const local = localStorage.getItem('is_settings');
-    if (local) return JSON.parse(local);
-    localStorage.setItem('is_settings', JSON.stringify(DEFAULT_SETTINGS_ENTERPRISE));
-  }
-  return DEFAULT_SETTINGS_ENTERPRISE;
+  const response = await fetchApi(`${BASE_URL}/settings`);
+  if (!response.ok) throw new Error('Error al obtener configuraciones');
+  return await response.json();
 };
 
 export const saveSettings = async (settings: Partial<SystemSettings>): Promise<{ message: string }> => {
-  try {
-    const response = await fetchApi(`${BASE_URL}/settings`, {
-      method: 'POST',
-      body: JSON.stringify(settings),
-    });
-    if (response.ok) return await response.json();
-  } catch (err) {}
-
-  if (typeof window !== 'undefined') {
-    const current = await getSettings();
-    const updated = { ...current, ...settings };
-    localStorage.setItem('is_settings', JSON.stringify(updated));
-  }
-  return { message: 'Configuración actualizada y sincronizada correctamente en los servidores de la nube' };
+  const response = await fetchApi(`${BASE_URL}/settings`, {
+    method: 'POST',
+    body: JSON.stringify(settings),
+  });
+  if (!response.ok) throw new Error('Error al guardar configuraciones');
+  return await response.json();
 };
 
 export interface CatalogProduct {
@@ -756,34 +618,21 @@ export interface BulkCatalogUpdateResponse {
 }
 
 export const getCatalogProducts = async (): Promise<CatalogProduct[]> => {
-  try {
-    const response = await fetchApi(`${BASE_URL}/catalog/products`);
-    if (response.ok) {
-      const data = await response.json();
-      if (Array.isArray(data)) return data;
-    }
-  } catch (err) {}
-
-  return [];
+  const response = await fetchApi(`${BASE_URL}/catalog/products`);
+  if (!response.ok) throw new Error('Error al obtener catalogo');
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
 };
 
 export const bulkUpdateCatalog = async (
   data: BulkCatalogUpdateRequest
 ): Promise<BulkCatalogUpdateResponse> => {
-  try {
-    const response = await fetchApi(`${BASE_URL}/catalog/bulk-update`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-    if (response.ok) return await response.json();
-  } catch (err) {}
-
-  return {
-    success: true,
-    updated_count: data.product_ids.length,
-    message: `${data.product_ids.length} productos actualizados con especificaciones técnicas`,
-    details: []
-  };
+  const response = await fetchApi(`${BASE_URL}/catalog/bulk-update`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Error al actualizar catálogo');
+  return await response.json();
 };
 
 export interface ImportInventoryResponse {
@@ -1005,11 +854,7 @@ export const importInventoryFile = async (file: File): Promise<ImportInventoryRe
 
     const data = await response.json();
 
-    // Guardar temporalmente en localStorage para que el UI (Dashboard) los pueda renderizar de inmediato.
-    // Como Vercel no tiene base de datos persistente, dependemos del caché del navegador para la demo.
-    if (typeof window !== 'undefined' && data.products) {
-      localStorage.setItem('is_products', JSON.stringify(data.products));
-    }
+
 
     return {
       success: data.success,
@@ -1226,9 +1071,7 @@ export const updateCentralStock = async (sku: string, newStock: number, reason: 
   if (products[idx].kaufland_stock !== undefined) products[idx].kaufland_stock = newStock;
   if (products[idx].ml_stock !== undefined) products[idx].ml_stock = newStock;
 
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('is_products', JSON.stringify(products));
-  }
+
 
   addAuditLogEntry(sku, {
     action: 'Ajuste Stock Central (Físico)',
@@ -1256,9 +1099,7 @@ export const reconcileSingleChannel = async (sku: string, channel: string): Prom
   else if (ch === 'kaufland') products[idx].kaufland_stock = targetStock;
   else if (ch === 'mercadolibre' || ch === 'ml') products[idx].ml_stock = targetStock;
 
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('is_products', JSON.stringify(products));
-  }
+
 
   addAuditLogEntry(sku, {
     action: `Conciliación Forzada Canal ${channel.toUpperCase()}`,
@@ -1291,9 +1132,7 @@ export const resolveStockConflict = async (
   products[idx].ml_stock = targetStock;
   products[idx].sync_status = 'MATCH';
 
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('is_products', JSON.stringify(products));
-  }
+
 
   addAuditLogEntry(sku, {
     action: `Resolución Conflicto Manual (Fuente: ${masterSource})`,
@@ -1380,9 +1219,7 @@ export const syncAllProductsToChannels = async (
     await new Promise(r => setTimeout(r, 40));
   }
 
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('is_products', JSON.stringify(products));
-  }
+
 
   return {
     updatedCount: total,

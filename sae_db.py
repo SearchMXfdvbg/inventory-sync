@@ -4,7 +4,21 @@ import logging
 from typing import Dict, Any
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from sae_mock import SAERepository, ProductNotFoundError, InsufficientStockError
+class SAESyncError(Exception):
+    pass
+
+class ProductNotFoundError(SAESyncError):
+    pass
+
+class InsufficientStockError(SAESyncError):
+    pass
+
+class SAERepository:
+    def get_stock(self, sku: str) -> int: raise NotImplementedError
+    def set_stock(self, sku: str, quantity: int) -> None: raise NotImplementedError
+    def decrement_stock(self, sku: str, quantity: int) -> int: raise NotImplementedError
+    def get_product(self, sku: str) -> Dict[str, Any]: raise NotImplementedError
+    def get_all_products(self) -> list: raise NotImplementedError
 
 logger = logging.getLogger("inventory_sync.sae_db")
 

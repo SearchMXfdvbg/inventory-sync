@@ -49,7 +49,7 @@ from tiktok_client import TikTokClient
 from amazon_client import AmazonClient
 from ebay_client import EbayClient
 from kaufland_client import KauflandClient
-from sae_mock import SAEMockRepository, ProductNotFoundError
+from sae_db import SAEDatabaseRepository, ProductNotFoundError
 from config import Settings, settings, reload_settings
 
 logger = logging.getLogger("inventory_sync.main")
@@ -61,7 +61,7 @@ tiktok_client = TikTokClient()
 amazon_client = AmazonClient()
 ebay_client = EbayClient()
 kaufland_client = KauflandClient()
-sae_repo = SAEMockRepository()
+sae_repo = SAEDatabaseRepository(settings.DATABASE_URL)
 
 # Base delay para backoff exponencial (en segundos)
 RETRY_BASE_DELAY = 60

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app import setup_logging
 from database import engine, Base, SessionLocal
 from models import Venta
-from sae_mock import SAEMockRepository, ProductNotFoundError, InsufficientStockError
+from sae_db import SAEDatabaseRepository, ProductNotFoundError, InsufficientStockError
 from shopify_client import ShopifyClient
 from ml_client import MLClient
 from tiktok_client import TikTokClient
@@ -29,7 +29,7 @@ tiktok_client = TikTokClient()
 amazon_client = AmazonClient()
 ebay_client = EbayClient()
 kaufland_client = KauflandClient()
-sae = SAEMockRepository()
+sae = SAEDatabaseRepository(settings.DATABASE_URL)
 
 # Base delay for exponential backoff (in seconds)
 RETRY_BASE_DELAY = 60
@@ -67,7 +67,7 @@ async def run_iteration(db: Session) -> bool:
     if not isinstance(ml_client, (Mock, MagicMock)):
         ml_client = MLClient()
     if not isinstance(sae, (Mock, MagicMock)):
-        sae = SAEMockRepository()
+        sae = SAEDatabaseRepository(settings.DATABASE_URL)
 
     logger.info("Starting worker processing iteration...")
     any_processed = False
