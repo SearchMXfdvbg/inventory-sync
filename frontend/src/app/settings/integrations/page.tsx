@@ -267,14 +267,7 @@ export default function IntegrationsSettingsPage() {
             Configura tu inventario principal (Shopify o SAE) y activa los canales donde vendes en tiempo real.
           </p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg shadow-blue-500/20 transition-all self-start md:self-auto cursor-pointer"
-        >
-          <Save size={16} />
-          <span>{saving ? 'Guardando...' : 'Guardar Todo'}</span>
-        </button>
+        
       </div>
 
       <form onSubmit={handleSave} className="space-y-8">
@@ -1149,5 +1142,6 @@ export default function IntegrationsSettingsPage() {
     </div>
   );
 }
+
 
 
