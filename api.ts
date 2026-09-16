@@ -1,4 +1,4 @@
-﻿// src/lib/api.ts
+// src/lib/api.ts
 import * as XLSX from 'xlsx';
 
 export interface Product {
@@ -113,7 +113,7 @@ export interface IntegrationStatus {
   };
 }
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+export const API_BASE_URL = typeof window !== 'undefined' ? '/api' : (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000');
 const BASE_URL = API_BASE_URL;
 
 export const isDemoMode = (): boolean => false;
@@ -1040,16 +1040,16 @@ export const isChannelConfigured = (channel: string, settings: SystemSettings | 
   if (!settings) return false;
   switch (channel.toLowerCase()) {
     case 'shopify':
-      return Boolean(settings.ENABLE_SHOPIFY && settings.SHOP_DOMAIN && !settings.SHOP_DOMAIN.includes('example') && settings.SHOPIFY_ACCESS_TOKEN && !settings.SHOPIFY_ACCESS_TOKEN.startsWith('shpat_â€¢â€¢â€¢') && settings.SHOPIFY_ACCESS_TOKEN.length > 10);
+      return Boolean(settings.ENABLE_SHOPIFY && settings.SHOP_DOMAIN && !settings.SHOP_DOMAIN.includes('example') && settings.SHOPIFY_ACCESS_TOKEN && !settings.SHOPIFY_ACCESS_TOKEN.startsWith('shpat_•••') && settings.SHOPIFY_ACCESS_TOKEN.length > 10);
     case 'mercadolibre':
     case 'ml':
-      return Boolean(settings.ENABLE_MERCADOLIBRE && settings.ML_ACCESS_TOKEN && !settings.ML_ACCESS_TOKEN.startsWith('â€¢â€¢â€¢') && settings.ML_USER_ID > 0);
+      return Boolean(settings.ENABLE_MERCADOLIBRE && settings.ML_ACCESS_TOKEN && !settings.ML_ACCESS_TOKEN.startsWith('•••') && settings.ML_USER_ID > 0);
     case 'amazon':
-      return Boolean(settings.ENABLE_AMAZON && settings.AMAZON_SELLER_ID && !settings.AMAZON_SELLER_ID.includes('XXXX') && settings.AMAZON_REFRESH_TOKEN && !settings.AMAZON_REFRESH_TOKEN.startsWith('Atzr|â€¢â€¢â€¢') && settings.AMAZON_REFRESH_TOKEN.length > 10);
+      return Boolean(settings.ENABLE_AMAZON && settings.AMAZON_SELLER_ID && !settings.AMAZON_SELLER_ID.includes('XXXX') && settings.AMAZON_REFRESH_TOKEN && !settings.AMAZON_REFRESH_TOKEN.startsWith('Atzr|•••') && settings.AMAZON_REFRESH_TOKEN.length > 10);
     case 'ebay':
-      return Boolean(settings.ENABLE_EBAY && settings.EBAY_CLIENT_ID && !settings.EBAY_CLIENT_ID.includes('â€¢â€¢â€¢â€¢') && settings.EBAY_REFRESH_TOKEN && !settings.EBAY_REFRESH_TOKEN.startsWith('v^1.1#â€¢â€¢â€¢') && settings.EBAY_REFRESH_TOKEN.length > 10);
+      return Boolean(settings.ENABLE_EBAY && settings.EBAY_CLIENT_ID && !settings.EBAY_CLIENT_ID.includes('••••') && settings.EBAY_REFRESH_TOKEN && !settings.EBAY_REFRESH_TOKEN.startsWith('v^1.1#•••') && settings.EBAY_REFRESH_TOKEN.length > 10);
     case 'kaufland':
-      return Boolean(settings.ENABLE_KAUFLAND && settings.KAUFLAND_CLIENT_KEY && !settings.KAUFLAND_CLIENT_KEY.includes('â€¢â€¢â€¢â€¢') && settings.KAUFLAND_CLIENT_KEY.length > 5);
+      return Boolean(settings.ENABLE_KAUFLAND && settings.KAUFLAND_CLIENT_KEY && !settings.KAUFLAND_CLIENT_KEY.includes('••••') && settings.KAUFLAND_CLIENT_KEY.length > 5);
     case 'tiktok':
       return Boolean(settings.ENABLE_TIKTOK && settings.TIKTOK_APP_KEY && settings.TIKTOK_ACCESS_TOKEN);
     case 'sae':
