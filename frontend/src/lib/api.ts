@@ -1,10 +1,10 @@
-// src/lib/api.ts
+﻿// src/lib/api.ts
 import * as XLSX from 'xlsx';
 
 export interface Product {
   sku: string;
   nombre: string;
-  stock: number; // Stock central / Almacén Local
+  stock: number; // Stock central / AlmacÃ©n Local
   categoria?: string;
   subcategoria?: string;
   marca?: string;
@@ -113,7 +113,7 @@ export interface IntegrationStatus {
   };
 }
 
-export const API_BASE_URL = typeof window !== 'undefined' ? '/api' : (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000');
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 const BASE_URL = API_BASE_URL;
 
 export const isDemoMode = (): boolean => false;
@@ -168,7 +168,7 @@ export const handleUnauthorized = (): void => {
   }
 };
 
-// Catálogo real vacío por defecto hasta que el cliente importe sus productos
+// CatÃ¡logo real vacÃ­o por defecto hasta que el cliente importe sus productos
 const ENTERPRISE_INITIAL_PRODUCTS: Product[] = [];
 
 const ENTERPRISE_INITIAL_SALES: Venta[] = [];
@@ -269,7 +269,7 @@ export const login = async (username: string, password: string): Promise<LoginRe
       }
       return data;
     } else {
-      let errorDetail = 'Credenciales inválidas. Verifique su usuario y contraseña.';
+      let errorDetail = 'Credenciales invÃ¡lidas. Verifique su usuario y contraseÃ±a.';
       try {
         const errJson = await response.json();
         if (errJson.detail) errorDetail = errJson.detail;
@@ -277,10 +277,10 @@ export const login = async (username: string, password: string): Promise<LoginRe
       throw new Error(errorDetail);
     }
   } catch (err: any) {
-    if (err.message && (err.message.includes('Credenciales') || err.message.includes('Usuario') || err.message.includes('Contraseña') || err.message.includes('crear una cuenta'))) {
+    if (err.message && (err.message.includes('Credenciales') || err.message.includes('Usuario') || err.message.includes('ContraseÃ±a') || err.message.includes('crear una cuenta'))) {
       throw err;
     }
-    throw new Error(err.message || 'Error de conexión con el servidor.');
+    throw new Error(err.message || 'Error de conexiÃ³n con el servidor.');
   }
 };
 
@@ -357,7 +357,7 @@ export const register = async (
           suspension_reason: '',
           commission_rate: '25%',
           created_at: new Date().toISOString(),
-          last_sync: 'En Línea'
+          last_sync: 'En LÃ­nea'
         });
       }
       localStorage.setItem('inventory_sync_tenants_v2', JSON.stringify(list));
@@ -426,7 +426,7 @@ export const verifyCode = async (email: string, code: string): Promise<VerifyCod
 };
 
 export const resendVerificationCode = async (email: string): Promise<{ message: string; dev_code?: string }> => {
-  return { message: 'Código de verificación reenviado exitosamente.' };
+  return { message: 'CÃ³digo de verificaciÃ³n reenviado exitosamente.' };
 };
 
 // API calls centralizadas con fallback empresarial para Vercel
@@ -581,7 +581,7 @@ export const testConnection = async (channel: string, payload?: Record<string, a
   const channelNames: Record<string, string> = {
     ebay: 'eBay Alemania (EBAY_DE)',
     kaufland: 'Kaufland Global Marketplace (Kaufland.de)',
-    amazon: 'Amazon SP-API Europa (11 países)',
+    amazon: 'Amazon SP-API Europa (11 paÃ­ses)',
     shopify: 'Shopify Admin GraphQL API',
     tiktok: 'TikTok Shop Partner API',
     mercadolibre: 'Mercado Libre API',
@@ -591,7 +591,7 @@ export const testConnection = async (channel: string, payload?: Record<string, a
   return {
     success: true,
     channel,
-    message: `Conexión verificada exitosamente con los servidores de ${channelNames[channel] || channel}. Latencia: 24ms. Estado: Operativo y autenticado.`,
+    message: `ConexiÃ³n verificada exitosamente con los servidores de ${channelNames[channel] || channel}. Latencia: 24ms. Estado: Operativo y autenticado.`,
     details: {
       status: 'AUTHENTICATED',
       endpoint_ping_ms: 24,
@@ -707,7 +707,7 @@ export const saveSettings = async (settings: Partial<SystemSettings>): Promise<{
     const updated = { ...current, ...settings };
     localStorage.setItem('is_settings', JSON.stringify(updated));
   }
-  return { message: 'Configuración actualizada y sincronizada correctamente en los servidores de la nube' };
+  return { message: 'ConfiguraciÃ³n actualizada y sincronizada correctamente en los servidores de la nube' };
 };
 
 export interface CatalogProduct {
@@ -781,7 +781,7 @@ export const bulkUpdateCatalog = async (
   return {
     success: true,
     updated_count: data.product_ids.length,
-    message: `${data.product_ids.length} productos actualizados con especificaciones técnicas`,
+    message: `${data.product_ids.length} productos actualizados con especificaciones tÃ©cnicas`,
     details: []
   };
 };
@@ -799,7 +799,7 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
   const data = await file.arrayBuffer();
   const workbook = XLSX.read(data, { type: 'array' });
   if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-    throw new Error('El archivo Excel no contiene hojas de cálculo válidas.');
+    throw new Error('El archivo Excel no contiene hojas de cÃ¡lculo vÃ¡lidas.');
   }
 
   const firstSheetName = workbook.SheetNames[0];
@@ -809,10 +809,10 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
   const rawRows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
 
   if (!rawRows || rawRows.length === 0) {
-    throw new Error('El archivo está vacío o no contiene filas de datos.');
+    throw new Error('El archivo estÃ¡ vacÃ­o o no contiene filas de datos.');
   }
 
-  // 2. Buscar inteligentemente cuál es la fila real de encabezados (headers)
+  // 2. Buscar inteligentemente cuÃ¡l es la fila real de encabezados (headers)
   let headerRowIndex = 0;
   let headerColumns: string[] = [];
 
@@ -821,10 +821,10 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
     if (!Array.isArray(row)) continue;
 
     const nonNullCells = row.filter((c: any) => c !== null && c !== undefined && String(c).trim() !== '');
-    if (nonNullCells.length < 2) continue; // Saltar títulos de una sola celda / banners
+    if (nonNullCells.length < 2) continue; // Saltar tÃ­tulos de una sola celda / banners
 
     const cleanCells = nonNullCells.map((c: any) => String(c).trim().toLowerCase());
-    const hasSku = cleanCells.some(c => c === 'sku' || c === 'codigo' || c === 'código' || c === 'clave' || c === 'id' || c === 'referencia' || c === 'articulo' || c === 'artículo' || c === 'item' || c.startsWith('sku'));
+    const hasSku = cleanCells.some(c => c === 'sku' || c === 'codigo' || c === 'cÃ³digo' || c === 'clave' || c === 'id' || c === 'referencia' || c === 'articulo' || c === 'artÃ­culo' || c === 'item' || c.startsWith('sku'));
     const hasName = cleanCells.some(c => c.includes('nom') || c.includes('prod') || c.includes('desc') || c.includes('titul'));
     const hasStock = cleanCells.some(c => c.includes('stock') || c.includes('exist') || c.includes('cant') || c.includes('qty'));
 
@@ -835,7 +835,7 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
     }
   }
 
-  // Si no se detectó una fila explícita, usar la fila 0
+  // Si no se detectÃ³ una fila explÃ­cita, usar la fila 0
   if (headerColumns.length === 0) {
     headerColumns = rawRows[0].map((cell: any) => (cell !== null && cell !== undefined ? String(cell).trim() : ''));
   }
@@ -887,7 +887,7 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
       skuRaw = String(row[0]).trim();
     }
 
-    // Filtrar filas vacías, encabezados repetidos o banners informativos
+    // Filtrar filas vacÃ­as, encabezados repetidos o banners informativos
     if (!skuRaw) continue;
     const cleanSkuUpper = skuRaw.toUpperCase();
     if (
@@ -920,7 +920,7 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
       if (!isNaN(parsedNum)) stock = Math.max(0, parsedNum);
     }
 
-    // Extraer campos adicionales de catálogo
+    // Extraer campos adicionales de catÃ¡logo
     const categoria = (categoriaCol >= 0 && row[categoriaCol]) ? String(row[categoriaCol]).trim() : undefined;
     const subcategoria = (subcategoriaCol >= 0 && row[subcategoriaCol]) ? String(row[subcategoriaCol]).trim() : undefined;
     const marca = (marcaCol >= 0 && row[marcaCol]) ? String(row[marcaCol]).trim() : undefined;
@@ -982,7 +982,7 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
   }
 
   if (products.length === 0) {
-    throw new Error('No se encontraron productos válidos con SKU en el archivo.');
+    throw new Error('No se encontraron productos vÃ¡lidos con SKU en el archivo.');
   }
 
   return products;
@@ -1006,7 +1006,7 @@ export const importInventoryFile = async (file: File): Promise<ImportInventoryRe
     const data = await response.json();
 
     // Guardar temporalmente en localStorage para que el UI (Dashboard) los pueda renderizar de inmediato.
-    // Como Vercel no tiene base de datos persistente, dependemos del caché del navegador para la demo.
+    // Como Vercel no tiene base de datos persistente, dependemos del cachÃ© del navegador para la demo.
     if (typeof window !== 'undefined' && data.products) {
       localStorage.setItem('is_products', JSON.stringify(data.products));
     }
@@ -1040,16 +1040,16 @@ export const isChannelConfigured = (channel: string, settings: SystemSettings | 
   if (!settings) return false;
   switch (channel.toLowerCase()) {
     case 'shopify':
-      return Boolean(settings.ENABLE_SHOPIFY && settings.SHOP_DOMAIN && !settings.SHOP_DOMAIN.includes('example') && settings.SHOPIFY_ACCESS_TOKEN && !settings.SHOPIFY_ACCESS_TOKEN.startsWith('shpat_•••') && settings.SHOPIFY_ACCESS_TOKEN.length > 10);
+      return Boolean(settings.ENABLE_SHOPIFY && settings.SHOP_DOMAIN && !settings.SHOP_DOMAIN.includes('example') && settings.SHOPIFY_ACCESS_TOKEN && !settings.SHOPIFY_ACCESS_TOKEN.startsWith('shpat_â€¢â€¢â€¢') && settings.SHOPIFY_ACCESS_TOKEN.length > 10);
     case 'mercadolibre':
     case 'ml':
-      return Boolean(settings.ENABLE_MERCADOLIBRE && settings.ML_ACCESS_TOKEN && !settings.ML_ACCESS_TOKEN.startsWith('•••') && settings.ML_USER_ID > 0);
+      return Boolean(settings.ENABLE_MERCADOLIBRE && settings.ML_ACCESS_TOKEN && !settings.ML_ACCESS_TOKEN.startsWith('â€¢â€¢â€¢') && settings.ML_USER_ID > 0);
     case 'amazon':
-      return Boolean(settings.ENABLE_AMAZON && settings.AMAZON_SELLER_ID && !settings.AMAZON_SELLER_ID.includes('XXXX') && settings.AMAZON_REFRESH_TOKEN && !settings.AMAZON_REFRESH_TOKEN.startsWith('Atzr|•••') && settings.AMAZON_REFRESH_TOKEN.length > 10);
+      return Boolean(settings.ENABLE_AMAZON && settings.AMAZON_SELLER_ID && !settings.AMAZON_SELLER_ID.includes('XXXX') && settings.AMAZON_REFRESH_TOKEN && !settings.AMAZON_REFRESH_TOKEN.startsWith('Atzr|â€¢â€¢â€¢') && settings.AMAZON_REFRESH_TOKEN.length > 10);
     case 'ebay':
-      return Boolean(settings.ENABLE_EBAY && settings.EBAY_CLIENT_ID && !settings.EBAY_CLIENT_ID.includes('••••') && settings.EBAY_REFRESH_TOKEN && !settings.EBAY_REFRESH_TOKEN.startsWith('v^1.1#•••') && settings.EBAY_REFRESH_TOKEN.length > 10);
+      return Boolean(settings.ENABLE_EBAY && settings.EBAY_CLIENT_ID && !settings.EBAY_CLIENT_ID.includes('â€¢â€¢â€¢â€¢') && settings.EBAY_REFRESH_TOKEN && !settings.EBAY_REFRESH_TOKEN.startsWith('v^1.1#â€¢â€¢â€¢') && settings.EBAY_REFRESH_TOKEN.length > 10);
     case 'kaufland':
-      return Boolean(settings.ENABLE_KAUFLAND && settings.KAUFLAND_CLIENT_KEY && !settings.KAUFLAND_CLIENT_KEY.includes('••••') && settings.KAUFLAND_CLIENT_KEY.length > 5);
+      return Boolean(settings.ENABLE_KAUFLAND && settings.KAUFLAND_CLIENT_KEY && !settings.KAUFLAND_CLIENT_KEY.includes('â€¢â€¢â€¢â€¢') && settings.KAUFLAND_CLIENT_KEY.length > 5);
     case 'tiktok':
       return Boolean(settings.ENABLE_TIKTOK && settings.TIKTOK_APP_KEY && settings.TIKTOK_ACCESS_TOKEN);
     case 'sae':
@@ -1063,8 +1063,8 @@ export const exportProductsToExcel = (products: Product[], filename: string = 'i
   const exportData = products.map(p => ({
     'SKU': p.sku,
     'Nombre del Producto': p.nombre,
-    'Categoría': p.categoria || 'Sin Categoría',
-    'Subcategoría': p.subcategoria || '',
+    'CategorÃ­a': p.categoria || 'Sin CategorÃ­a',
+    'SubcategorÃ­a': p.subcategoria || '',
     'Marca / Proveedor': p.marca || 'N/A',
     'Stock Central (Local)': p.stock,
     'Stock Shopify': p.shopify_stock ?? 'No vinculado',
@@ -1074,9 +1074,9 @@ export const exportProductsToExcel = (products: Product[], filename: string = 'i
     'Stock Kaufland DE': p.kaufland_stock ?? 'No vinculado',
     'Precio ($ USD)': p.precio !== undefined ? p.precio : '',
     'Costo Unitario ($ USD)': p.costo !== undefined ? p.costo : '',
-    'Código de Barras': p.codigo_barras || '',
+    'CÃ³digo de Barras': p.codigo_barras || '',
     'Estado': p.estado || 'Activo',
-    'Estado de Sincronización': p.sync_status === 'MATCH' ? 'Sincronizado' : p.sync_status === 'DESYNC' ? 'Desincronizado' : 'Almacén Local'
+    'Estado de SincronizaciÃ³n': p.sync_status === 'MATCH' ? 'Sincronizado' : p.sync_status === 'DESYNC' ? 'Desincronizado' : 'AlmacÃ©n Local'
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -1102,7 +1102,7 @@ export const exportDifferencesToExcel = (products: Product[], filename: string =
   const exportData = listToExport.map(p => ({
     'SKU': p.sku,
     'Nombre del Producto': p.nombre,
-    'Stock Central (Físico SAE)': p.stock,
+    'Stock Central (FÃ­sico SAE)': p.stock,
     'Stock Shopify': p.shopify_stock ?? 'N/A',
     'Dif. Shopify': p.shopify_stock !== undefined ? p.shopify_stock - p.stock : 0,
     'Stock Amazon EU': p.amazon_stock ?? 'N/A',
@@ -1203,7 +1203,7 @@ export const addAuditLogEntry = (sku: string, entry: Partial<AuditLogEntry>): vo
       newStock: entry.newStock ?? 0,
       source: entry.source || 'Manual',
       user: entry.user || 'Administrador',
-      reason: entry.reason || 'Actualización de inventario',
+      reason: entry.reason || 'ActualizaciÃ³n de inventario',
       status: entry.status || 'SUCCESS'
     };
     const updated = [newEntry, ...current].slice(0, 50);
@@ -1219,7 +1219,7 @@ export const updateCentralStock = async (sku: string, newStock: number, reason: 
   const prevStock = products[idx].stock;
   products[idx].stock = newStock;
   products[idx].sync_status = 'MATCH';
-  // Si los canales están alineados:
+  // Si los canales estÃ¡n alineados:
   if (products[idx].shopify_stock !== undefined) products[idx].shopify_stock = newStock;
   if (products[idx].amazon_stock !== undefined) products[idx].amazon_stock = newStock;
   if (products[idx].ebay_stock !== undefined) products[idx].ebay_stock = newStock;
@@ -1231,10 +1231,10 @@ export const updateCentralStock = async (sku: string, newStock: number, reason: 
   }
 
   addAuditLogEntry(sku, {
-    action: 'Ajuste Stock Central (Físico)',
+    action: 'Ajuste Stock Central (FÃ­sico)',
     previousStock: prevStock,
     newStock,
-    source: 'Almacén Central (SAE)',
+    source: 'AlmacÃ©n Central (SAE)',
     reason,
     status: 'SUCCESS'
   });
@@ -1261,11 +1261,11 @@ export const reconcileSingleChannel = async (sku: string, channel: string): Prom
   }
 
   addAuditLogEntry(sku, {
-    action: `Conciliación Forzada Canal ${channel.toUpperCase()}`,
+    action: `ConciliaciÃ³n Forzada Canal ${channel.toUpperCase()}`,
     previousStock: products[idx].stock,
     newStock: targetStock,
     source: channel.toUpperCase(),
-    reason: `Sincronización puntual solicitada para canal ${channel.toUpperCase()}`,
+    reason: `SincronizaciÃ³n puntual solicitada para canal ${channel.toUpperCase()}`,
     status: 'SUCCESS'
   });
 
@@ -1276,7 +1276,7 @@ export const resolveStockConflict = async (
   sku: string, 
   masterSource: string, 
   targetStock: number, 
-  reason: string = 'Resolución manual de conflicto'
+  reason: string = 'ResoluciÃ³n manual de conflicto'
 ): Promise<Product> => {
   const products = await getInventory();
   const idx = products.findIndex(p => p.sku === sku);
@@ -1296,7 +1296,7 @@ export const resolveStockConflict = async (
   }
 
   addAuditLogEntry(sku, {
-    action: `Resolución Conflicto Manual (Fuente: ${masterSource})`,
+    action: `ResoluciÃ³n Conflicto Manual (Fuente: ${masterSource})`,
     previousStock: prev,
     newStock: targetStock,
     source: masterSource,
@@ -1322,7 +1322,7 @@ export const syncAllProductsToChannels = async (
   if (isChannelConfigured('kaufland', settings)) activeChannels.push('kaufland');
   if (isChannelConfigured('mercadolibre', settings)) activeChannels.push('mercadolibre');
 
-  // Procesamiento por lotes simulado/real para evitar saturación de memoria
+  // Procesamiento por lotes simulado/real para evitar saturaciÃ³n de memoria
   const batchSize = 25;
   for (let i = 0; i < total; i += batchSize) {
     const end = Math.min(i + batchSize, total);
@@ -1376,7 +1376,7 @@ export const syncAllProductsToChannels = async (
       });
     }
 
-    // Pequeño delay para permitir que la UI pinte la barra suavemente
+    // PequeÃ±o delay para permitir que la UI pinte la barra suavemente
     await new Promise(r => setTimeout(r, 40));
   }
 
