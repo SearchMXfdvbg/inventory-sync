@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import Link from 'next/link';
@@ -41,13 +41,13 @@ export const Sidebar: React.FC = () => {
 
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Catálogo / TikTok', path: '/catalog', icon: Sparkles },
+    { name: 'CatÃ¡logo / TikTok', path: '/catalog', icon: Sparkles },
     { name: 'Inventario', path: '/inventory', icon: Package },
     { name: 'Ventas', path: '/sales', icon: ShoppingCart },
-    { name: 'Sincronización', path: '/synchronization', icon: RefreshCw },
-    { name: 'Conciliación', path: '/reconciliation', icon: GitCompare },
+    { name: 'SincronizaciÃ³n', path: '/synchronization', icon: RefreshCw },
+    { name: 'ConciliaciÃ³n', path: '/reconciliation', icon: GitCompare },
     { name: 'Alertas', path: '/alerts', icon: Bell },
-    { name: 'Configuración', path: '/settings/integrations', icon: Settings },
+    { name: 'ConfiguraciÃ³n', path: '/settings/integrations', icon: Settings },
   ];
 
   const handleLogout = () => {
@@ -130,7 +130,7 @@ export const Sidebar: React.FC = () => {
           
           <button 
             onClick={handleLogout}
-            title="Cerrar sesión"
+            title="Cerrar sesiÃ³n"
             className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-red-400 transition-colors shrink-0 cursor-pointer"
           >
             <LogOut size={16} />
@@ -142,3 +142,4 @@ export const Sidebar: React.FC = () => {
 };
 
 export default Sidebar;
+
