@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -204,16 +204,38 @@ export default function IntegrationsSettingsPage() {
 
   // Calculate active connections for the badge
   const activeConnections = [];
-  if (status?.shopify_connected && settings.ENABLE_SHOPIFY) activeConnections.push({ name: 'Shopify', color: 'bg-green-500' });
-  if (status?.ml_connected && settings.ENABLE_MERCADOLIBRE) activeConnections.push({ name: 'Mercado Libre', color: 'bg-yellow-500' });
+  if (status?.active_channels?.shopify && settings.ENABLE_SHOPIFY) activeConnections.push({ name: 'Shopify', color: 'bg-green-500' });
+  if (status?.active_channels?.mercadolibre && settings.ENABLE_MERCADOLIBRE) activeConnections.push({ name: 'Mercado Libre', color: 'bg-yellow-500' });
   if (settings.ENABLE_AMAZON && settings.AMAZON_CLIENT_ID && settings.AMAZON_REFRESH_TOKEN) activeConnections.push({ name: 'Amazon SP-API', color: 'bg-orange-500' });
   if (settings.ENABLE_TIKTOK && settings.TIKTOK_APP_KEY) activeConnections.push({ name: 'TikTok Shop', color: 'bg-pink-500' });
   if (settings.ENABLE_EBAY && settings.EBAY_CLIENT_ID) activeConnections.push({ name: 'eBay', color: 'bg-blue-500' });
   if (settings.ENABLE_KAUFLAND && settings.KAUFLAND_CLIENT_KEY) activeConnections.push({ name: 'Kaufland', color: 'bg-red-500' });
-  if (status?.sae_connected && settings.ENABLE_SAE) activeConnections.push({ name: 'Aspel SAE', color: 'bg-indigo-500' });
+  if (status?.active_channels?.sae && settings.ENABLE_SAE) activeConnections.push({ name: 'Aspel SAE', color: 'bg-indigo-500' });
+
+  const isSAEEnabled = settings.ENABLE_SAE ?? true;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-6xl mx-auto pb-16">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-xl text-sm font-semibold transition-all animate-fade-in ${
+          toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+          <span>{toast.message}</span>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5 transition-colors">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Canales e Integraciones de Stock</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+            Configura tu inventario principal (Shopify o SAE) y activa los canales donde vendes en tiempo real.
+          </p>
+        </div>
+      </div>
+
       {/* Active Connections Badge Panel */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
@@ -238,36 +260,6 @@ export default function IntegrationsSettingsPage() {
             </div>
           )}
         </div>
-      </div>
-        <LoadingSkeleton variant="card" />
-        <LoadingSkeleton variant="table" />
-      </div>
-    );
-  }
-
-  const isSAEEnabled = settings.ENABLE_SAE ?? true;
-
-  return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-16">
-      {/* Toast Notification */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-xl text-sm font-semibold transition-all animate-fade-in ${
-          toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
-        }`}>
-          {toast.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
-          <span>{toast.message}</span>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5 transition-colors">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Canales e Integraciones de Stock</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            Configura tu inventario principal (Shopify o SAE) y activa los canales donde vendes en tiempo real.
-          </p>
-        </div>
-        
       </div>
 
       <form onSubmit={handleSave} className="space-y-8">
