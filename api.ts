@@ -116,7 +116,6 @@ export interface IntegrationStatus {
 export const API_BASE_URL = typeof window !== 'undefined' ? '/api' : (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000');
 const BASE_URL = API_BASE_URL;
 
-export const isDemoMode = (): boolean => false;
 
 export const setDemoMode = (_enabled: boolean): void => {
   if (typeof window === 'undefined') return;
@@ -148,7 +147,6 @@ export const clearSession = (): void => {
     'is_products',
     'is_sales',
     'is_settings',
-    'demo_mode',
     'is_sync_automation_paused'
   ];
   keysToRemove.forEach(key => localStorage.removeItem(key));
@@ -1006,7 +1004,6 @@ export const importInventoryFile = async (file: File): Promise<ImportInventoryRe
     const data = await response.json();
 
     // Guardar temporalmente en localStorage para que el UI (Dashboard) los pueda renderizar de inmediato.
-    // Como Vercel no tiene base de datos persistente, dependemos del caché del navegador para la demo.
     if (typeof window !== 'undefined' && data.products) {
       localStorage.setItem('is_products', JSON.stringify(data.products));
     }

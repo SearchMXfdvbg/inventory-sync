@@ -17,12 +17,7 @@ class AmazonClient:
     LWA_TOKEN_ENDPOINT = "https://api.amazon.com/auth/o2/token"
 
     def __init__(self):
-        self._mock_stocks: Dict[str, int] = {
-            "SKU001": 10,
-            "SKU002": 15,
-            "SKU003": 8,
-            "SKU004": 20
-        }
+        pass
         self._cached_access_token: Optional[str] = None
 
     @property
@@ -38,7 +33,7 @@ class AmazonClient:
     async def _get_access_token(self) -> str:
         """Obtiene un token de acceso LWA (Login with Amazon) usando el refresh_token."""
         if not self.is_configured:
-            return "mock-lwa-access-token"
+            raise AmazonClientError("Amazon SP-API no está configurado.")
 
         if self._cached_access_token:
             return self._cached_access_token
@@ -64,16 +59,6 @@ class AmazonClient:
         Utiliza el endpoint de Listings Items API de SP-API.
         """
         logger.info(f"Actualizando stock en Amazon para SKU={sku} -> Cantidad={quantity}")
-
-        if not self.is_configured:
-            self._mock_stocks[sku] = quantity
-            logger.info(f"[MOCK AMAZON] Stock actualizado exitosamente para {sku}: {quantity} unidades.")
-            return {
-                "sku": sku,
-                "status": "ACCEPTED",
-                "quantity": quantity,
-                "marketplace": settings.AMAZON_MARKETPLACE_ID
-            }
 
         access_token = await self._get_access_token()
         seller_id = settings.AMAZON_SELLER_ID
@@ -124,8 +109,6 @@ class AmazonClient:
         """
         Consulta la cantidad disponible en inventario para un SKU en Amazon.
         """
-        if not self.is_configured:
-            return self._mock_stocks.get(sku, 10)
 
         try:
             access_token = await self._get_access_token()
@@ -150,25 +133,12 @@ class AmazonClient:
             return 10
         except Exception as e:
             logger.warning(f"No se pudo consultar stock en Amazon para {sku}: {e}")
-            return self._mock_stocks.get(sku, 10)
+            return 0
 
     async def get_order(self, order_id: str) -> Dict[str, Any]:
         """
         Obtiene el detalle de los artículos en una orden de Amazon.
         """
-        if not self.is_configured:
-            return {
-                "AmazonOrderId": order_id,
-                "OrderStatus": "Unshipped",
-                "OrderItems": [
-                    {
-                        "SellerSKU": "SKU001",
-                        "QuantityOrdered": 1,
-                        "Title": "Producto Demo Amazon"
-                    }
-                ]
-            }
-
         access_token = await self._get_access_token()
         url = f"{self.SP_API_ENDPOINT}/orders/v0/orders/{order_id}/orderItems"
         async with httpx.AsyncClient(timeout=10.0) as client:

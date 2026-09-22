@@ -380,8 +380,7 @@ async def get_current_user(
     - Si se pasa Bearer token válido -> retorna payload de usuario.
     - Si se pasa Bearer token inválido o expirado -> lanza HTTP 401.
     - Si NO se pasa token:
-        * Permite bypass con header 'X-Demo-Mode: true'.
-        * Permite fallback seguro de test si ENVIRONMENT=='test' o en peticiones TestClient
+* Permite fallback seguro de test si ENVIRONMENT=='test' o en peticiones TestClient
           (siempre y cuando ENVIRONMENT no sea explícitamente 'production').
         * De lo contrario -> lanza HTTP 401 Unauthorized.
     """
@@ -438,8 +437,6 @@ async def get_current_user(
                 detail="Token inválido",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-
-    # Demo Mode Bypass Removed
 
     # 3. Fallback seguro para entorno de testing / TestClient
     env = (getattr(settings, "ENVIRONMENT", "") or os.environ.get("ENVIRONMENT", "")).lower()

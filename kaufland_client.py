@@ -19,13 +19,7 @@ class KauflandClient:
     KAUFLAND_API_ENDPOINT = "https://sellerapi.kaufland.com/v2"
 
     def __init__(self):
-        self._mock_stocks: Dict[str, int] = {
-            "SKU001": 10,
-            "SKU002": 15,
-            "SKU003": 8,
-            "SKU004": 20
-        }
-
+        pass
     @property
     def is_configured(self) -> bool:
         """Indica si las credenciales de Kaufland Seller API están configuradas."""
@@ -39,7 +33,7 @@ class KauflandClient:
         Genera las cabeceras de autenticación HMAC-SHA256 requeridas por la API de Kaufland.
         """
         if not self.is_configured:
-            return {"Kaufland-Client-Key": "mock-kaufland-client-key"}
+            raise KauflandClientError("Kaufland no está configurado.")
 
         timestamp = str(int(time.time()))
         string_to_sign = f"{method.upper()}\n{uri}\n{body}\n{timestamp}"
@@ -143,8 +137,6 @@ class KauflandClient:
 
     async def get_stock(self, sku: str) -> int:
         """Consulta la cantidad disponible de un SKU en Kaufland."""
-        if not self.is_configured:
-            return self._mock_stocks.get(sku, 10)
 
         try:
             uri = f"{self.KAUFLAND_API_ENDPOINT}/units/sku/{sku}"
@@ -157,24 +149,10 @@ class KauflandClient:
             return 10
         except Exception as e:
             logger.warning(f"No se pudo consultar stock en Kaufland para {sku}: {e}")
-            return self._mock_stocks.get(sku, 10)
+            return 0
 
     async def get_order(self, order_id: str) -> Dict[str, Any]:
         """Obtiene el detalle de una orden de compra en Kaufland."""
-        if not self.is_configured:
-            return {
-                "id_order": order_id,
-                "status": "need_to_be_sent",
-                "order_units": [
-                    {
-                        "id_order_unit": 1001,
-                        "id_product": "SKU001",
-                        "amount": 1,
-                        "title": "Producto Demo Kaufland Alemania"
-                    }
-                ]
-            }
-
         uri = f"{self.KAUFLAND_API_ENDPOINT}/orders/{order_id}"
         headers = self._generate_auth_headers("GET", uri)
         async with httpx.AsyncClient(timeout=10.0) as client:

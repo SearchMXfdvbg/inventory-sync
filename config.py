@@ -54,7 +54,7 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "sqlite:///./data/database.db"
     SAE_DATA_PATH: str = "data/productos.json"
-    SAE_REPOSITORY_TYPE: str = "mock"
+    SAE_REPOSITORY_TYPE: str = "database"
     SHOP_DOMAIN: str = "your-shop.myshopify.com"
     SHOPIFY_ACCESS_TOKEN: str = "shpat_xxxx"
     SHOPIFY_API_VERSION: str = "2026-07"

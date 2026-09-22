@@ -17,12 +17,7 @@ class EbayClient:
     EBAY_OAUTH_ENDPOINT = "https://api.ebay.com/identity/v1/oauth2/token"
 
     def __init__(self):
-        self._mock_stocks: Dict[str, int] = {
-            "SKU001": 10,
-            "SKU002": 15,
-            "SKU003": 8,
-            "SKU004": 20
-        }
+        pass
         self._cached_access_token: Optional[str] = None
 
     @property
@@ -37,7 +32,7 @@ class EbayClient:
     async def _get_access_token(self) -> str:
         """Obtiene un token de acceso OAuth2 usando el refresh_token."""
         if not self.is_configured:
-            return "mock-ebay-access-token"
+            raise EbayClientError("eBay no está configurado.")
 
         if self._cached_access_token:
             return self._cached_access_token
@@ -160,8 +155,6 @@ class EbayClient:
 
     async def get_stock(self, sku: str) -> int:
         """Consulta el stock disponible para un SKU en eBay."""
-        if not self.is_configured:
-            return self._mock_stocks.get(sku, 10)
 
         try:
             access_token = await self._get_access_token()
@@ -178,24 +171,10 @@ class EbayClient:
             return 10
         except Exception as e:
             logger.warning(f"No se pudo consultar stock en eBay para {sku}: {e}")
-            return self._mock_stocks.get(sku, 10)
+            return 0
 
     async def get_order(self, order_id: str) -> Dict[str, Any]:
         """Obtiene los detalles de una orden de venta en eBay."""
-        if not self.is_configured:
-            return {
-                "orderId": order_id,
-                "orderPaymentStatus": "PAID",
-                "lineItems": [
-                    {
-                        "lineItemId": "EBAY_LINE_001",
-                        "sku": "SKU001",
-                        "quantity": 1,
-                        "title": "Producto Demo eBay Alemania"
-                    }
-                ]
-            }
-
         access_token = await self._get_access_token()
         url = f"https://api.ebay.com/sell/fulfillment/v1/order/{order_id}"
         async with httpx.AsyncClient(timeout=10.0) as client:

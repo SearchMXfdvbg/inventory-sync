@@ -193,23 +193,6 @@ def test_protected_endpoints_blocked_in_production_without_token():
         assert res_cat.status_code == 401
 
 
-def test_demo_mode_bypass_header():
-    """Header 'X-Demo-Mode: true' permite acceso a endpoints protegidos en cualquier entorno."""
-    with patch.object(settings, "ENVIRONMENT", "production"):
-        demo_headers = {"X-Demo-Mode": "true"}
-
-        res_me = client.get("/auth/me", headers=demo_headers)
-        assert res_me.status_code == 200
-        assert res_me.json()["username"] == "demo_user"
-        assert res_me.json().get("is_demo") is True
-
-        res_inv = client.get("/inventory", headers=demo_headers)
-        assert res_inv.status_code == 200
-
-        res_sales = client.get("/sales", headers=demo_headers)
-        assert res_sales.status_code == 200
-
-
 def test_invalid_auth_header_format():
     """Header de autorización malformado o no Bearer debe retornar 401."""
     res = client.get("/inventory", headers={"Authorization": "Basic admin:secret"})
