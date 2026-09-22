@@ -939,9 +939,9 @@ async def import_inventory_file(
         return None
 
     first_row_keys = list(rows[0].keys())
-    sku_key = find_key(first_row_keys, ["sku", "codigo", "clave", "itemid", "id", "referencia", "articulo"])
-    name_key = find_key(first_row_keys, ["nombre", "descripcion", "producto", "title", "name"])
-    stock_key = find_key(first_row_keys, ["stock", "existencia", "cantidad", "cant", "qty", "quantity", "disponible", "total"])
+    sku_key = find_key(first_row_keys, ["sku", "codigo", "clave", "cveart", "itemid", "id", "referencia", "articulo"])
+    name_key = find_key(first_row_keys, ["nombre", "descripcion", "descr", "desc", "producto", "title", "name"])
+    stock_key = find_key(first_row_keys, ["stock", "exist", "existencia", "inventario", "cantidad", "cant", "qty", "quantity", "disponible", "total", "saldo", "unidades", "piezas", "pzas"])
 
     if not sku_key:
         raise HTTPException(
