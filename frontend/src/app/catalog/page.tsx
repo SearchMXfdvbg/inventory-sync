@@ -43,8 +43,8 @@ export default function CatalogPage() {
   const [height, setHeight] = useState('3');
   const [weight, setWeight] = useState('150');
   const [weightUnit, setWeightUnit] = useState('GRAMS');
-  const [warrantyType, setWarrantyType] = useState('GarantÃ­a del vendedor');
-  const [warrantyPeriod, setWarrantyPeriod] = useState('30 dÃ­as');
+  const [warrantyType, setWarrantyType] = useState('Garantía del vendedor');
+  const [warrantyPeriod, setWarrantyPeriod] = useState('30 días');
   const [targetAudience, setTargetAudience] = useState('Adultos');
 
   const loadProducts = async () => {
@@ -53,7 +53,7 @@ export default function CatalogPage() {
       const data = await getCatalogProducts();
       setProducts(data);
     } catch (err) {
-      console.error('Error al cargar catÃ¡logo:', err);
+      console.error('Error al cargar catálogo:', err);
     } finally {
       setLoading(false);
     }
@@ -92,21 +92,21 @@ export default function CatalogPage() {
       setWidth('10');
       setHeight('3');
       setWeight('150');
-      setWarrantyPeriod('30 dÃ­as');
+      setWarrantyPeriod('30 días');
       setTargetAudience('Adultos');
     } else if (type === 'ropa') {
       setLength('35');
       setWidth('25');
       setHeight('5');
       setWeight('300');
-      setWarrantyPeriod('30 dÃ­as');
+      setWarrantyPeriod('30 días');
       setTargetAudience('Unisex');
     } else if (type === 'estandar') {
       setLength('25');
       setWidth('20');
       setHeight('15');
       setWeight('500');
-      setWarrantyPeriod('60 dÃ­as');
+      setWarrantyPeriod('60 días');
       setTargetAudience('Adultos');
     }
   };
@@ -131,7 +131,7 @@ export default function CatalogPage() {
 
     try {
       const res = await bulkUpdateCatalog(payload);
-      showToast(res.message || `Â¡${selectedIds.length} productos actualizados con Ã©xito para TikTok Shop!`);
+      showToast(res.message || `¡${selectedIds.length} productos actualizados con éxito para TikTok Shop!`);
       setSelectedIds([]);
       await loadProducts();
     } catch (err: any) {
@@ -141,7 +141,7 @@ export default function CatalogPage() {
     }
   };
 
-  // Auto-Fix Inteligente TikTok: Ajusta dimensiones al tope de 99cm, normaliza peso a 150g y aplica garantÃ­a
+  // Auto-Fix Inteligente TikTok: Ajusta dimensiones al tope de 99cm, normaliza peso a 150g y aplica garantía
   const handleAutoFixTikTok = async () => {
     const targets = selectedIds.length > 0 ? selectedIds : products.map((p) => p.id);
     if (targets.length === 0) return;
@@ -155,14 +155,14 @@ export default function CatalogPage() {
       length: 99,
       width: 50,
       height: 25,
-      warranty_type: 'GarantÃ­a del vendedor',
-      warranty_period: '30 dÃ­as',
+      warranty_type: 'Garantía del vendedor',
+      warranty_period: '30 días',
       target_audience: 'Adultos',
     };
 
     try {
       const res = await bulkUpdateCatalog(payload);
-      showToast(res.message || `âš¡ Â¡Auto-Fix aplicado a ${targets.length} productos! Listos para TikTok Shop.`);
+      showToast(res.message || `âš¡ ¡Auto-Fix aplicado a ${targets.length} productos! Listos para TikTok Shop.`);
       setSelectedIds([]);
       await loadProducts();
     } catch (err: any) {
@@ -199,8 +199,8 @@ export default function CatalogPage() {
         p.length || 15,
         p.width || 10,
         p.height || 3,
-        `"${p.warranty ? p.warranty.split(' - ')[0] : 'GarantÃ­a del vendedor'}"`,
-        `"${p.warranty ? p.warranty.split(' - ')[1] || '30 dÃ­as' : '30 dÃ­as'}"`,
+        `"${p.warranty ? p.warranty.split(' - ')[0] : 'Garantía del vendedor'}"`,
+        `"${p.warranty ? p.warranty.split(' - ')[1] || '30 días' : '30 días'}"`,
         p.tiktok_ready ? 'Listo para publicar' : 'Pendiente'
       ].join(',');
     });
@@ -213,7 +213,7 @@ export default function CatalogPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast('Plantilla CSV para TikTok Shop descargada con Ã©xito');
+    showToast('Plantilla CSV para TikTok Shop descargada con éxito');
   };
 
   // Filtered products
@@ -253,9 +253,9 @@ export default function CatalogPage() {
               <Sparkles size={24} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">CatÃ¡logo y Preparador TikTok Shop</h1>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Catálogo y Preparador TikTok Shop</h1>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                Inyecta especificaciones obligatorias (medidas, peso, garantÃ­a, marca) en lote sin tener que entrar producto por producto.
+                Inyecta especificaciones obligatorias (medidas, peso, garantía, marca) en lote sin tener que entrar producto por producto.
               </p>
             </div>
           </div>
@@ -286,7 +286,7 @@ export default function CatalogPage() {
           <div>
             <p className="text-xs font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Total Productos</p>
             <h3 className="text-2xl font-bold text-slate-800 dark:text-white mt-1">{totalCount}</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">CatÃ¡logo de Shopify</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Catálogo de Shopify</p>
           </div>
           <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
             <Package size={22} />
@@ -344,18 +344,18 @@ export default function CatalogPage() {
             <div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                 {selectedIds.length > 0 
-                  ? `${selectedIds.length} producto${selectedIds.length > 1 ? 's' : ''} seleccionado${selectedIds.length > 1 ? 's' : ''} para ediciÃ³n en lote`
-                  : 'EdiciÃ³n y AsignaciÃ³n Masiva de Especificaciones'}
+                  ? `${selectedIds.length} producto${selectedIds.length > 1 ? 's' : ''} seleccionado${selectedIds.length > 1 ? 's' : ''} para edición en lote`
+                  : 'Edición y Asignación Masiva de Especificaciones'}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Selecciona productos en la tabla y asigna medidas, peso y garantÃ­a de un solo golpe.
+                Selecciona productos en la tabla y asigna medidas, peso y garantía de un solo golpe.
               </p>
             </div>
           </div>
 
           {/* Quick Presets */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider mr-1">Plantillas rÃ¡pidas:</span>
+            <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider mr-1">Plantillas rápidas:</span>
             <button
               onClick={handleAutoFixTikTok}
               disabled={saving}
@@ -368,7 +368,7 @@ export default function CatalogPage() {
               onClick={() => applyPreset('joyeria')}
               className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
             >
-              âœ¨ JoyerÃ­a / Accesorios
+              âœ¨ Joyería / Accesorios
             </button>
             <button
               onClick={() => applyPreset('ropa')}
@@ -380,7 +380,7 @@ export default function CatalogPage() {
               onClick={() => applyPreset('estandar')}
               className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
             >
-              ðŸ“¦ Caja EstÃ¡ndar
+              ðŸ“¦ Caja Estándar
             </button>
           </div>
         </div>
@@ -460,13 +460,13 @@ export default function CatalogPage() {
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
               <ShieldCheck size={13} className="text-blue-600 dark:text-blue-400" />
-              GarantÃ­a
+              Garantía
             </label>
             <input
               type="text"
               value={warrantyPeriod}
               onChange={(e) => setWarrantyPeriod(e.target.value)}
-              placeholder="ej. 30 dÃ­as"
+              placeholder="ej. 30 días"
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-colors"
             />
           </div>
@@ -476,7 +476,7 @@ export default function CatalogPage() {
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <Info size={15} className="text-blue-600 dark:text-blue-400" />
-            <span>Al aplicar, se actualizarÃ¡n las variantes en Shopify y se inyectarÃ¡n los campos requeridos por TikTok Shop.</span>
+            <span>Al aplicar, se actualizarán las variantes en Shopify y se inyectarán los campos requeridos por TikTok Shop.</span>
           </div>
 
           <button
@@ -511,7 +511,7 @@ export default function CatalogPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por tÃ­tulo, SKU o marca..."
+            placeholder="Buscar por título, SKU o marca..."
             className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 shadow-sm focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
@@ -569,7 +569,7 @@ export default function CatalogPage() {
                 <th className="py-4 px-4 font-semibold">Marca</th>
                 <th className="py-4 px-4 font-semibold">Peso</th>
                 <th className="py-4 px-4 font-semibold">Dimensiones (cm)</th>
-                <th className="py-4 px-4 font-semibold">GarantÃ­a</th>
+                <th className="py-4 px-4 font-semibold">Garantía</th>
                 <th className="py-4 px-4 font-semibold text-center">Estado TikTok</th>
               </tr>
             </thead>
@@ -578,16 +578,16 @@ export default function CatalogPage() {
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">
                     <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-blue-600 dark:text-blue-400" />
-                    <span className="text-sm">Cargando catÃ¡logo de productos...</span>
+                    <span className="text-sm">Cargando catálogo de productos...</span>
                   </td>
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">
                     <Package size={32} className="mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">CatÃ¡logo VacÃ­o</p>
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Catálogo Vacío</p>
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">
-                      No hay productos registrados aÃºn. Conecta tu tienda Shopify en ConfiguraciÃ³n para sincronizar tus productos reales.
+                      No hay productos registrados aún. Conecta tu tienda Shopify en Configuración para sincronizar tus productos reales.
                     </p>
                   </td>
                 </tr>
@@ -598,7 +598,7 @@ export default function CatalogPage() {
                   const sku = firstVariant.sku || 'Sin SKU';
                   const price = firstVariant.price ? `$${firstVariant.price}` : '--';
                   const dimensions = (p.length && p.width && p.height) 
-                    ? `${p.length} Ã— ${p.width} Ã— ${p.height}` 
+                    ? `${p.length} × ${p.width} × ${p.height}` 
                     : '--';
                   const weightDisplay = p.weight && p.weight > 0 
                     ? `${p.weight} ${p.weight_unit || 'g'}` 

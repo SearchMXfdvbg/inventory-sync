@@ -24,7 +24,7 @@ export default function RootLayout({
     suspension_reason?: string;
   } | null>(null);
 
-  // PÃ¡ginas independientes/pÃºblicas donde NUNCA debe mostrarse el Sidebar ni el Topbar estÃ¡ndar
+  // Páginas independientes/públicas donde NUNCA debe mostrarse el Sidebar ni el Topbar estándar
   const cleanPath = (pathname || '').replace(/\/$/, '') || '/';
   const isPublicPage = Boolean(
     cleanPath === '/' ||
@@ -50,7 +50,7 @@ export default function RootLayout({
       }
     }
 
-    // Verificar si el usuario ha iniciado sesiÃ³n en rutas protegidas
+    // Verificar si el usuario ha iniciado sesión en rutas protegidas
     const loggedIn = typeof window !== 'undefined' ? localStorage.getItem('logged_in') : null;
     const hasToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const isAuth = Boolean(loggedIn || hasToken);
@@ -153,25 +153,25 @@ export default function RootLayout({
   if (cleanPath.startsWith('/inventory/')) {
     topbarTitle = 'Detalle de Producto';
   } else if (cleanPath === '/catalog') {
-    topbarTitle = 'CatÃ¡logo y Preparador TikTok';
+    topbarTitle = 'Catálogo y Preparador TikTok';
   } else if (cleanPath === '/inventory') {
-    topbarTitle = 'CatÃ¡logo de Inventario';
+    topbarTitle = 'Catálogo de Inventario';
   } else if (cleanPath === '/sales') {
     topbarTitle = 'Historial de Transacciones';
   } else if (cleanPath === '/synchronization') {
-    topbarTitle = 'Cola de SincronizaciÃ³n';
+    topbarTitle = 'Cola de Sincronización';
   } else if (cleanPath === '/reconciliation') {
-    topbarTitle = 'MÃ³dulo de ConciliaciÃ³n';
+    topbarTitle = 'Módulo de Conciliación';
   } else if (cleanPath === '/alerts') {
     topbarTitle = 'Centro de Alertas';
   } else if (cleanPath === '/settings/integrations') {
-    topbarTitle = 'ConfiguraciÃ³n de Integraciones';
+    topbarTitle = 'Configuración de Integraciones';
   }
 
-  // El Sidebar y el Topbar SOLO se muestran si la pÃ¡gina NO es pÃºblica Y el usuario estÃ¡ autenticado
+  // El Sidebar y el Topbar SOLO se muestran si la página NO es pública Y el usuario está autenticado
   const showAppChrome = mounted && !isPublicPage && isAuthenticated;
 
-  // Verificar si el usuario debe ser bloqueado por Plan Guest o SuspensiÃ³n
+  // Verificar si el usuario debe ser bloqueado por Plan Guest o Suspensión
   const isRestrictedClient = Boolean(
     currentUser &&
     currentUser.username.toLowerCase() !== 'cristadmin' &&

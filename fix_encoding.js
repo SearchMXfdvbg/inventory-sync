@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 
 function fixMojibake(text) {
@@ -41,5 +41,16 @@ function processDir(dir) {
         }
     }
 }
+
+['./api.ts', './frontend/src/lib/api.ts'].forEach(apiPath => {
+    if (fs.existsSync(apiPath)) {
+        const content = fs.readFileSync(apiPath, 'utf8');
+        const fixed = fixMojibake(content);
+        if (content !== fixed) {
+            console.log('Fixed:', apiPath);
+            fs.writeFileSync(apiPath, fixed, 'utf8');
+        }
+    }
+});
 
 processDir('./frontend/src');

@@ -115,7 +115,7 @@ export default function IntegrationsSettingsPage() {
     } catch (err: any) {
       setTestResults(prev => ({
         ...prev,
-        [channel]: { success: false, message: err.message || 'Error de conexiÃ³n' }
+        [channel]: { success: false, message: err.message || 'Error de conexión' }
       }));
     } finally {
       setTestingChannel(null);
@@ -143,7 +143,7 @@ export default function IntegrationsSettingsPage() {
       }));
     } catch (error) {
       console.error('Error al obtener datos de integraciones', error);
-      showToast('Error al cargar la configuraciÃ³n', 'error');
+      showToast('Error al cargar la configuración', 'error');
     } finally {
       setLoading(false);
     }
@@ -177,7 +177,7 @@ export default function IntegrationsSettingsPage() {
       };
       
       const res = await saveSettings(payload);
-      showToast(res.message || 'ConfiguraciÃ³n guardada correctamente.', 'success');
+      showToast(res.message || 'Configuración guardada correctamente.', 'success');
       
       // Actualizar estado local
       const statusRes = await getIntegrationStatus();
@@ -186,7 +186,7 @@ export default function IntegrationsSettingsPage() {
       const settingsRes = await getSettings();
       setSettings(prev => ({ ...prev, ...settingsRes }));
     } catch (error) {
-      console.error('Error al guardar configuraciÃ³n', error);
+      console.error('Error al guardar configuración', error);
       showToast('Error al conectar con el servidor para guardar.', 'error');
     } finally {
       setSaving(false);
@@ -272,7 +272,7 @@ export default function IntegrationsSettingsPage() {
 
       <form onSubmit={handleSave} className="space-y-8">
         
-        {/* PANEL PRINCIPAL: ELECCIÃ“N DE INVENTARIO MAESTRO Y CANALES ACTIVOS */}
+        {/* PANEL PRINCIPAL: ELECCIÓN DE INVENTARIO MAESTRO Y CANALES ACTIVOS */}
         <div className="bg-white dark:bg-slate-900 border-2 border-blue-100 dark:border-slate-800 shadow-sm rounded-2xl p-6 transition-colors">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
@@ -281,7 +281,7 @@ export default function IntegrationsSettingsPage() {
             <div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-white">Inventario Principal y Canales Activos</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Define quÃ© sistema manda sobre el stock y oculta los canales que no utilices en tu empresa.
+                Define qué sistema manda sobre el stock y oculta los canales que no utilices en tu empresa.
               </p>
             </div>
           </div>
@@ -298,15 +298,15 @@ export default function IntegrationsSettingsPage() {
                 className="w-full border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold cursor-pointer transition-colors"
               >
                 <option value="shopify">ðŸ›ï¸ Shopify (Tiendas Online y Marcas Propias)</option>
-                <option value="amazon">ðŸ“¦ Amazon SP-API (Seller Central - MÃ©xico, EE.UU. y Europa)</option>
-                <option value="mercadolibre">ðŸŸ¡ Mercado Libre (CatÃ¡logo Central)</option>
+                <option value="amazon">ðŸ“¦ Amazon SP-API (Seller Central - México, EE.UU. y Europa)</option>
+                <option value="mercadolibre">ðŸŸ¡ Mercado Libre (Catálogo Central)</option>
                 <option value="ebay">ðŸ‡©ðŸ‡ª eBay (eBay Alemania / Europa)</option>
                 <option value="kaufland">ðŸ”´ Kaufland (Kaufland Global Marketplace - Alemania)</option>
-                <option value="tiktok">ðŸŽµ TikTok Shop (CatÃ¡logo TikTok Shop)</option>
-                <option value="sae">ðŸ–¥ï¸ CONTPAQi SAE / Excel (Bodega FÃ­sica o ERP Administrativo)</option>
+                <option value="tiktok">ðŸŽµ TikTok Shop (Catálogo TikTok Shop)</option>
+                <option value="sae">ðŸ–¥ï¸ CONTPAQi SAE / Excel (Bodega Física o ERP Administrativo)</option>
               </select>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
-                Cuando ocurra una venta en cualquier canal, este inventario maestro serÃ¡ el sistema de referencia para actualizar en cascada a todos los demÃ¡s.
+                Cuando ocurra una venta en cualquier canal, este inventario maestro será el sistema de referencia para actualizar en cascada a todos los demás.
               </p>
             </div>
 
@@ -411,7 +411,7 @@ export default function IntegrationsSettingsPage() {
           </div>
         </div>
 
-        {/* TARJETAS DE CONEXIÃ“N POR CANAL */}
+        {/* TARJETAS DE CONEXIÓN POR CANAL */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* 1. SHOPIFY */}
@@ -493,7 +493,7 @@ export default function IntegrationsSettingsPage() {
                         ) : (
                           <>
                             <Activity size={13} />
-                            <span>Probar ConexiÃ³n en Vivo</span>
+                            <span>Probar Conexión en Vivo</span>
                           </>
                         )}
                       </button>
@@ -519,13 +519,13 @@ export default function IntegrationsSettingsPage() {
                   <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
                     <summary className="cursor-pointer font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
-                      <span>Â¿CÃ³mo extraer estas credenciales en Shopify?</span>
+                      <span>¿Cómo extraer estas credenciales en Shopify?</span>
                     </summary>
                     <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
                       <p><strong>1. Dominio:</strong> El subdominio oficial que termina en <code>.myshopify.com</code> (ej: <code>tu-tienda.myshopify.com</code>).</p>
-                      <p><strong>2. Access Token:</strong> En tu Shopify Admin ve a <em>ConfiguraciÃ³n</em> &gt; <em>Apps y canales de venta</em> &gt; <em>Desarrollar apps</em> &gt; <em>Crear una app</em> (nombre: InventorySync). En configuraciÃ³n de API marca los permisos de <code>read_products, write_products, read_inventory, write_inventory, read_orders</code>. Dale <em>Instalar app</em> y copia el token que inicia con <code>shpat_...</code>.</p>
-                      <p><strong>3. Location ID:</strong> En <em>ConfiguraciÃ³n</em> &gt; <em>Ubicaciones</em>, haz clic en tu almacÃ©n o tienda principal. El ID es el nÃºmero al final de la URL en tu navegador (ej: <code>gid://shopify/Location/83942019</code>).</p>
-                      <p><strong>4. API Secret:</strong> En la misma app que creaste, en la secciÃ³n de credenciales copia el Secreto de API (inicia con <code>shpss_...</code>).</p>
+                      <p><strong>2. Access Token:</strong> En tu Shopify Admin ve a <em>Configuración</em> &gt; <em>Apps y canales de venta</em> &gt; <em>Desarrollar apps</em> &gt; <em>Crear una app</em> (nombre: InventorySync). En configuración de API marca los permisos de <code>read_products, write_products, read_inventory, write_inventory, read_orders</code>. Dale <em>Instalar app</em> y copia el token que inicia con <code>shpat_...</code>.</p>
+                      <p><strong>3. Location ID:</strong> En <em>Configuración</em> &gt; <em>Ubicaciones</em>, haz clic en tu almacén o tienda principal. El ID es el número al final de la URL en tu navegador (ej: <code>gid://shopify/Location/83942019</code>).</p>
+                      <p><strong>4. API Secret:</strong> En la misma app que creaste, en la sección de credenciales copia el Secreto de API (inicia con <code>shpss_...</code>).</p>
                     </div>
                   </details>
                 </div>
@@ -602,7 +602,7 @@ export default function IntegrationsSettingsPage() {
                         ) : (
                           <>
                             <Activity size={13} />
-                            <span>Probar ConexiÃ³n en Vivo</span>
+                            <span>Probar Conexión en Vivo</span>
                           </>
                         )}
                       </button>
@@ -628,12 +628,12 @@ export default function IntegrationsSettingsPage() {
                   <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
                     <summary className="cursor-pointer font-bold text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
-                      <span>Â¿CÃ³mo extraer estas credenciales en Mercado Libre?</span>
+                      <span>¿Cómo extraer estas credenciales en Mercado Libre?</span>
                     </summary>
                     <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
-                      <p><strong>1. Access Token:</strong> Entra a <a href="https://developers.mercadolibre.com.mx" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline font-semibold">developers.mercadolibre.com.mx</a> con la cuenta del vendedor &gt; <em>Mis aplicaciones</em> &gt; <em>Crear aplicaciÃ³n</em>. En autenticaciÃ³n genera tu Access Token (inicia con <code>APP_USR-...</code>).</p>
-                      <p><strong>2. User ID:</strong> Es tu nÃºmero de cuenta de vendedor. Al dar clic en <em>Probar ConexiÃ³n en Vivo</em> el sistema lo detecta y autocompleta automÃ¡ticamente.</p>
-                      <p><strong>3. Site ID:</strong> Escribe <code>MLM</code> para MÃ©xico, <code>MLA</code> para Argentina o <code>MCO</code> para Colombia.</p>
+                      <p><strong>1. Access Token:</strong> Entra a <a href="https://developers.mercadolibre.com.mx" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline font-semibold">developers.mercadolibre.com.mx</a> con la cuenta del vendedor &gt; <em>Mis aplicaciones</em> &gt; <em>Crear aplicación</em>. En autenticación genera tu Access Token (inicia con <code>APP_USR-...</code>).</p>
+                      <p><strong>2. User ID:</strong> Es tu número de cuenta de vendedor. Al dar clic en <em>Probar Conexión en Vivo</em> el sistema lo detecta y autocompleta automáticamente.</p>
+                      <p><strong>3. Site ID:</strong> Escribe <code>MLM</code> para México, <code>MLA</code> para Argentina o <code>MCO</code> para Colombia.</p>
                     </div>
                   </details>
                 </div>
@@ -720,11 +720,11 @@ export default function IntegrationsSettingsPage() {
                   <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
                     <summary className="cursor-pointer font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
-                      <span>Â¿CÃ³mo extraer estas credenciales en TikTok Shop?</span>
+                      <span>¿Cómo extraer estas credenciales en TikTok Shop?</span>
                     </summary>
                     <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
-                      <p><strong>1. App Key & App Secret:</strong> Entra a <a href="https://partner.tiktokshop.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline font-semibold">partner.tiktokshop.com</a> &gt; <em>App Management</em> &gt; <em>Create App</em> (categorÃ­a ERP / Inventory). ObtÃ©n tus claves API de desarrollador.</p>
-                      <p><strong>2. Shop ID / Code:</strong> En tu TikTok Shop Seller Center, ve a <em>My Account</em> &gt; <em>Account Settings</em> y copia tu cÃ³digo de tienda.</p>
+                      <p><strong>1. App Key & App Secret:</strong> Entra a <a href="https://partner.tiktokshop.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline font-semibold">partner.tiktokshop.com</a> &gt; <em>App Management</em> &gt; <em>Create App</em> (categoría ERP / Inventory). Obtén tus claves API de desarrollador.</p>
+                      <p><strong>2. Shop ID / Code:</strong> En tu TikTok Shop Seller Center, ve a <em>My Account</em> &gt; <em>Account Settings</em> y copia tu código de tienda.</p>
                       <p><strong>3. Access Token:</strong> En Partner Center, autoriza tu propia tienda desde <em>Authorization Management</em> para generar el token permanente.</p>
                     </div>
                   </details>
@@ -770,7 +770,7 @@ export default function IntegrationsSettingsPage() {
                         type="text"
                         value={settings.AMAZON_MARKETPLACE_ID || 'A1AM78C64UM0Y8'}
                         onChange={(e) => handleInputChange('AMAZON_MARKETPLACE_ID', e.target.value)}
-                        placeholder="A1AM78C64UM0Y8 (MÃ©xico)"
+                        placeholder="A1AM78C64UM0Y8 (México)"
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
@@ -812,12 +812,12 @@ export default function IntegrationsSettingsPage() {
                   <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
                     <summary className="cursor-pointer font-bold text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
-                      <span>Â¿CÃ³mo extraer estas credenciales en Amazon Seller Central?</span>
+                      <span>¿Cómo extraer estas credenciales en Amazon Seller Central?</span>
                     </summary>
                     <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
                       <p><strong>1. Seller ID:</strong> En <a href="https://sellercentral-europe.amazon.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline font-semibold">sellercentral-europe.amazon.com</a> &gt; <em>Settings</em> &gt; <em>Account Info</em> &gt; <em>Merchant Token</em>.</p>
                       <p><strong>2. LWA Client ID & Secret:</strong> En <em>Apps & Services</em> &gt; <em>Develop Apps</em>, genera las claves de Login with Amazon (LWA).</p>
-                      <p><strong>3. Marketplace IDs Europa:</strong> Alemania: <code>A1PA6795UKMFR9</code>, EspaÃ±a: <code>A1RKKUPIHCS9HS</code>, Italia: <code>APJ6JRA9NG5V4</code>, Francia: <code>A13V1IB3VIYZZH</code>, UK: <code>A1F83G8C2ARO7P</code>, MÃ©xico: <code>A1AM78C64UM0Y8</code>.</p>
+                      <p><strong>3. Marketplace IDs Europa:</strong> Alemania: <code>A1PA6795UKMFR9</code>, España: <code>A1RKKUPIHCS9HS</code>, Italia: <code>APJ6JRA9NG5V4</code>, Francia: <code>A13V1IB3VIYZZH</code>, UK: <code>A1F83G8C2ARO7P</code>, México: <code>A1AM78C64UM0Y8</code>.</p>
                     </div>
                   </details>
                 </div>
@@ -844,7 +844,7 @@ export default function IntegrationsSettingsPage() {
                   </span>
                 </div>
 
-                {/* BotÃ³n Probar ConexiÃ³n en Vivo */}
+                {/* Botón Probar Conexión en Vivo */}
                 <div className="mb-4">
                   <button
                     type="button"
@@ -860,7 +860,7 @@ export default function IntegrationsSettingsPage() {
                     ) : (
                       <>
                         <Activity size={14} className="text-blue-600 dark:text-blue-400" />
-                        <span>Probar ConexiÃ³n en Vivo con eBay</span>
+                        <span>Probar Conexión en Vivo con eBay</span>
                       </>
                     )}
                   </button>
@@ -877,7 +877,7 @@ export default function IntegrationsSettingsPage() {
                         <AlertCircle size={16} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                       )}
                       <div>
-                        <p className="font-bold">{testResults['ebay'].success ? 'ConexiÃ³n Exitosa' : 'Fallo de ConexiÃ³n'}</p>
+                        <p className="font-bold">{testResults['ebay'].success ? 'Conexión Exitosa' : 'Fallo de Conexión'}</p>
                         <p className="text-[11px] mt-0.5">{testResults['ebay'].message}</p>
                       </div>
                     </div>
@@ -893,7 +893,7 @@ export default function IntegrationsSettingsPage() {
                       className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 font-semibold cursor-pointer transition-colors"
                     >
                       <option value="EBAY_DE">ðŸ‡©ðŸ‡ª eBay Alemania (EBAY_DE)</option>
-                      <option value="EBAY_ES">ðŸ‡ªðŸ‡¸ eBay EspaÃ±a (EBAY_ES)</option>
+                      <option value="EBAY_ES">ðŸ‡ªðŸ‡¸ eBay España (EBAY_ES)</option>
                       <option value="EBAY_IT">ðŸ‡®ðŸ‡¹ eBay Italia (EBAY_IT)</option>
                       <option value="EBAY_FR">ðŸ‡«ðŸ‡· eBay Francia (EBAY_FR)</option>
                       <option value="EBAY_GB">ðŸ‡¬ðŸ‡§ eBay Reino Unido (EBAY_GB)</option>
@@ -939,12 +939,12 @@ export default function IntegrationsSettingsPage() {
                   <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
                     <summary className="cursor-pointer font-bold text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
-                      <span>Â¿CÃ³mo extraer estas credenciales en eBay Developer Portal?</span>
+                      <span>¿Cómo extraer estas credenciales en eBay Developer Portal?</span>
                     </summary>
                     <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
                       <p><strong>1. Portal de Desarrollador:</strong> Ingresa a <a href="https://developer.ebay.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline font-semibold">developer.ebay.com</a> con tu cuenta de vendedor de eBay.</p>
-                      <p><strong>2. Production Keyset:</strong> Ve a <em>Application Keys</em> y genera tu juego de llaves de ProducciÃ³n (App ID y Cert ID).</p>
-                      <p><strong>3. User Token (OAuth2):</strong> En <em>User Tokens</em>, selecciona el Ã¡mbito <code>https://api.ebay.com/oauth/api_scope/sell.inventory</code> y autoriza tu cuenta para obtener el <strong>Refresh Token</strong> permanente.</p>
+                      <p><strong>2. Production Keyset:</strong> Ve a <em>Application Keys</em> y genera tu juego de llaves de Producción (App ID y Cert ID).</p>
+                      <p><strong>3. User Token (OAuth2):</strong> En <em>User Tokens</em>, selecciona el ámbito <code>https://api.ebay.com/oauth/api_scope/sell.inventory</code> y autoriza tu cuenta para obtener el <strong>Refresh Token</strong> permanente.</p>
                     </div>
                   </details>
                 </div>
@@ -971,7 +971,7 @@ export default function IntegrationsSettingsPage() {
                   </span>
                 </div>
 
-                {/* BotÃ³n Probar ConexiÃ³n en Vivo */}
+                {/* Botón Probar Conexión en Vivo */}
                 <div className="mb-4">
                   <button
                     type="button"
@@ -987,7 +987,7 @@ export default function IntegrationsSettingsPage() {
                     ) : (
                       <>
                         <Activity size={14} className="text-red-600 dark:text-red-400" />
-                        <span>Probar ConexiÃ³n en Vivo con Kaufland</span>
+                        <span>Probar Conexión en Vivo con Kaufland</span>
                       </>
                     )}
                   </button>
@@ -1004,7 +1004,7 @@ export default function IntegrationsSettingsPage() {
                         <AlertCircle size={16} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                       )}
                       <div>
-                        <p className="font-bold">{testResults['kaufland'].success ? 'ConexiÃ³n Exitosa' : 'Fallo de ConexiÃ³n'}</p>
+                        <p className="font-bold">{testResults['kaufland'].success ? 'Conexión Exitosa' : 'Fallo de Conexión'}</p>
                         <p className="text-[11px] mt-0.5">{testResults['kaufland'].message}</p>
                       </div>
                     </div>
@@ -1013,7 +1013,7 @@ export default function IntegrationsSettingsPage() {
 
                 <div className="space-y-3 text-xs">
                   <div>
-                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">PaÃ­s / Storefront de Kaufland</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">País / Storefront de Kaufland</label>
                     <select
                       value={settings.KAUFLAND_STOREFRONT || 'de'}
                       onChange={(e) => handleInputChange('KAUFLAND_STOREFRONT', e.target.value)}
@@ -1021,7 +1021,7 @@ export default function IntegrationsSettingsPage() {
                     >
                       <option value="de">ðŸ‡©ðŸ‡ª Alemania (Kaufland.de)</option>
                       <option value="pl">ðŸ‡µðŸ‡± Polonia (Kaufland.pl)</option>
-                      <option value="cz">ðŸ‡¨ðŸ‡¿ RepÃºblica Checa (Kaufland.cz)</option>
+                      <option value="cz">ðŸ‡¨ðŸ‡¿ República Checa (Kaufland.cz)</option>
                       <option value="sk">ðŸ‡¸ðŸ‡° Eslovaquia (Kaufland.sk)</option>
                       <option value="at">ðŸ‡¦ðŸ‡¹ Austria (Kaufland.at)</option>
                     </select>
@@ -1053,12 +1053,12 @@ export default function IntegrationsSettingsPage() {
                   <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
                     <summary className="cursor-pointer font-bold text-red-700 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
-                      <span>Â¿CÃ³mo extraer estas credenciales en Kaufland Seller Portal?</span>
+                      <span>¿Cómo extraer estas credenciales en Kaufland Seller Portal?</span>
                     </summary>
                     <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
                       <p><strong>1. Panel de Vendedor:</strong> Ingresa a <a href="https://sellerportal.kaufland.de" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline font-semibold">sellerportal.kaufland.de</a>.</p>
-                      <p><strong>2. MenÃº de ConfiguraciÃ³n:</strong> Ve a <em>Shop-Einstellungen</em> (ConfiguraciÃ³n de la tienda) &gt; <em>API</em>.</p>
-                      <p><strong>3. Generar Claves:</strong> Haz clic en <em>Neue API-SchlÃ¼ssel generieren</em> para copiar tu <strong>Client Key</strong> y tu <strong>Secret Key</strong>.</p>
+                      <p><strong>2. Menú de Configuración:</strong> Ve a <em>Shop-Einstellungen</em> (Configuración de la tienda) &gt; <em>API</em>.</p>
+                      <p><strong>3. Generar Claves:</strong> Haz clic en <em>Neue API-Schlüssel generieren</em> para copiar tu <strong>Client Key</strong> y tu <strong>Secret Key</strong>.</p>
                     </div>
                   </details>
                 </div>
@@ -1077,17 +1077,17 @@ export default function IntegrationsSettingsPage() {
                     </div>
                     <div>
                       <h3 className="font-bold text-slate-900 dark:text-white">CONTPAQi SAE</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Base de datos ERP / CatÃ¡logo Local</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Base de datos ERP / Catálogo Local</p>
                     </div>
                   </div>
                   <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                    {settings.SAE_REPOSITORY_TYPE === 'production' ? 'SQL Server' : 'CatÃ¡logo Local'}
+                    {settings.SAE_REPOSITORY_TYPE === 'production' ? 'SQL Server' : 'Catálogo Local'}
                   </span>
                 </div>
 
                 <div className="space-y-3 text-xs">
                   <div>
-                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Ruta de CatÃ¡logo / Archivo SAE</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Ruta de Catálogo / Archivo SAE</label>
                     <input
                       type="text"
                       value={settings.SAE_DATA_PATH}
@@ -1097,14 +1097,14 @@ export default function IntegrationsSettingsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Modo de OperaciÃ³n</label>
+                    <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Modo de Operación</label>
                     <select
                       value={settings.SAE_REPOSITORY_TYPE}
                       onChange={(e) => handleInputChange('SAE_REPOSITORY_TYPE', e.target.value)}
                       className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors cursor-pointer"
                     >
-                      <option value="mock">CatÃ¡logo Local de Productos</option>
-                      <option value="production">Base de Datos SQL Server en Vivo (ProducciÃ³n)</option>
+                      <option value="mock">Catálogo Local de Productos</option>
+                      <option value="production">Base de Datos SQL Server en Vivo (Producción)</option>
                     </select>
                   </div>
 
@@ -1112,11 +1112,11 @@ export default function IntegrationsSettingsPage() {
                   <details className="mt-3 group bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-600 dark:text-slate-400 transition-all">
                     <summary className="cursor-pointer font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1.5 select-none">
                       <HelpCircle size={14} />
-                      <span>Â¿CÃ³mo conectar tus productos de CONTPAQi / SAE?</span>
+                      <span>¿Cómo conectar tus productos de CONTPAQi / SAE?</span>
                     </summary>
                     <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
-                      <p><strong>OpciÃ³n 1 (Recomendada / Sin instalaciones):</strong> En tu sistema CONTPAQi / SAE ve a <em>Inventarios</em> &gt; <em>Reporte de Existencias</em> &gt; <em>Exportar a Excel</em>. Luego ve a la pantalla de <strong>Inventario</strong> en esta plataforma y sÃºbelo con el botÃ³n <em>Importar Excel / CSV</em>.</p>
-                      <p><strong>OpciÃ³n 2 (SQL Server Local):</strong> Si deseas conexiÃ³n automÃ¡tica permanente a la base de datos de tu servidor local, selecciona <em>Base de Datos SQL Server en Vivo</em> e ingresa tu cadena de conexiÃ³n ODBC.</p>
+                      <p><strong>Opción 1 (Recomendada / Sin instalaciones):</strong> En tu sistema CONTPAQi / SAE ve a <em>Inventarios</em> &gt; <em>Reporte de Existencias</em> &gt; <em>Exportar a Excel</em>. Luego ve a la pantalla de <strong>Inventario</strong> en esta plataforma y súbelo con el botón <em>Importar Excel / CSV</em>.</p>
+                      <p><strong>Opción 2 (SQL Server Local):</strong> Si deseas conexión automática permanente a la base de datos de tu servidor local, selecciona <em>Base de Datos SQL Server en Vivo</em> e ingresa tu cadena de conexión ODBC.</p>
                     </div>
                   </details>
                 </div>
@@ -1126,7 +1126,7 @@ export default function IntegrationsSettingsPage() {
 
         </div>
 
-        {/* BotÃ³n flotante o fijo para guardar */}
+        {/* Botón flotante o fijo para guardar */}
         <div className="flex justify-end pt-4">
           <button
             type="submit"
@@ -1134,7 +1134,7 @@ export default function IntegrationsSettingsPage() {
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-8 py-3.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg shadow-blue-500/20 transition-all cursor-pointer"
           >
             <Save size={18} />
-            <span>{saving ? 'Guardando cambios...' : 'Guardar y Aplicar ConfiguraciÃ³n'}</span>
+            <span>{saving ? 'Guardando cambios...' : 'Guardar y Aplicar Configuración'}</span>
           </button>
         </div>
 
