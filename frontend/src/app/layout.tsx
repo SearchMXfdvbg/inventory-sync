@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -164,6 +164,8 @@ export default function RootLayout({
     topbarTitle = 'Módulo de Conciliación';
   } else if (cleanPath === '/alerts') {
     topbarTitle = 'Centro de Alertas';
+  } else if (cleanPath.startsWith('/tickets')) {
+    topbarTitle = 'Centro de Soporte & Tickets';
   } else if (cleanPath === '/settings/integrations') {
     topbarTitle = 'Configuración de Integraciones';
   }
@@ -171,7 +173,7 @@ export default function RootLayout({
   // El Sidebar y el Topbar SOLO se muestran si la página NO es pública Y el usuario está autenticado
   const showAppChrome = mounted && !isPublicPage && isAuthenticated;
 
-  // Verificar si el usuario debe ser bloqueado por Plan Guest o Suspensión
+  // Verificar si el usuario debe ser bloqueado por Plan Guest o Suspensión (excepto en /tickets para que puedan comunicarse)
   const isRestrictedClient = Boolean(
     currentUser &&
     currentUser.username.toLowerCase() !== 'cristadmin' &&
@@ -194,7 +196,7 @@ export default function RootLayout({
           <div className="min-h-screen bg-slate-950 flex items-center justify-center">
             <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
           </div>
-        ) : isRestrictedClient ? (
+        ) : isRestrictedClient && !cleanPath.startsWith('/tickets') ? (
           <AccessGate user={currentUser!} onRefresh={() => setMounted(false)} />
         ) : (
           <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950">

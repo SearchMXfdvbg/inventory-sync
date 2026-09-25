@@ -1,13 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { 
   ShieldAlert, 
   Hourglass, 
   LogOut, 
   RefreshCw, 
   ShieldCheck, 
-  AlertTriangle 
+  AlertTriangle,
+  Ticket,
+  LifeBuoy
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import { clearSession } from '@/lib/api';
@@ -108,6 +111,13 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/tickets"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-xs font-bold transition-all cursor-pointer shadow-sm"
+          >
+            <LifeBuoy size={14} />
+            <span>Tickets de Soporte</span>
+          </Link>
           <ThemeToggle />
           <button
             onClick={handleLogout}
@@ -155,7 +165,7 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
             <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs text-slate-300 space-y-2 text-left">
               <p className="font-bold text-slate-200">¿Cómo reactivar tu cuenta?</p>
               <p className="text-slate-400 leading-relaxed">
-                Ponte en contacto con el Super Administrador para solventar el motivo indicado y restaurar inmediatamente la sincronización con tus canales de venta.
+                Ponte en contacto con el Super Administrador o abre un ticket de apelación para solventar el motivo indicado y restaurar inmediatamente la sincronización con tus canales de venta.
               </p>
               <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between font-mono text-[11px]">
                 <span className="text-slate-400">Contacto Administrador:</span>
@@ -171,17 +181,24 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
 
             {/* Acciones */}
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href="/tickets"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-lg shadow-red-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <Ticket size={15} />
+                <span>Abrir Ticket / Apelar Suspensión</span>
+              </Link>
               <button
                 onClick={handleCheckStatus}
                 disabled={checking}
-                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
               >
                 <RefreshCw size={15} className={checking ? 'animate-spin' : ''} />
-                <span>{checking ? 'Verificando con Servidor...' : 'Comprobar si ya fue Reactivada'}</span>
+                <span>{checking ? 'Verificando con Servidor...' : 'Comprobar Reactivación'}</span>
               </button>
               <button
                 onClick={handleLogout}
-                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer transition-colors"
+                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 font-bold text-xs cursor-pointer transition-colors border border-slate-800"
               >
                 Cerrar Sesión
               </button>
@@ -213,7 +230,7 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
                 <span>Acceso Restringido</span>
               </div>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Hola, <strong className="text-white">{user.username}</strong>. Para ver tu catálogo, órdenes y comenzar a sincronizar tu inventario con Shopify y Mercado Libre, <strong className="text-amber-300">comunícate con el administrador</strong> para que active tu cuenta y te asigne un plan de sincronización.
+                Hola, <strong className="text-white">{user.username}</strong>. Para ver tu catálogo, órdenes y comenzar a sincronizar tu inventario con Shopify y Mercado Libre, genera un <strong className="text-amber-300">Ticket de Activación</strong> para que el administrador apruebe tu cuenta y te asigne un plan de sincronización.
               </p>
               <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 font-mono text-xs">
                 <span className="text-slate-400">Super Administrador:</span>
@@ -229,17 +246,24 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
 
             {/* Acciones */}
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href="/tickets"
+                className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.02]"
+              >
+                <Ticket size={16} />
+                <span>Abrir Ticket de Soporte / Activación</span>
+              </Link>
               <button
                 onClick={handleCheckStatus}
                 disabled={checking}
-                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
               >
                 <RefreshCw size={15} className={checking ? 'animate-spin' : ''} />
-                <span>{checking ? 'Consultando Servidor...' : 'Comprobar si ya fue Asignado mi Plan'}</span>
+                <span>{checking ? 'Consultando Servidor...' : 'Verificar si ya fue Asignado'}</span>
               </button>
               <button
                 onClick={handleLogout}
-                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer transition-colors"
+                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 font-bold text-xs cursor-pointer transition-colors border border-slate-800"
               >
                 Cerrar Sesión
               </button>

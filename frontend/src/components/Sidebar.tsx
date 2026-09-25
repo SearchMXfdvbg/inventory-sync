@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import Link from 'next/link';
@@ -13,7 +13,8 @@ import {
   Settings, 
   LogOut,
   User,
-  Sparkles
+  Sparkles,
+  LifeBuoy
 } from 'lucide-react';
 import { clearSession } from '@/lib/api';
 
@@ -47,6 +48,7 @@ export const Sidebar: React.FC = () => {
     { name: 'Sincronización', path: '/synchronization', icon: RefreshCw },
     { name: 'Conciliación', path: '/reconciliation', icon: GitCompare },
     { name: 'Alertas', path: '/alerts', icon: Bell },
+    { name: 'Tickets de Soporte', path: '/tickets', icon: LifeBuoy },
     { name: 'Configuración', path: '/settings/integrations', icon: Settings },
   ];
 
