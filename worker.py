@@ -31,8 +31,19 @@ ebay_client = EbayClient()
 kaufland_client = KauflandClient()
 sae = SAEDatabaseRepository(settings.DATABASE_URL)
 
-# Base delay for exponential backoff (in seconds)
-RETRY_BASE_DELAY = 60
+# Schedule progresivo de reintentos rápidos (evita esperas excesivas ante hipos de red):
+# Intento 0: Inmediato al registrarse.
+# Intento 1 (1er reintento tras fallo): 5 segundos para recuperación inmediata.
+# Intento 2: 20 segundos.
+# Intento 3: 60 segundos (1 minuto).
+# Intento 4: 180 segundos (3 minutos).
+# Intento >= 5: FAILED permanente para intervención manual.
+RETRY_SCHEDULE = {
+    1: 5,
+    2: 20,
+    3: 60,
+    4: 180,
+}
 
 
 def handle_temp_error(db: Session, venta: Venta, error_msg: str) -> None:
@@ -87,8 +98,8 @@ async def run_iteration(db: Session) -> bool:
                 ready_sale = sale
                 break
             else:
-                # Calculate backoff: RETRY_BASE_DELAY * 2^(attempts-1)
-                delay_seconds = RETRY_BASE_DELAY * (2 ** (sale.attempts - 1))
+                # Consultar tiempo de espera según el número de reintento
+                delay_seconds = RETRY_SCHEDULE.get(sale.attempts, 180)
                 next_attempt = sale.updated_at + timedelta(seconds=delay_seconds)
                 if now >= next_attempt:
                     ready_sale = sale
@@ -243,7 +254,7 @@ async def run_iteration(db: Session) -> bool:
             venta.ml_synced = True
 
         # 7. TikTok Shop inventory update
-        if enable_tiktok:
+        if enable_tiktok and getattr(settings, "TIKTOK_APP_KEY", ""):
             if not venta.tiktok_synced:
                 try:
                     await tiktok_client.update_stock(
@@ -262,7 +273,7 @@ async def run_iteration(db: Session) -> bool:
             venta.tiktok_synced = True
 
         # 8. Amazon inventory update
-        if enable_amazon:
+        if enable_amazon and getattr(settings, "AMAZON_REFRESH_TOKEN", ""):
             if not venta.amazon_synced:
                 try:
                     await amazon_client.update_stock(
@@ -280,7 +291,7 @@ async def run_iteration(db: Session) -> bool:
             venta.amazon_synced = True
 
         # 9. eBay inventory update (Alemania / Europa)
-        if enable_ebay:
+        if enable_ebay and getattr(settings, "EBAY_CLIENT_ID", ""):
             if not venta.ebay_synced:
                 try:
                     await ebay_client.update_stock(
@@ -298,7 +309,7 @@ async def run_iteration(db: Session) -> bool:
             venta.ebay_synced = True
 
         # 10. Kaufland inventory update (Alemania)
-        if enable_kaufland:
+        if enable_kaufland and getattr(settings, "KAUFLAND_CLIENT_KEY", ""):
             if not venta.kaufland_synced:
                 try:
                     await kaufland_client.update_stock(

@@ -8,7 +8,7 @@ from database import Base
 from models import Venta
 from config import settings
 import worker
-from sae_mock import ProductNotFoundError, InsufficientStockError
+from sae_db import ProductNotFoundError, InsufficientStockError
 
 @pytest.fixture
 def db_session():
@@ -218,7 +218,7 @@ async def test_run_iteration_ml_temporary_failure(mock_ml, mock_shopify, mock_sa
 
 @pytest.mark.asyncio
 async def test_run_iteration_backoff_delay(db_session):
-    # Create a sale in status PROCESSING, attempt = 1, updated recently (seconds ago)
+    # Create a sale in status PROCESSING, attempt = 1, updated recently (2 seconds ago)
     venta = Venta(
         external_id="ext-006",
         origen="shopify",
@@ -226,18 +226,18 @@ async def test_run_iteration_backoff_delay(db_session):
         cantidad=2,
         status="PROCESSING",
         attempts=1,
-        updated_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=10) # 10 seconds ago
+        updated_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=2) # 2 seconds ago
     )
     db_session.add(venta)
     db_session.commit()
 
-    # Since RETRY_BASE_DELAY = 60, and attempts = 1, delay is 60 * 2^0 = 60 seconds.
-    # 10 seconds elapsed < 60 seconds delay, so it should NOT be ready yet.
+    # Under RETRY_SCHEDULE, attempts = 1 has a delay of 5 seconds.
+    # 2 seconds elapsed < 5 seconds delay, so it should NOT be ready yet.
     res = await worker.run_iteration(db_session)
     assert res is False
 
-    # Now manually set updated_at to 70 seconds ago (which is > 60 seconds delay)
-    venta.updated_at = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=70)
+    # Now manually set updated_at to 10 seconds ago (which is > 5 seconds delay)
+    venta.updated_at = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=10)
     db_session.commit()
 
     # It should be picked up now. We patch sae to throw an exception to verify it gets processed.
