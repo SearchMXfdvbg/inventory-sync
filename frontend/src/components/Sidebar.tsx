@@ -13,8 +13,8 @@ import {
   Settings, 
   LogOut,
   User,
-  Sparkles,
-  LifeBuoy
+  LifeBuoy,
+  Sparkles
 } from 'lucide-react';
 import { clearSession } from '@/lib/api';
 
@@ -42,7 +42,6 @@ export const Sidebar: React.FC = () => {
 
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Catálogo / TikTok', path: '/catalog', icon: Sparkles },
     { name: 'Inventario', path: '/inventory', icon: Package },
     { name: 'Ventas', path: '/sales', icon: ShoppingCart },
     { name: 'Sincronización', path: '/synchronization', icon: RefreshCw },

@@ -289,13 +289,13 @@ export default function IntegrationsSettingsPage() {
                 onChange={(e) => handleInputChange('INVENTARIO_PRINCIPAL', e.target.value)}
                 className="w-full border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold cursor-pointer transition-colors"
               >
-                <option value="shopify">ðŸ›ï¸ Shopify (Tiendas Online y Marcas Propias)</option>
-                <option value="amazon">ðŸ“¦ Amazon SP-API (Seller Central - México, EE.UU. y Europa)</option>
-                <option value="mercadolibre">ðŸŸ¡ Mercado Libre (Catálogo Central)</option>
-                <option value="ebay">ðŸ‡©ðŸ‡ª eBay (eBay Alemania / Europa)</option>
-                <option value="kaufland">ðŸ”´ Kaufland (Kaufland Global Marketplace - Alemania)</option>
-                <option value="tiktok">ðŸŽµ TikTok Shop (Catálogo TikTok Shop)</option>
-                <option value="sae">ðŸ–¥ï¸ CONTPAQi SAE / Excel (Bodega Física o ERP Administrativo)</option>
+                <option value="shopify">Shopify (Tiendas Online y Marcas Propias)</option>
+                <option value="amazon">Amazon SP-API (Seller Central - México, EE.UU. y Europa)</option>
+                <option value="mercadolibre">Mercado Libre (Catálogo Central)</option>
+                <option value="ebay">eBay Alemania / Europa)</option>
+                <option value="kaufland">Kaufland Global Marketplace - Alemania)</option>
+                <option value="tiktok">TikTok Shop)</option>
+                <option value="sae">CONTPAQi SAE / Excel (Bodega Física o ERP Administrativo)</option>
               </select>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
                 Cuando ocurra una venta en cualquier canal, este inventario maestro será el sistema de referencia para actualizar en cascada a todos los demás.
@@ -442,7 +442,7 @@ export default function IntegrationsSettingsPage() {
                       type="password"
                       value={settings.SHOPIFY_ACCESS_TOKEN}
                       onChange={(e) => handleInputChange('SHOPIFY_ACCESS_TOKEN', e.target.value)}
-                      placeholder="shpat_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                      placeholder="shpat_••••••••"
                       className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                     />
                   </div>
@@ -463,7 +463,7 @@ export default function IntegrationsSettingsPage() {
                         type="password"
                         value={settings.SHOPIFY_API_SECRET}
                         onChange={(e) => handleInputChange('SHOPIFY_API_SECRET', e.target.value)}
-                        placeholder="shpss_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                        placeholder="shpss_••••••••"
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
@@ -551,7 +551,7 @@ export default function IntegrationsSettingsPage() {
                       type="password"
                       value={settings.ML_ACCESS_TOKEN}
                       onChange={(e) => handleInputChange('ML_ACCESS_TOKEN', e.target.value)}
-                      placeholder="APP_USR-â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                      placeholder="APP_USR-••••••••"
                       className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                     />
                   </div>
@@ -670,7 +670,7 @@ export default function IntegrationsSettingsPage() {
                         type="password"
                         value={settings.TIKTOK_APP_SECRET || ''}
                         onChange={(e) => handleInputChange('TIKTOK_APP_SECRET', e.target.value)}
-                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                        placeholder="••••••••"
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
@@ -681,7 +681,7 @@ export default function IntegrationsSettingsPage() {
                       type="password"
                       value={settings.TIKTOK_ACCESS_TOKEN || ''}
                       onChange={(e) => handleInputChange('TIKTOK_ACCESS_TOKEN', e.target.value)}
-                      placeholder="ttp_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                      placeholder="ttp_••••••••"
                       className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                     />
                   </div>
@@ -702,7 +702,7 @@ export default function IntegrationsSettingsPage() {
                         type="password"
                         value={settings.TIKTOK_SHOP_CIPHER || ''}
                         onChange={(e) => handleInputChange('TIKTOK_SHOP_CIPHER', e.target.value)}
-                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                        placeholder="••••••••"
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
@@ -784,7 +784,7 @@ export default function IntegrationsSettingsPage() {
                         type="password"
                         value={settings.AMAZON_CLIENT_SECRET || ''}
                         onChange={(e) => handleInputChange('AMAZON_CLIENT_SECRET', e.target.value)}
-                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                        placeholder="••••••••"
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
@@ -794,7 +794,7 @@ export default function IntegrationsSettingsPage() {
                         type="password"
                         value={settings.AMAZON_REFRESH_TOKEN || ''}
                         onChange={(e) => handleInputChange('AMAZON_REFRESH_TOKEN', e.target.value)}
-                        placeholder="Atzr|â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                        placeholder="Atzr|••••••••"
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
@@ -884,12 +884,12 @@ export default function IntegrationsSettingsPage() {
                       onChange={(e) => handleInputChange('EBAY_MARKETPLACE_ID', e.target.value)}
                       className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 font-semibold cursor-pointer transition-colors"
                     >
-                      <option value="EBAY_DE">ðŸ‡©ðŸ‡ª eBay Alemania (EBAY_DE)</option>
-                      <option value="EBAY_ES">ðŸ‡ªðŸ‡¸ eBay España (EBAY_ES)</option>
-                      <option value="EBAY_IT">ðŸ‡®ðŸ‡¹ eBay Italia (EBAY_IT)</option>
-                      <option value="EBAY_FR">ðŸ‡«ðŸ‡· eBay Francia (EBAY_FR)</option>
-                      <option value="EBAY_GB">ðŸ‡¬ðŸ‡§ eBay Reino Unido (EBAY_GB)</option>
-                      <option value="EBAY_US">ðŸ‡ºðŸ‡¸ eBay Estados Unidos (EBAY_US)</option>
+                      <option value="EBAY_DE">Alemania (EBAY_DE)</option>
+                      <option value="EBAY_ES">España (EBAY_ES)</option>
+                      <option value="EBAY_IT">Italia (EBAY_IT)</option>
+                      <option value="EBAY_FR">Francia (EBAY_FR)</option>
+                      <option value="EBAY_GB">Reino Unido (EBAY_GB)</option>
+                      <option value="EBAY_US">Estados Unidos (EBAY_US)</option>
                     </select>
                   </div>
 
@@ -911,7 +911,7 @@ export default function IntegrationsSettingsPage() {
                         type="password"
                         value={settings.EBAY_CLIENT_SECRET || ''}
                         onChange={(e) => handleInputChange('EBAY_CLIENT_SECRET', e.target.value)}
-                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                        placeholder="••••••••"
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
@@ -921,7 +921,7 @@ export default function IntegrationsSettingsPage() {
                         type="password"
                         value={settings.EBAY_REFRESH_TOKEN || ''}
                         onChange={(e) => handleInputChange('EBAY_REFRESH_TOKEN', e.target.value)}
-                        placeholder="v^1.1#i^1#â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                        placeholder="v^1.1#i^1#••••••••"
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                       />
                     </div>
@@ -1011,11 +1011,11 @@ export default function IntegrationsSettingsPage() {
                       onChange={(e) => handleInputChange('KAUFLAND_STOREFRONT', e.target.value)}
                       className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 font-semibold cursor-pointer transition-colors"
                     >
-                      <option value="de">ðŸ‡©ðŸ‡ª Alemania (Kaufland.de)</option>
-                      <option value="pl">ðŸ‡µðŸ‡± Polonia (Kaufland.pl)</option>
-                      <option value="cz">ðŸ‡¨ðŸ‡¿ República Checa (Kaufland.cz)</option>
-                      <option value="sk">ðŸ‡¸ðŸ‡° Eslovaquia (Kaufland.sk)</option>
-                      <option value="at">ðŸ‡¦ðŸ‡¹ Austria (Kaufland.at)</option>
+                      <option value="de">Alemania (Kaufland.de)</option>
+                      <option value="pl">Polonia (Kaufland.pl)</option>
+                      <option value="cz">República Checa (Kaufland.cz)</option>
+                      <option value="sk">Eslovaquia (Kaufland.sk)</option>
+                      <option value="at">Austria (Kaufland.at)</option>
                     </select>
                   </div>
 
@@ -1036,7 +1036,7 @@ export default function IntegrationsSettingsPage() {
                       type="password"
                       value={settings.KAUFLAND_SECRET_KEY || ''}
                       onChange={(e) => handleInputChange('KAUFLAND_SECRET_KEY', e.target.value)}
-                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                      placeholder="••••••••"
                       className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 transition-colors"
                     />
                   </div>

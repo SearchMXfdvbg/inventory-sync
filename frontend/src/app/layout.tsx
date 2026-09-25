@@ -152,8 +152,6 @@ export default function RootLayout({
   let topbarTitle = 'Panel de Control';
   if (cleanPath.startsWith('/inventory/')) {
     topbarTitle = 'Detalle de Producto';
-  } else if (cleanPath === '/catalog') {
-    topbarTitle = 'Catálogo y Preparador TikTok';
   } else if (cleanPath === '/inventory') {
     topbarTitle = 'Catálogo de Inventario';
   } else if (cleanPath === '/sales') {
