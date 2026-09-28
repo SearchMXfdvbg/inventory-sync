@@ -59,6 +59,29 @@ export default function LandingPage() {
   // Selector de Schemas de Payload
   const [activeSchemaTab, setActiveSchemaTab] = useState<'shopify' | 'mercadolibre' | 'compensate'>('shopify');
 
+  // Rotador dinámico de plataformas cada 2 segundos
+  const platforms = [
+    { name: 'Mercado Libre', color: 'text-[#ffe600]' },
+    { name: 'Amazon', color: 'text-[#ff9900]' },
+    { name: 'Shopify', color: 'text-[#95bf47]' },
+    { name: 'eBay', color: 'text-[#0064d2]' },
+    { name: 'Kaufland', color: 'text-[#e30613]' }
+  ];
+  const [platformIndex, setPlatformIndex] = useState(0);
+  const [isFading, setIsFading] = useState(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIsFading(true);
+      setTimeout(() => {
+        setPlatformIndex((prev) => (prev + 1) % platforms.length);
+        setIsFading(false);
+      }, 250);
+    }, 2000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   const terminalEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -228,7 +251,15 @@ export default function LandingPage() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05]">
-              Vender lo que ya no tienes te cuesta la cuenta de Mercado Libre.
+              Vender lo que ya no tienes te cuesta la cuenta de{' '}
+              <span
+                className={`inline-block font-mono-code transition-all duration-300 transform ${
+                  isFading ? 'opacity-0 -translate-y-2' : 'opacity-100 translate-y-0'
+                } ${platforms[platformIndex].color} underline decoration-[#20242c] underline-offset-8`}
+              >
+                {platforms[platformIndex].name}
+              </span>
+              .
             </h1>
 
             <p className="text-lg text-[#a1a7b5] leading-relaxed max-w-2xl font-light">
