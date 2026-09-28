@@ -59,16 +59,16 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-64 bg-[#0d0e12] text-[#ededed] flex flex-col justify-between border-r border-[#20242c] h-screen fixed left-0 top-0 z-20 font-mono-code text-xs">
+    <aside className="w-64 bg-white dark:bg-[#0d0e12] text-slate-800 dark:text-[#ededed] flex flex-col justify-between border-r border-slate-200 dark:border-[#20242c] h-screen fixed left-0 top-0 z-20 font-mono-code text-xs transition-colors duration-200">
       <div>
         {/* Brand Header */}
-        <div className="p-5 border-b border-[#20242c] flex items-center gap-3">
+        <div className="p-5 border-b border-slate-200 dark:border-[#20242c] flex items-center gap-3">
           <div className="w-8 h-8 bg-[#00ff66] text-black font-bold flex items-center justify-center text-sm shadow-hard">
             //
           </div>
           <div>
-            <h1 className="font-bold text-white text-sm tracking-tight leading-none">INVENTORY_SYNC</h1>
-            <p className="text-[10px] text-[#8e95a5] mt-1 tracking-wider uppercase">Saga Distributed Core</p>
+            <h1 className="font-bold text-slate-900 dark:text-white text-sm tracking-tight leading-none">INVENTORY_SYNC</h1>
+            <p className="text-[10px] text-slate-500 dark:text-[#8e95a5] mt-1 tracking-wider uppercase">Saga Distributed Core</p>
           </div>
         </div>
 
@@ -80,7 +80,7 @@ export const Sidebar: React.FC = () => {
               className={`flex items-center justify-between gap-3 px-3 py-2 text-xs font-bold border border-[#ff3b00]/40 transition-all mb-3 ${
                 pathname === '/super-admin' 
                   ? 'bg-[#ff3b00] text-black shadow-hard' 
-                  : 'bg-[#ff3b00]/10 text-[#ff3b00] hover:bg-[#ff3b00]/20'
+                  : 'bg-[#ff3b00]/10 text-[#d93200] dark:text-[#ff3b00] hover:bg-[#ff3b00]/20'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -102,8 +102,8 @@ export const Sidebar: React.FC = () => {
                 href={item.path}
                 className={`flex items-center gap-3 px-3 py-2.5 transition-all ${
                   isActive
-                    ? 'bg-[#181b22] text-[#00ff66] border-l-2 border-[#00ff66] font-bold'
-                    : 'text-[#8e95a5] hover:text-white hover:bg-[#14171e]'
+                    ? 'bg-slate-100 dark:bg-[#181b22] text-[#008f39] dark:text-[#00ff66] border-l-2 border-[#008f39] dark:border-[#00ff66] font-bold'
+                    : 'text-slate-600 dark:text-[#8e95a5] hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#14171e]'
                 }`}
               >
                 <Icon size={16} />
@@ -115,19 +115,19 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Footer Section with Operator Status */}
-      <div className="p-4 border-t border-[#20242c] bg-[#090a0c] space-y-3">
+      <div className="p-4 border-t border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#090a0c] space-y-3 transition-colors duration-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
             <div className={`w-7 h-7 flex items-center justify-center font-bold text-xs shrink-0 border ${
               currentUser.toLowerCase() === 'cristadmin'
                 ? 'border-[#ff3b00] bg-[#ff3b00]/20 text-[#ff3b00]'
-                : 'border-[#00ff66] bg-[#00ff66]/20 text-[#00ff66]'
+                : 'border-[#00ff66] bg-[#00ff66]/20 text-emerald-700 dark:text-[#00ff66]'
             }`}>
               {currentUser.charAt(0).toUpperCase()}
             </div>
             <div className="leading-tight min-w-0">
-              <p className="text-xs font-bold text-white truncate max-w-[120px]">{currentUser}</p>
-              <p className="text-[10px] text-[#555d6e]">
+              <p className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[120px]">{currentUser}</p>
+              <p className="text-[10px] text-slate-500 dark:text-[#555d6e]">
                 {currentUser.toLowerCase() === 'cristadmin' ? 'SUPER_OPERADOR' : 'OPERADOR_CLIENTE'}
               </p>
             </div>
@@ -136,7 +136,7 @@ export const Sidebar: React.FC = () => {
           <button 
             onClick={handleLogout}
             title="Desconectar consola"
-            className="p-1.5 border border-[#20242c] hover:border-[#ff3b00] text-[#8e95a5] hover:text-[#ff3b00] transition-colors shrink-0"
+            className="p-1.5 border border-slate-300 dark:border-[#20242c] hover:border-[#ff3b00] text-slate-500 dark:text-[#8e95a5] hover:text-[#ff3b00] transition-colors shrink-0"
           >
             <LogOut size={14} />
           </button>
