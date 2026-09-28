@@ -41,10 +41,6 @@ export const Topbar: React.FC<TopbarProps> = ({ title }) => {
 
       {/* Control panel */}
       <div className="flex items-center gap-4">
-        <div className="hidden md:flex items-center gap-2 text-[10px] text-[#8e95a5]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#00ff66]"></span>
-          <span>LATENCIA CAS: <strong className="text-white">18ms</strong></span>
-        </div>
 
         {/* Botón exclusivo para CristAdmin */}
         {isSuperAdmin && (
