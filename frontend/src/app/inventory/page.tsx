@@ -310,36 +310,36 @@ export default function InventoryPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Banner de Estado de Canales y Transparencia de Sincronización */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm transition-colors">
+    <div className="space-y-5">
+      {/* Banner de Estado de Canales */}
+      <div className="bg-white dark:bg-[#0d0e12] border border-slate-200 dark:border-[#20242c] p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-hard transition-colors">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${
+          <div className={`w-9 h-9 border flex items-center justify-center ${
             activeChannelsCount > 0 
-              ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400' 
-              : 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'
+              ? 'border-[#00ff66]/40 text-[#00ff66] bg-[#00ff66]/5' 
+              : 'border-slate-300 dark:border-[#20242c] text-slate-500 dark:text-[#8e95a5]'
           }`}>
-            <Layers size={20} />
+            <Layers size={16} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-slate-800 dark:text-white">
+              <h2 className="text-xs font-bold uppercase tracking-widest font-mono text-slate-800 dark:text-white">
                 {activeChannelsCount > 0 
-                  ? `Sincronización Multicanal Activa (${activeChannelsCount} Canales Conectados)` 
-                  : 'Catálogo Maestro en Almacén Local / Archivo'}
+                  ? `SYNC_MULTICANAL — ${activeChannelsCount} CANALES ACTIVOS` 
+                  : 'ALMACÉN_LOCAL — SIN CANALES ACTIVOS'}
               </h2>
-              <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider border ${
+              <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest font-mono border ${
                 activeChannelsCount > 0
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                  ? 'text-[#00ff66] border-[#00ff66]/40 bg-[#00ff66]/5'
+                  : 'text-[#8e95a5] border-[#20242c] bg-transparent'
               }`}>
-                {activeChannelsCount > 0 ? '🟢 Conectado en Vivo' : '⚪ Modo Almacén Central'}
+                {activeChannelsCount > 0 ? 'ONLINE' : 'LOCAL'}
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-[11px] text-slate-500 dark:text-[#8e95a5] mt-0.5 font-mono">
               {activeChannelsCount > 0 
-                ? 'El stock se actualiza automáticamente entre tu almacén y las plataformas conectadas.'
-                : 'Tus productos están guardados localmente. Conecta tus credenciales de Shopify, Amazon, ML o eBay para sincronizar en tiempo real.'}
+                ? 'Stock sincronizado automáticamente con todas las plataformas conectadas.'
+                : 'Catálogo local. Conecta credenciales de Shopify / Amazon / ML / eBay para activar sync.'}
             </p>
           </div>
         </div>
@@ -347,10 +347,10 @@ export default function InventoryPage() {
         <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
           <Link
             href="/settings/integrations"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800 rounded-xl transition-all shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold font-mono uppercase tracking-wider text-[#00ff66] border border-[#00ff66]/40 hover:bg-[#00ff66]/10 transition-colors shadow-hard"
           >
-            <Zap size={14} className="text-blue-600 dark:text-blue-400" />
-            <span>Configurar Conexiones</span>
+            <Zap size={13} />
+            <span>Configurar Canales</span>
           </Link>
         </div>
       </div>
@@ -401,13 +401,13 @@ export default function InventoryPage() {
         activeFiltersCount={activeFiltersCount}
       />
 
-      {/* Barra de Acciones de Inventario (Exportar / Importar / Plantilla / Resumen) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-semibold">
-          <span>Mostrando <strong>{filteredProducts.length}</strong> de <strong>{products.length}</strong> productos</span>
+      {/* Barra de Acciones de Inventario */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-[#8e95a5] font-mono">
+          <span>MOSTRANDO <strong className="text-slate-700 dark:text-white">{filteredProducts.length}</strong> / <strong className="text-slate-700 dark:text-white">{products.length}</strong> PRODUCTOS</span>
           {activeFiltersCount > 0 && (
-            <span className="text-blue-600 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800/60">
-              (Filtros aplicados)
+            <span className="text-[#ff3b00] font-bold border border-[#ff3b00]/40 bg-[#ff3b00]/5 px-2 py-0.5 text-[10px] font-mono uppercase">
+              {activeFiltersCount} FILTROS
             </span>
           )}
         </div>
@@ -416,20 +416,20 @@ export default function InventoryPage() {
           <button
             onClick={handleExportAll}
             disabled={filteredProducts.length === 0}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
-            title="Exportar la lista actual de productos con todos sus datos a Excel"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold font-mono text-slate-700 dark:text-[#8e95a5] bg-white dark:bg-[#0d0e12] border border-slate-200 dark:border-[#20242c] hover:border-slate-400 dark:hover:border-[#8e95a5] transition-colors cursor-pointer disabled:opacity-40"
+            title="Exportar productos a Excel"
           >
-            <Download size={14} className="text-slate-500 dark:text-slate-400" />
-            <span>Exportar Excel ({filteredProducts.length})</span>
+            <Download size={13} />
+            <span>EXPORTAR ({filteredProducts.length})</span>
           </button>
           
           <button
             onClick={downloadInventoryTemplate}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"
-            title="Descargar plantilla CSV para carga masiva"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold font-mono text-slate-700 dark:text-[#8e95a5] bg-white dark:bg-[#0d0e12] border border-slate-200 dark:border-[#20242c] hover:border-slate-400 dark:hover:border-[#8e95a5] transition-colors cursor-pointer"
+            title="Descargar plantilla CSV"
           >
-            <FileSpreadsheet size={14} className="text-slate-500 dark:text-slate-400" />
-            <span>Plantilla</span>
+            <FileSpreadsheet size={13} />
+            <span>PLANTILLA</span>
           </button>
 
           <button
@@ -439,117 +439,117 @@ export default function InventoryPage() {
               setImportResult(null);
               setIsImportModalOpen(true);
             }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-sm cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold font-mono uppercase text-slate-800 dark:text-black bg-white dark:bg-[#8e95a5] border border-slate-300 dark:border-[#8e95a5] hover:bg-slate-100 dark:hover:bg-[#a0a8b5] transition-colors shadow-hard cursor-pointer"
           >
-            <UploadCloud size={14} />
-            <span>Importar Excel / CSV</span>
+            <UploadCloud size={13} />
+            <span>IMPORTAR</span>
           </button>
 
           <button
             onClick={handleStartBulkSync}
             disabled={isBulkSyncing || products.length === 0}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-black text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl transition-all shadow-md cursor-pointer disabled:opacity-50"
-            title="Sincronizar todo el inventario central a todos los canales de venta conectados"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-black font-mono uppercase text-black bg-[#00ff66] border border-[#00ff66] hover:bg-[#00e55a] transition-colors shadow-hard cursor-pointer disabled:opacity-50"
+            title="Sincronizar todo el inventario a los canales conectados"
           >
-            <Zap size={14} className="text-yellow-300 animate-pulse" />
-            <span>Sincronizar Todo</span>
+            <Zap size={13} />
+            <span>SYNC_ALL</span>
           </button>
         </div>
       </div>
 
-      {/* Barra Flotante de Acciones en Lote (cuando hay ítems seleccionados) */}
+      {/* Barra Flotante de Acciones en Lote */}
       {selectedSkus.length > 0 && (
-        <div className="bg-slate-900 dark:bg-slate-800 text-white rounded-2xl p-3 px-5 flex flex-wrap items-center justify-between gap-3 shadow-xl border border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-150">
+        <div className="bg-[#0d0e12] dark:bg-[#0d0e12] border border-[#20242c] text-white p-3 px-5 flex flex-wrap items-center justify-between gap-3 shadow-hard animate-in fade-in slide-in-from-bottom-2 duration-150">
           <div className="flex items-center gap-3">
-            <span className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-xs font-extrabold">
+            <span className="w-7 h-7 border border-[#00ff66]/60 bg-[#00ff66]/10 flex items-center justify-center text-xs font-extrabold font-mono text-[#00ff66]">
               {selectedSkus.length}
             </span>
-            <span className="text-xs font-bold text-slate-200">
-              {selectedSkus.length === 1 ? '1 producto seleccionado' : `${selectedSkus.length} productos seleccionados`}
+            <span className="text-xs font-bold font-mono uppercase tracking-wider text-[#8e95a5]">
+              {selectedSkus.length === 1 ? '1 PRODUCTO SELECCIONADO' : `${selectedSkus.length} PRODUCTOS SELECCIONADOS`}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={handleExportSelected}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg border border-slate-600 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold font-mono text-[#8e95a5] bg-transparent border border-[#20242c] hover:border-[#8e95a5] hover:text-white transition-all cursor-pointer"
             >
               <Download size={13} />
-              <span>Exportar Selección</span>
+              <span>EXPORTAR SELECCIÓN</span>
             </button>
             <button
               onClick={() => setSelectedSkus([])}
-              className="px-2.5 py-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="px-2.5 py-1.5 text-xs font-semibold font-mono text-[#8e95a5] hover:text-white transition-colors cursor-pointer"
             >
-              Deseleccionar
+              DESELECCIONAR
             </button>
           </div>
         </div>
       )}
 
       {/* Tabla Principal de Inventario */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
+      <div className="bg-white dark:bg-[#0d0e12] border border-slate-200 dark:border-[#20242c] shadow-hard overflow-hidden transition-colors">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider font-mono">
-                <th className="w-10 px-4 py-4 text-center">
+              <tr className="border-b border-slate-100 dark:border-[#20242c] bg-slate-50 dark:bg-[#090a0c] text-slate-500 dark:text-[#8e95a5] text-[10px] font-bold uppercase tracking-widest font-mono">
+                <th className="w-10 px-4 py-3 text-center">
                   <button 
                     onClick={toggleSelectAllPage}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-[#00ff66] transition-colors"
                   >
                     {isAllPageSelected ? (
-                      <CheckSquare size={16} className="text-blue-600 dark:text-blue-400" />
+                      <CheckSquare size={15} className="text-[#00ff66]" />
                     ) : (
-                      <Square size={16} />
+                      <Square size={15} />
                     )}
                   </button>
                 </th>
-                <th className="px-5 py-4 font-semibold">Producto / Descripción</th>
-                <th className="px-4 py-4 font-semibold">SKU / Marca</th>
-                <th className="px-4 py-4 font-semibold">Stock Central (Local)</th>
-                <th className="px-4 py-4 font-semibold">
+                <th className="px-5 py-3">Producto / Descripción</th>
+                <th className="px-4 py-3">SKU / Marca</th>
+                <th className="px-4 py-3">Stock Central</th>
+                <th className="px-4 py-3">
                   <div className="flex items-center gap-1.5">
                     <span>Shopify</span>
-                    <span className={`w-2 h-2 rounded-full ${shopifyConnected ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`} title={shopifyConnected ? 'Canal Conectado' : 'Canal Sin Configurar'} />
+                    <span className={`w-1.5 h-1.5 ${shopifyConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={shopifyConnected ? 'Conectado' : 'Sin configurar'} />
                   </div>
                 </th>
-                <th className="px-4 py-4 font-semibold">
+                <th className="px-4 py-3">
                   <div className="flex items-center gap-1.5">
                     <span>Amazon</span>
-                    <span className={`w-2 h-2 rounded-full ${amazonConnected ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`} title={amazonConnected ? 'Canal Conectado' : 'Canal Sin Configurar'} />
+                    <span className={`w-1.5 h-1.5 ${amazonConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={amazonConnected ? 'Conectado' : 'Sin configurar'} />
                   </div>
                 </th>
-                <th className="px-4 py-4 font-semibold">
+                <th className="px-4 py-3">
                   <div className="flex items-center gap-1.5">
                     <span>eBay</span>
-                    <span className={`w-2 h-2 rounded-full ${ebayConnected ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`} title={ebayConnected ? 'Canal Conectado' : 'Canal Sin Configurar'} />
+                    <span className={`w-1.5 h-1.5 ${ebayConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={ebayConnected ? 'Conectado' : 'Sin configurar'} />
                   </div>
                 </th>
-                <th className="px-4 py-4 font-semibold">
+                <th className="px-4 py-3">
                   <div className="flex items-center gap-1.5">
                     <span>Kaufland</span>
-                    <span className={`w-2 h-2 rounded-full ${kauflandConnected ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`} title={kauflandConnected ? 'Canal Conectado' : 'Canal Sin Configurar'} />
+                    <span className={`w-1.5 h-1.5 ${kauflandConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={kauflandConnected ? 'Conectado' : 'Sin configurar'} />
                   </div>
                 </th>
-                <th className="px-4 py-4 font-semibold">Estado Multicanal</th>
-                <th className="px-4 py-4 font-semibold text-right">Detalle</th>
+                <th className="px-4 py-3">Estado</th>
+                <th className="px-4 py-3 text-right">—</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+            <tbody className="divide-y divide-slate-100 dark:divide-[#20242c]">
               {paginatedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-16 text-sm text-slate-400 dark:text-slate-500 font-medium">
+                  <td colSpan={10} className="text-center py-16 text-sm text-slate-400 dark:text-[#8e95a5] font-medium">
                     <div className="max-w-xs mx-auto text-center space-y-2">
-                      <Layers size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-1" />
-                      <p className="font-bold text-slate-700 dark:text-slate-300">No se encontraron productos</p>
-                      <p className="text-xs text-slate-400">Intenta ajustar los filtros de búsqueda o restablecerlos.</p>
+                      <Layers size={28} className="mx-auto text-slate-300 dark:text-[#20242c] mb-1" />
+                      <p className="font-bold font-mono uppercase text-xs tracking-widest text-slate-700 dark:text-[#8e95a5]">Sin resultados</p>
+                      <p className="text-[11px] font-mono text-slate-400 dark:text-[#8e95a5]/60">Ajusta los filtros de búsqueda.</p>
                       {activeFiltersCount > 0 && (
                         <button
                           onClick={handleClearFilters}
-                          className="mt-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                          className="mt-2 text-xs font-bold font-mono text-[#ff3b00] hover:underline cursor-pointer"
                         >
-                          Limpiar todos los filtros
+                          LIMPIAR FILTROS
                         </button>
                       )}
                     </div>
@@ -559,48 +559,46 @@ export default function InventoryPage() {
                 paginatedProducts.map((p) => {
                   const isSelected = selectedSkus.includes(p.sku);
                   
-                  // Determinar estado de sincronización real
                   let displayStatus = 'LOCAL_ONLY';
                   if (activeChannelsCount > 0) {
-                    // Si hay canales activos, checar discrepancia
                     displayStatus = p.sync_status === 'DESYNC' ? 'DESYNC' : 'MATCH';
                   }
 
                   return (
                     <tr 
                       key={p.sku} 
-                      className={`hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors ${
-                        isSelected ? 'bg-blue-50/30 dark:bg-blue-950/20' : ''
+                      className={`hover:bg-slate-50 dark:hover:bg-[#111318] transition-colors ${
+                        isSelected ? 'bg-[#00ff66]/5 dark:bg-[#00ff66]/5' : ''
                       }`}
                     >
-                      {/* Checkbox de fila */}
-                      <td className="w-10 px-4 py-3.5 text-center">
+                      {/* Checkbox */}
+                      <td className="w-10 px-4 py-3 text-center">
                         <button
                           onClick={() => toggleSelectProduct(p.sku)}
-                          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                          className="text-slate-400 hover:text-slate-600 dark:hover:text-[#00ff66] transition-colors"
                         >
                           {isSelected ? (
-                            <CheckSquare size={16} className="text-blue-600 dark:text-blue-400" />
+                            <CheckSquare size={15} className="text-[#00ff66]" />
                           ) : (
-                            <Square size={16} />
+                            <Square size={15} />
                           )}
                         </button>
                       </td>
 
                       {/* Producto y Categoría */}
-                      <td className="px-5 py-3.5">
+                      <td className="px-5 py-3">
                         <div className="max-w-sm">
                           <span className="text-sm font-bold text-slate-800 dark:text-slate-100 block truncate" title={p.nombre}>
                             {p.nombre}
                           </span>
                           <div className="flex items-center gap-2 mt-0.5">
                             {p.categoria && (
-                              <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.2 rounded-md border border-blue-200/60 dark:border-blue-800/40">
+                              <span className="text-[10px] font-bold font-mono uppercase text-slate-500 dark:text-[#8e95a5] px-1.5 py-0.5 border border-slate-200 dark:border-[#20242c]">
                                 {p.categoria}
                               </span>
                             )}
                             {p.precio !== undefined && (
-                              <span className="text-[11px] font-mono font-semibold text-emerald-700 dark:text-emerald-400">
+                              <span className="text-[11px] font-mono font-semibold text-[#00ff66]">
                                 ${p.precio.toFixed(2)}
                               </span>
                             )}
@@ -609,76 +607,76 @@ export default function InventoryPage() {
                       </td>
 
                       {/* SKU y Marca */}
-                      <td className="px-4 py-3.5 text-xs">
+                      <td className="px-4 py-3 text-xs">
                         <span className="font-mono font-bold text-slate-700 dark:text-slate-300 block">{p.sku}</span>
                         {p.marca ? (
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block">{p.marca}</span>
+                          <span className="text-[11px] text-slate-500 dark:text-[#8e95a5] block">{p.marca}</span>
                         ) : (
                           <span className="text-[10px] text-slate-400">—</span>
                         )}
                       </td>
 
                       {/* Stock Central */}
-                      <td className="px-4 py-3.5">
-                        <span className={`text-sm font-bold font-mono px-2.5 py-1 rounded-lg ${
+                      <td className="px-4 py-3">
+                        <span className={`text-sm font-bold font-mono px-2 py-0.5 border ${
                           p.stock === 0
-                            ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60'
+                            ? 'text-[#ff3b00] border-[#ff3b00]/40 bg-[#ff3b00]/5'
                             : p.stock < 10
-                            ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-900/60'
-                            : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700'
+                            ? 'text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/20'
+                            : 'text-slate-700 dark:text-slate-200 border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#111318]'
                         }`}>
                           {p.stock}
                         </span>
                       </td>
 
                       {/* Shopify */}
-                      <td className="px-4 py-3.5 text-xs font-mono">
+                      <td className="px-4 py-3 text-xs font-mono">
                         {shopifyConnected ? (
                           <span className="font-bold text-slate-800 dark:text-slate-200">{p.shopify_stock ?? p.stock}</span>
                         ) : (
-                          <span className="text-slate-400 dark:text-slate-500 text-[11px] italic">Sin vincular</span>
+                          <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
                         )}
                       </td>
 
                       {/* Amazon */}
-                      <td className="px-4 py-3.5 text-xs font-mono">
+                      <td className="px-4 py-3 text-xs font-mono">
                         {amazonConnected ? (
                           <span className="font-bold text-slate-800 dark:text-slate-200">{p.amazon_stock ?? p.stock}</span>
                         ) : (
-                          <span className="text-slate-400 dark:text-slate-500 text-[11px] italic">Sin vincular</span>
+                          <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
                         )}
                       </td>
 
                       {/* eBay */}
-                      <td className="px-4 py-3.5 text-xs font-mono">
+                      <td className="px-4 py-3 text-xs font-mono">
                         {ebayConnected ? (
                           <span className="font-bold text-slate-800 dark:text-slate-200">{p.ebay_stock ?? p.stock}</span>
                         ) : (
-                          <span className="text-slate-400 dark:text-slate-500 text-[11px] italic">Sin vincular</span>
+                          <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
                         )}
                       </td>
 
                       {/* Kaufland */}
-                      <td className="px-4 py-3.5 text-xs font-mono">
+                      <td className="px-4 py-3 text-xs font-mono">
                         {kauflandConnected ? (
                           <span className="font-bold text-slate-800 dark:text-slate-200">{p.kaufland_stock ?? p.stock}</span>
                         ) : (
-                          <span className="text-slate-400 dark:text-slate-500 text-[11px] italic">Sin vincular</span>
+                          <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
                         )}
                       </td>
 
-                      {/* Sincronización */}
-                      <td className="px-4 py-3.5">
+                      {/* Estado */}
+                      <td className="px-4 py-3">
                         <StatusBadge status={displayStatus} />
                       </td>
 
                       {/* Detalle */}
-                      <td className="px-4 py-3.5 text-right">
+                      <td className="px-4 py-3 text-right">
                         <Link
                           href={`/inventory/${p.sku}`}
-                          className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors inline-flex items-center gap-1 text-xs font-bold"
+                          className="p-1.5 border border-transparent hover:border-[#20242c] text-slate-500 dark:text-[#8e95a5] hover:text-slate-700 dark:hover:text-white transition-colors inline-flex items-center gap-1 text-xs font-mono"
                         >
-                          <Eye size={15} /> Ver
+                          <Eye size={14} />
                         </Link>
                       </td>
                     </tr>
@@ -691,36 +689,36 @@ export default function InventoryPage() {
 
         {/* Paginación */}
         {totalPages > 1 && (
-          <div className="bg-slate-50/70 dark:bg-slate-950/50 px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, totalItems)} de {totalItems} productos
+          <div className="bg-slate-50 dark:bg-[#090a0c] px-6 py-3 border-t border-slate-100 dark:border-[#20242c] flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span className="text-[11px] font-mono text-slate-500 dark:text-[#8e95a5]">
+              {startIndex + 1}–{Math.min(startIndex + itemsPerPage, totalItems)} / {totalItems}
             </span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="px-3.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm cursor-pointer"
+                className="px-3 py-1.5 border border-slate-200 dark:border-[#20242c] text-xs font-mono text-slate-700 dark:text-[#8e95a5] hover:border-slate-400 dark:hover:border-[#8e95a5] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
-                Anterior
+                ← ANTERIOR
               </button>
               
-              <div className="text-xs font-bold text-slate-600 dark:text-slate-400 px-2">
-                Pág. {currentPage} de {totalPages}
+              <div className="text-[11px] font-bold font-mono text-slate-600 dark:text-[#8e95a5] px-2">
+                {currentPage} / {totalPages}
               </div>
 
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="px-3.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm cursor-pointer"
+                className="px-3 py-1.5 border border-slate-200 dark:border-[#20242c] text-xs font-mono text-slate-700 dark:text-[#8e95a5] hover:border-slate-400 dark:hover:border-[#8e95a5] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
-                Siguiente
+                SIGUIENTE →
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Modal de Importación de Excel / CSV */}
+      {/* Modal de Importación */}
       {isImportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150 transition-colors">
