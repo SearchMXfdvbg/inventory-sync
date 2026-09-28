@@ -179,41 +179,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#090a0c] text-[#ededed] bg-grid-tech selection:bg-[#00ff66] selection:text-black">
-      {/* Top Telemetry Terminal Strip */}
-      <div className="border-b border-[#20242c] bg-[#0d0e12] px-4 py-2 font-mono-code text-[11px] overflow-x-auto whitespace-nowrap scrollbar-none flex items-center justify-between gap-6">
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="inline-block w-2 h-2 rounded-full bg-[#00ff66] animate-pulse"></span>
-          <span className="text-[#00ff66] font-bold">ORCHESTRATOR ONLINE</span>
-          <span className="text-[#3a3f4d]">|</span>
-          <span className="text-[#8e95a5]">ENGINE: <strong className="text-white font-medium">Saga Pattern Distributed Worker</strong></span>
-          <span className="text-[#3a3f4d]">|</span>
-          <span className="text-[#8e95a5]">FAIL-SAFE: <strong className="text-white font-medium">Atomic CAS Lock (0ms Race Window)</strong></span>
-        </div>
-        
-        <div className="flex items-center gap-4 text-[#8e95a5] shrink-0">
-          <span>SHOPIFY API: <strong className="text-white">142ms</strong></span>
-          <span>ML REST: <strong className="text-white">189ms</strong></span>
-          <span>AMAZON SP-API: <strong className="text-white">318ms</strong></span>
-          <span>SYNC LATENCY: <strong className="text-[#00ff66]">&lt; 1.8s</strong></span>
-          <Link href="/login" className="text-white hover:text-[#00ff66] underline decoration-[#20242c] underline-offset-4 ml-2">
-            Ingreso Consola &rarr;
-          </Link>
-        </div>
-      </div>
-
-      {/* Secondary DB Lock Indicator Bar */}
-      <div className="border-b border-[#20242c] bg-[#090a0c] px-4 py-1.5 font-mono-code text-[10px] text-[#8e95a5] flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Database className="w-3 h-3 text-[#00ff66]" />
-          <span>DB LOCK SERIALIZER: <strong className="text-white">SQLite WAL / PostgreSQL (Row-level)</strong></span>
-        </div>
-        <div className="hidden sm:flex items-center gap-3 text-[#555d6e]">
-          <span>MUTEX CLUSTER: REDIS 7.2 IN-MEMORY</span>
-          <span>•</span>
-          <span>CLUSTER ID: mx-central-01</span>
-        </div>
-      </div>
-
       {/* Main Navigation */}
       <nav className="border-b border-[#20242c] bg-[#090a0c]/90 backdrop-blur sticky top-0 z-50 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -237,10 +202,16 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-3">
             <Link
+              href="/login"
+              className="text-[#8e95a5] hover:text-white font-mono-code text-xs px-3 py-2 border border-[#20242c] transition-colors"
+            >
+              INGRESAR
+            </Link>
+            <Link
               href="/register"
               className="bg-[#00ff66] hover:bg-[#00e65c] text-black font-mono-code font-bold text-xs px-4 py-2.5 shadow-hard flex items-center gap-2 border border-[#00ff66] transition-transform active:translate-x-0.5 active:translate-y-0.5"
             >
-              INICIAR SYNC AHORA
+              INICIAR SYNC
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
