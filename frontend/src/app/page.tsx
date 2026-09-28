@@ -1,534 +1,911 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { 
-  CheckCircle2, 
-  XCircle, 
-  ArrowRight, 
-  ShieldCheck, 
-  Scale, 
-  Box, 
+  Terminal, 
+  Cpu, 
+  ShieldAlert, 
+  ArrowUpRight, 
+  Check, 
+  AlertTriangle, 
+  RefreshCw, 
+  Activity, 
+  Server, 
+  GitBranch, 
+  Lock, 
   Layers, 
   Zap, 
-  MessageCircle, 
-  ChevronDown, 
-  ChevronUp,
-  Store,
-  RefreshCw,
-  Clock,
-  Truck,
-  AlertTriangle,
-  Building2,
-  Lock
+  DollarSign, 
+  ChevronRight, 
+  Copy, 
+  CheckCheck,
+  Code2,
+  Database,
+  ArrowRight
 } from 'lucide-react';
 
-export default function LandingPage() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+interface LogEntry {
+  id: string;
+  timestamp: string;
+  source: 'WEBHOOK' | 'SAGA' | 'SHOPIFY' | 'ML' | 'AMAZON';
+  message: string;
+  status: 'info' | 'success' | 'warn' | 'error';
+}
 
-  const toggleFaq = (index: number) => {
-    setOpenFaq(openFaq === index ? null : index);
+export default function LandingPage() {
+  // Simulador de eventos de inventario
+  const [stock, setStock] = useState<number>(1);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [logs, setLogs] = useState<LogEntry[]>([
+    {
+      id: 'init-1',
+      timestamp: '14:20:01.102',
+      source: 'SAGA',
+      message: 'Worker orquestador iniciado. Monitoreando SKU: SONY-WH1000XM5-BLK (Stock maestro: 1 unidad)',
+      status: 'info'
+    },
+    {
+      id: 'init-2',
+      timestamp: '14:20:01.120',
+      source: 'SHOPIFY',
+      message: 'Canal sincronizado. Location ID: gid://shopify/Location/9812401',
+      status: 'success'
+    },
+    {
+      id: 'init-3',
+      timestamp: '14:20:01.155',
+      source: 'ML',
+      message: 'Canal sincronizado. Item ID: MLM291823018 (Status: Activo)',
+      status: 'success'
+    }
+  ]);
+
+  // Calculadora de pérdidas por sobreventa
+  const [monthlyOrders, setMonthlyOrders] = useState<number>(350);
+  const [averageTicket, setAverageTicket] = useState<number>(850);
+  const [copiedCode, setCopiedCode] = useState<boolean>(false);
+  const [activePayloadTab, setActivePayloadTab] = useState<'saga' | 'shopify' | 'ml'>('saga');
+
+  const logsEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
+
+  // Simulación de disparo de venta simultánea
+  const triggerSaleSimulation = (channel: 'MERCADO_LIBRE' | 'SHOPIFY' | 'RACE_CONDITION') => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+
+    const now = () => {
+      const d = new Date();
+      return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}.${d.getMilliseconds().toString().padStart(3, '0')}`;
+    };
+
+    if (channel === 'RACE_CONDITION') {
+      const newLogs: LogEntry[] = [
+        {
+          id: Math.random().toString(),
+          timestamp: now(),
+          source: 'WEBHOOK',
+          message: '🚨 ¡COLISIÓN DETECTADA! 2 ventas entraron exactamente en el mismo instante (ML: #ORD-9812 vs Shopify: #SHP-4019).',
+          status: 'warn'
+        }
+      ];
+      setLogs(prev => [...prev, ...newLogs]);
+
+      setTimeout(() => {
+        setLogs(prev => [
+          ...prev,
+          {
+            id: Math.random().toString(),
+            timestamp: now(),
+            source: 'SAGA',
+            message: 'Aplicando Atomic CAS Lock: UPDATE ventas SET status="PROCESSING" WHERE id=ORD-9812 AND status="PENDING".',
+            status: 'info'
+          }
+        ]);
+      }, 250);
+
+      setTimeout(() => {
+        setLogs(prev => [
+          ...prev,
+          {
+            id: Math.random().toString(),
+            timestamp: now(),
+            source: 'SAGA',
+            message: 'Lock concedido a Mercado Libre (1ra en milisegundo). Stock decrementado en almacén maestro: 1 -> 0.',
+            status: 'success'
+          },
+          {
+            id: Math.random().toString(),
+            timestamp: now(),
+            source: 'SAGA',
+            message: 'Venta concurrente de Shopify (#SHP-4019) evaluada: InsufficientStockError capturado. Rechazada limpiamente sin cobrar ni sobrevender.',
+            status: 'warn'
+          }
+        ]);
+        setStock(0);
+      }, 650);
+
+      setTimeout(() => {
+        setLogs(prev => [
+          ...prev,
+          {
+            id: Math.random().toString(),
+            timestamp: now(),
+            source: 'SHOPIFY',
+            message: 'Ajuste relativo propagado (delta: 0, stock disponible agotado en < 800ms). IdempotencyKey: saga_lock_9812',
+            status: 'success'
+          },
+          {
+            id: Math.random().toString(),
+            timestamp: now(),
+            source: 'SAGA',
+            message: 'Transacción distribuida cerrada como PROCESSED. 0 sobreventas. Reputación blindada.',
+            status: 'success'
+          }
+        ]);
+        setIsProcessing(false);
+      }, 1100);
+
+    } else {
+      const isML = channel === 'MERCADO_LIBRE';
+      const orderId = isML ? 'MLM-948102' : 'SHP-810291';
+      const sourceTag = isML ? 'ML' : 'SHOPIFY';
+
+      setLogs(prev => [
+        ...prev,
+        {
+          id: Math.random().toString(),
+          timestamp: now(),
+          source: 'WEBHOOK',
+          message: `Webhook recibido desde ${isML ? 'Mercado Libre' : 'Shopify'} (Orden ${orderId}). Firma criptográfica HMAC verificada en 11ms.`,
+          status: 'info'
+        }
+      ]);
+
+      setTimeout(() => {
+        const nextStock = Math.max(0, stock - 1);
+        setStock(nextStock);
+        setLogs(prev => [
+          ...prev,
+          {
+            id: Math.random().toString(),
+            timestamp: now(),
+            source: 'SAGA',
+            message: `Stock maestro actualizado a ${nextStock} unidades. Propagando en paralelo a los canales restantes...`,
+            status: 'success'
+          },
+          {
+            id: Math.random().toString(),
+            timestamp: now(),
+            source: isML ? 'SHOPIFY' : 'ML',
+            message: `Ajuste remoto recibido. Actualizado inventario disponible en ${isML ? 'Shopify' : 'Mercado Libre'} a ${nextStock} piezas.`,
+            status: 'success'
+          }
+        ]);
+        setIsProcessing(false);
+      }, 600);
+    }
   };
 
-  const whatsappLink = (planName: string) => {
-    const text = encodeURIComponent(
-      `¡Hola! Me interesa activar el plan ${planName} de InventorySync para eliminar sobreventas entre Mercado Libre, TikTok Shop, Shopify y Amazon.`
-    );
-    return `https://wa.me/5215555555555?text=${text}`;
+  const resetStock = () => {
+    setStock(1);
+    setLogs(prev => [
+      ...prev,
+      {
+        id: Math.random().toString(),
+        timestamp: new Date().toLocaleTimeString(),
+        source: 'SAGA',
+        message: 'Inventario de prueba reseteado a 1 unidad. Listo para probar concurrencia.',
+        status: 'info'
+      }
+    ]);
+  };
+
+  // Cálculo de penalizaciones por sobreventa
+  const estimatedCancellations = Math.max(1, Math.round(monthlyOrders * 0.035)); // 3.5% tasa promedio de sobreventa manual
+  const lossInSales = estimatedCancellations * averageTicket;
+  const mlPenalties = estimatedCancellations * 280; // Multa administrativa por cancelación imputable al seller
+  const totalMonthlyBleed = lossInSales + mlPenalties;
+
+  const payloads = {
+    saga: `// Esquema Atómico de Transacción Saga (SQLite / Postgres)
+Table ventas {
+  id: "uuid-v5" [primary_key]
+  external_id: "ORD-9812-MLM" [unique_index]
+  sku: "SONY-WH1000XM5-BLK"
+  cantidad: 1
+  status: "PROCESSING" // PENDING -> PROCESSING -> PROCESSED | FAILED
+  sae_decremented: true
+  shopify_synced: true
+  ml_synced: true
+  attempts: 1 // Backoff progresivo: 0s -> 5s -> 20s -> 60s -> 180s
+  last_error: null
+  idempotency_hash: "sha256(external_id + origin + sku)"
+}`,
+    shopify: `mutation inventoryAdjustQuantities($input: InventoryAdjustQuantitiesInput!) {
+  inventoryAdjustQuantities(input: {
+    reason: "correction",
+    name: "available",
+    changes: [{
+      inventoryItemId: "gid://shopify/InventoryItem/481928301",
+      locationId: "gid://shopify/Location/9812401",
+      delta: -1
+    }]
+  }) {
+    userErrors { field message }
+    inventoryAdjustmentGroup {
+      id
+      createdAt
+      changes { name delta quantityAfterChange }
+    }
+  }
+}
+// Header: Idempotency-Key: "shopify_sale_mercadolibre_ORD-9812"`,
+    ml: `PUT /items/MLM291823018 HTTP/1.1
+Host: api.mercadolibre.com
+Authorization: Bearer APP_USR-821039-xxxxxxxx
+Content-Type: application/json
+
+{
+  "available_quantity": 0,
+  "channels": ["marketplace"],
+  "price": 6499.00
+}
+
+// Sincronización absoluta: evita decrementos duplicados si la red parpadea`
+  };
+
+  const copyPayload = () => {
+    navigator.clipboard.writeText(payloads[activePayloadTab]);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-blue-600 selection:text-white">
-      {/* Top Banner */}
-      <div className="bg-slate-900 text-slate-200 text-xs font-semibold py-2.5 px-4 text-center border-b border-slate-800">
-        <span>🚀 PROMOCIÓN DE LANZAMIENTO: Sincroniza Mercado Libre, TikTok, Shopify y Amazon por solo <strong className="text-white">$197 MXN</strong> tu primer mes.</span>
+    <div className="min-h-screen bg-[#090A0C] text-[#EDEDED] font-sans selection:bg-[#00FF66] selection:text-[#090A0C]">
+      
+      {/* 1. TOP TELEMETRY STRIP */}
+      <div className="border-b border-[#20242C] bg-[#0E1015] px-4 py-2 text-[11px] font-mono text-[#808694]">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5 text-[#00FF66]">
+              <span className="w-2 h-2 rounded-full bg-[#00FF66] animate-pulse"></span>
+              ORCHESTRATOR ONLINE
+            </span>
+            <span className="hidden sm:inline text-[#2A2E39]">|</span>
+            <span className="hidden sm:inline">ENGINE: <strong className="text-[#EDEDED]">Saga Pattern Distributed Worker</strong></span>
+            <span className="hidden md:inline text-[#2A2E39]">|</span>
+            <span className="hidden md:inline">FAIL-SAFE: <strong className="text-[#EDEDED]">Atomic CAS Lock (0ms Race Window)</strong></span>
+          </div>
+
+          <div className="flex items-center gap-4 text-[10px]">
+            <span className="flex items-center gap-1">SHOPIFY API: <span className="text-[#00FF66]">142ms</span></span>
+            <span className="flex items-center gap-1">ML REST: <span className="text-[#00FF66]">189ms</span></span>
+            <span className="flex items-center gap-1">AMAZON SP-API: <span className="text-[#00FF66]">310ms</span></span>
+            <span className="flex items-center gap-1">SYNC LATENCY: <span className="text-[#00FF66] font-bold">&lt; 1.8s</span></span>
+          </div>
+        </div>
       </div>
 
-      {/* Navigation */}
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      {/* 2. NAVIGATION BAR */}
+      <nav className="border-b border-[#20242C] bg-[#090A0C]/90 backdrop-blur-md sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-base shadow-md shadow-blue-500/20">
+            <div className="w-8 h-8 rounded-none bg-[#00FF66] flex items-center justify-center text-[#090A0C] font-mono font-black text-sm shadow-hard">
               IS
             </div>
             <div>
-              <span className="font-bold text-slate-900 text-lg tracking-tight">InventorySync</span>
-              <span className="text-[10px] text-blue-600 font-bold uppercase ml-2 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 tracking-wider">
-                Multi-Channel
+              <span className="font-mono font-bold tracking-tight text-base text-white">InventorySync</span>
+              <span className="text-[10px] font-mono uppercase ml-2 px-1.5 py-0.5 bg-[#161920] border border-[#262B36] text-[#808694]">
+                v2.6.4-prod
               </span>
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-            <a href="#problema" className="hover:text-slate-900 transition-colors">El Peligro de Sobreventa</a>
-            <a href="#como-funciona" className="hover:text-slate-900 transition-colors">¿Cómo Funciona?</a>
-            <a href="#precios" className="hover:text-slate-900 transition-colors">Planes y Precios</a>
-            <a href="#faq" className="hover:text-slate-900 transition-colors">Preguntas Frecuentes</a>
-          </nav>
+          <div className="hidden md:flex items-center gap-8 text-xs font-mono tracking-tight text-[#808694]">
+            <a href="#terminal" className="hover:text-white transition-colors">01. SIMULADOR_SAGA</a>
+            <a href="#arquitectura" className="hover:text-white transition-colors">02. ARQUITECTURA</a>
+            <a href="#calculadora" className="hover:text-white transition-colors">03. IMPACTO_FINANCIERO</a>
+            <a href="#payloads" className="hover:text-white transition-colors">04. PAYLOADS_JSON</a>
+            <a href="#precios" className="hover:text-white transition-colors">05. PRECIO_UNICO</a>
+          </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="text-sm font-semibold text-slate-700 hover:text-slate-900 px-3 py-1.5 transition-colors"
+              className="px-4 py-2 text-xs font-mono text-[#EDEDED] hover:text-white border border-[#20242C] hover:border-[#404656] bg-[#111317] transition-all"
             >
               Iniciar Sesión
             </Link>
             <Link
-              href="/login?mode=register"
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl transition-all shadow-md shadow-blue-500/20 active:scale-95"
+              href="/register"
+              className="px-4 py-2 text-xs font-mono font-bold text-[#090A0C] bg-[#00FF66] hover:bg-[#00E05A] transition-all shadow-hard-accent flex items-center gap-1.5"
             >
-              Crear Cuenta
+              <span>Ver Demo en Vivo</span>
+              <ArrowRight size={13} />
             </Link>
           </div>
         </div>
-      </header>
+      </nav>
 
-      {/* Hero Section */}
-      <section className="relative pt-16 pb-20 overflow-hidden bg-gradient-to-b from-white via-slate-50 to-slate-100/70 border-b border-slate-200">
-        <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.12]">
-            ¿Tienes sobreventas en{' '}
-            <span className="text-blue-600">
-              Mercado Libre, TikTok, Shopify y Amazon?
-            </span>
-          </h1>
-
-          <p className="mt-6 text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-            Vender en varios canales sin inventario sincronizado es una bomba de tiempo: te compran la misma pieza en dos tiendas, tienes que cancelar y <strong>Mercado Libre o Amazon te destruyen la reputación</strong>.
-          </p>
-
-          <p className="mt-3 text-base sm:text-lg text-slate-700 font-medium max-w-2xl mx-auto">
-            <strong>InventorySync descuenta tu stock en tiempo real en todos tus canales en automático</strong> en segundos tras cada venta. Y como extra, incluye Auto-Fix de medidas y pesos para que TikTok Shop nunca te rebote un producto.
-          </p>
-
-          {/* Badges de Canales Sincronizados */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <span className="px-3.5 py-1.5 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs font-bold flex items-center gap-1.5 shadow-sm">
-              🟡 Mercado Libre
-            </span>
-            <span className="px-3.5 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm">
-              ⚫ TikTok Shop
-            </span>
-            <span className="px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5 shadow-sm">
-              🟢 Shopify
-            </span>
-            <span className="px-3.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold flex items-center gap-1.5 shadow-sm">
-              🟠 Amazon
-            </span>
-            <span className="px-3.5 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold flex items-center gap-1.5 shadow-sm">
-              🏢 CONTPAQi SAE / Almacén Físico
-            </span>
-          </div>
-
-          {/* CTAs */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href="#precios"
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-base shadow-xl shadow-blue-500/25 transition-all flex items-center justify-center gap-3 active:scale-98"
-            >
-              <span>Eliminar Sobreventas por $197 MXN</span>
-              <ArrowRight size={18} />
-            </a>
-
-            <Link
-              href="/inventory"
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-semibold text-base transition-all flex items-center justify-center gap-2 shadow-sm"
-            >
-              <Store size={18} className="text-blue-600" />
-              <span>Explorar Inventario en Vivo</span>
-            </Link>
-          </div>
-
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-500">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 size={16} className="text-emerald-600" /> Sincronización en &lt; 3 segundos
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 size={16} className="text-emerald-600" /> Reputación 100% blindada
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 size={16} className="text-emerald-600" /> Incluye Auto-Fix TikTok
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Comparison: The Pain vs The Solution */}
-      <section id="problema" className="py-20 bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">El Peligro Real de Vender sin Sincronización</h2>
-            <p className="text-slate-500 mt-2 text-sm sm:text-base">
-              Las sobreventas no solo te hacen perder dinero: te pueden costar la suspensión de tu cuenta en Mercado Libre o Amazon.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* The Old Way */}
-            <div className="bg-red-50/50 border border-red-200 rounded-3xl p-8 relative shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold">
-                  <XCircle size={22} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-red-950">Sin Sincronizador (A mano / Desconectado)</h3>
-                  <p className="text-xs text-red-700/80">Cancelaciones forzadas y estrés diario</p>
-                </div>
-              </div>
-
-              <ul className="space-y-4 text-sm text-slate-700">
-                <li className="flex items-start gap-3">
-                  <span className="text-red-600 mt-0.5 font-bold">✕</span>
-                  <span><strong>Sobreventas cruzadas:</strong> Vendes tu última pieza en Shopify y 5 minutos después entra la misma venta en Mercado Libre o Amazon.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-red-600 mt-0.5 font-bold">✕</span>
-                  <span><strong>Caída de Reputación:</strong> Mercado Libre te baja a amarillo o rojo por cancelar ventas por falta de stock. En Amazon pierdes la Buy Box al instante.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-red-600 mt-0.5 font-bold">✕</span>
-                  <span><strong>Rebotes de catálogo en TikTok:</strong> Intentas subir productos a TikTok Shop y te los rechaza por medidas mayores a 100cm o falta de peso/garantía.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-red-600 mt-0.5 font-bold">✕</span>
-                  <span><strong>Excel a medianoche:</strong> Terminas tu jornada contando piezas a mano y modificando inventarios tienda por tienda.</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* The New Way */}
-            <div className="bg-blue-50/40 border-2 border-blue-500/30 rounded-3xl p-8 relative shadow-md">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
-                  <CheckCircle2 size={22} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">Con InventorySync (Sincronización Total)</h3>
-                  <p className="text-xs text-blue-600 font-semibold">Stock idéntico en todos lados en tiempo real</p>
-                </div>
-              </div>
-
-              <ul className="space-y-4 text-sm text-slate-700">
-                <li className="flex items-start gap-3">
-                  <span className="text-emerald-600 mt-0.5 font-bold">✓</span>
-                  <span><strong>Descuento Inmediato en Cascada:</strong> Cae una venta en cualquier canal ➔ el stock se descuenta en segundos en todos los demás automáticamente.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-emerald-600 mt-0.5 font-bold">✓</span>
-                  <span><strong>Reputación 100% Protegida:</strong> Cero cancelaciones por falta de producto. Mantén tu medalla de MercadoLíder Platinum y tus cuentas seguras.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-emerald-600 mt-0.5 font-bold">✓</span>
-                  <span><strong>Auto-Fix TikTok Shop Incluido:</strong> Convierte medidas rebeldes a límites válidos (99×99×99 cm) y normaliza pesos para aprobación instantánea.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-emerald-600 mt-0.5 font-bold">✓</span>
-                  <span><strong>Conexión con tu Almacén / ERP:</strong> Compatible con CONTPAQi SAE para que tu inventario físico cuadre a la perfección con la nube.</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How it Works: 3 Steps */}
-      <section id="como-funciona" className="py-20 bg-slate-50 border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">Flujo Ultra Sencillo</span>
-            <h2 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">Listo en 3 Pasos sin Complicaciones</h2>
-            <p className="text-slate-500 mt-2 text-sm sm:text-base">
-              No necesitas saber de programación ni contratar una agencia cara.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center mb-4 text-base shadow-md shadow-blue-500/20">
-                1
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Conectas tus Tiendas</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Ingresas tus accesos de Shopify, Mercado Libre o TikTok Shop en 1 minuto. El sistema valida la conexión de inmediato.
-              </p>
-            </div>
-
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center mb-4 text-base shadow-md shadow-blue-500/20">
-                2
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Unificas tu Inventario</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Nuestro motor concilia las cantidades disponibles en cada canal y detecta cualquier desface o error de especificaciones.
-              </p>
-            </div>
-
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center mb-4 text-base shadow-md shadow-blue-500/20">
-                3
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Duermes Tranquilo</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Cada que cae una venta, el inventario se descuenta en automático en segundos. Cero sobreventas y cero cancelaciones de por vida.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section (The 3 Agreed Plans) */}
-      <section id="precios" className="py-20 bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">Inversión Inteligente</span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2 tracking-tight">Planes Claros, Sin Letras Chiquitas</h2>
-            <p className="text-slate-500 mt-2 text-sm sm:text-base">
-              No pagues miles de pesos por integradores que no resuelven. Elige el plan que se adapte a tu tamaño de negocio.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+      {/* 3. HERO / LIVE SAGA ENGINE TERMINAL (ESTRUCTURA NO GENÉRICA) */}
+      <section id="terminal" className="border-b border-[#20242C] bg-grid-tech py-12 lg:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* Plan 1: Fix Básico */}
-            <div className="bg-white border border-slate-200 rounded-3xl p-8 flex flex-col justify-between shadow-sm hover:border-slate-300 transition-all">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Plan 1</span>
-                <h3 className="text-2xl font-bold text-slate-900 mt-1">Fix Básico</h3>
-                <p className="text-xs text-slate-500 mt-2">
-                  Ideal para tiendas que solo quieren dejar de rebotar en TikTok y sincronizar catálogo base.
-                </p>
-
-                <div className="mt-6 flex items-baseline gap-2">
-                  <span className="text-4xl font-extrabold text-slate-900">$197</span>
-                  <span className="text-xs font-semibold text-slate-500">MXN / 1er mes</span>
-                </div>
-                <p className="text-xs font-semibold text-blue-600 mt-1">Luego solo $497 MXN / mes</p>
-
-                <div className="w-full h-px bg-slate-100 my-6" />
-
-                <ul className="space-y-3 text-xs text-slate-600">
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span>Sincronización <strong>Shopify ➔ TikTok Shop</strong></span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span><strong>Auto-Fix de Medidas:</strong> ajusta a 100x100x100</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span><strong>Auto-Fix de Peso:</strong> normaliza decimales</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span>Inyección de garantía estándar de 30 días</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span>Hasta <strong>200 productos</strong></span>
-                  </li>
-                </ul>
+            {/* Izquierda: Copy Técnico y Pitch Brutal */}
+            <div className="lg:col-span-5 space-y-6">
+              
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-[#12141A] border border-[#262B36] text-[11px] font-mono text-[#00FF66]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00FF66]"></span>
+                CERO ZAPIER • CERO WEBHOOKS ROTAS • CERO MULTAS
               </div>
 
-              <div className="mt-8">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tighter leading-[1.05] text-white">
+                Si vendes en Mercado Libre y Shopify a la vez, <span className="text-[#00FF66] underline decoration-2 underline-offset-4">te vas a quedar sin inventario.</span>
+              </h1>
+
+              <p className="text-sm text-[#9CA3AF] leading-relaxed font-sans">
+                Cuando te queda 1 pieza en bodega y entran 2 ventas al mismo segundo en canales distintos, cualquier script común se rompe. InventorySync orquesta transacciones distribuidas con <strong>patrón Saga y bloqueo atómico Compare-And-Swap</strong>. En menos de 1.8 segundos, todos tus canales conocen el stock real.
+              </p>
+
+              {/* Métricas Crudas */}
+              <div className="grid grid-cols-3 gap-3 pt-2">
+                <div className="border border-[#20242C] bg-[#111317] p-3">
+                  <div className="text-[10px] font-mono text-[#808694]">VENTANA RACE</div>
+                  <div className="text-xl font-mono font-bold text-[#00FF66] mt-1">0 ms</div>
+                  <div className="text-[10px] text-[#606775] mt-0.5">CAS lock a nivel DB</div>
+                </div>
+                <div className="border border-[#20242C] bg-[#111317] p-3">
+                  <div className="text-[10px] font-mono text-[#808694]">PROPAGACIÓN</div>
+                  <div className="text-xl font-mono font-bold text-white mt-1">&lt; 1.8s</div>
+                  <div className="text-[10px] text-[#606775] mt-0.5">Multi-hilo asíncrono</div>
+                </div>
+                <div className="border border-[#20242C] bg-[#111317] p-3">
+                  <div className="text-[10px] font-mono text-[#808694]">SOBREVENTAS</div>
+                  <div className="text-xl font-mono font-bold text-[#FF3B00] mt-1">0.00%</div>
+                  <div className="text-[10px] text-[#606775] mt-0.5">Garantía estricta</div>
+                </div>
+              </div>
+
+              {/* Botón de acción directo */}
+              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <Link
-                  href="/login"
-                  className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-all text-center block"
+                  href="/register"
+                  className="px-6 py-3.5 bg-[#00FF66] hover:bg-[#00E05A] text-[#090A0C] font-mono font-bold text-xs uppercase tracking-wider text-center transition-all shadow-hard-accent flex items-center justify-center gap-2"
                 >
-                  Comenzar por $197 MXN
+                  <Cpu size={16} />
+                  <span>Conectar mis canales ahora</span>
                 </Link>
-              </div>
-            </div>
-
-            {/* Plan 2: Vendedor Pro (Featured) */}
-            <div className="bg-blue-50/30 border-2 border-blue-600 rounded-3xl p-8 flex flex-col justify-between relative shadow-xl">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[11px] font-extrabold uppercase px-4 py-1 rounded-full shadow-md">
-                ⭐ El Más Vendido
-              </div>
-
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-blue-600">Plan 2</span>
-                <h3 className="text-2xl font-bold text-slate-900 mt-1">Vendedor Pro</h3>
-                <p className="text-xs text-slate-600 mt-2">
-                  Para vendedores activos en Mercado Libre, TikTok, Shopify y Amazon.
-                </p>
-
-                <div className="mt-6 flex items-baseline gap-2">
-                  <span className="text-4xl font-extrabold text-slate-900">$997</span>
-                  <span className="text-xs font-semibold text-slate-500">MXN / mes</span>
-                </div>
-                <p className="text-xs font-semibold text-emerald-600 mt-1">Sin límite de productos</p>
-
-                <div className="w-full h-px bg-slate-200 my-6" />
-
-                <ul className="space-y-3 text-xs text-slate-700">
-                  <li className="flex items-center gap-2.5 font-medium">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span><strong>Sincronización en tiempo real</strong> (Mercado Libre, Shopify, TikTok)</span>
-                  </li>
-                  <li className="flex items-center gap-2.5 font-medium">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span><strong>Productos ilimitados</strong></span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span>Modo <strong>"Envío del Vendedor"</strong> automático (&gt;60cm)</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span>Sincronización de stock cada <strong>30 minutos</strong></span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span>Exportación de plantilla TikTok CSV en 1 clic</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span>Soporte directo por WhatsApp</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="mt-8">
-                <Link
-                  href="/login"
-                  className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all text-center block shadow-md shadow-blue-500/25 active:scale-98"
-                >
-                  Elegir Plan Pro ($997 MXN)
-                </Link>
-              </div>
-            </div>
-
-            {/* Plan 3: Agencia & ERP Personalizado */}
-            <div className="bg-white border border-slate-200 rounded-3xl p-8 flex flex-col justify-between shadow-sm hover:border-slate-300 transition-all">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Plan 3</span>
-                <h3 className="text-2xl font-bold text-slate-900 mt-1">Agencia & ERP</h3>
-                <p className="text-xs text-slate-500 mt-2">
-                  Para empresas con múltiples marcas o que requieren conexión con su sistema contable.
-                </p>
-
-                <div className="mt-6 flex items-baseline gap-2">
-                  <span className="text-4xl font-extrabold text-slate-900">$1,997</span>
-                  <span className="text-xs font-semibold text-slate-500">MXN / mes</span>
-                </div>
-                <p className="text-xs text-slate-500 mt-1">Multi-tienda + Conexión ERP</p>
-
-                <div className="w-full h-px bg-slate-100 my-6" />
-
-                <ul className="space-y-3 text-xs text-slate-600">
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span>Todo lo del plan Pro</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span>Hasta <strong>5 tiendas TikTok / Shopify / ML</strong></span>
-                  </li>
-                  <li className="flex items-center gap-2.5 font-medium text-slate-800">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span>Conexión con <strong>CONTPAQi SAE</strong> o ERP local</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span>Etiquetas automáticas con medida real</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                    <span>Setup inicial 1 a 1 asistido con ingeniero</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="mt-8">
                 <a
-                  href={whatsappLink('Agencia / ERP')}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-all text-center flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20"
+                  href="#arquitectura"
+                  className="px-5 py-3.5 bg-[#12141A] hover:bg-[#1B1E26] text-[#EDEDED] border border-[#262B36] font-mono text-xs text-center transition-all flex items-center justify-center gap-2"
                 >
-                  <MessageCircle size={16} />
-                  <span>Cotizar por WhatsApp</span>
+                  <span>Ver flujo de la Saga</span>
+                  <ChevronRight size={14} />
                 </a>
               </div>
+
+            </div>
+
+            {/* Derecha: Consola Interactiva de Concurrencia en Vivo */}
+            <div className="lg:col-span-7">
+              <div className="border border-[#262B36] bg-[#0E1015] shadow-hard overflow-hidden">
+                
+                {/* Header de la Terminal */}
+                <div className="px-4 py-3 bg-[#13161C] border-b border-[#20242C] flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 bg-[#FF5F56] inline-block"></span>
+                    <span className="w-2.5 h-2.5 bg-[#FFBD2E] inline-block"></span>
+                    <span className="w-2.5 h-2.5 bg-[#27C93F] inline-block"></span>
+                    <span className="font-mono text-xs text-[#808694] ml-2">inventory-sync://saga-orchestrator-node-01</span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 font-mono text-xs">
+                      <span className="text-[#808694]">STOCK_ACTUAL:</span>
+                      <span className={`px-2 py-0.5 font-black text-xs ${stock > 0 ? 'bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/40' : 'bg-[#FF3B00]/20 text-[#FF3B00] border border-[#FF3B00]/40'}`}>
+                        {stock} PZAS
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={resetStock}
+                      title="Reiniciar a 1 pieza de prueba"
+                      className="p-1 hover:bg-[#20242C] text-[#808694] hover:text-white transition-colors"
+                    >
+                      <RefreshCw size={13} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Área de Control del Experimento */}
+                <div className="p-4 bg-[#111318] border-b border-[#20242C] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+                  <span className="text-[#808694] uppercase tracking-wide">
+                    Prueba la orquestación en tiempo real:
+                  </span>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => triggerSaleSimulation('MERCADO_LIBRE')}
+                      disabled={isProcessing || stock <= 0}
+                      className="px-3 py-1.5 bg-[#FFE600]/10 hover:bg-[#FFE600]/20 text-[#FFE600] border border-[#FFE600]/40 font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      +1 Venta en ML
+                    </button>
+                    <button
+                      onClick={() => triggerSaleSimulation('SHOPIFY')}
+                      disabled={isProcessing || stock <= 0}
+                      className="px-3 py-1.5 bg-[#96BF48]/10 hover:bg-[#96BF48]/20 text-[#96BF48] border border-[#96BF48]/40 font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      +1 Venta en Shopify
+                    </button>
+                    <button
+                      onClick={() => triggerSaleSimulation('RACE_CONDITION')}
+                      disabled={isProcessing}
+                      className="px-3 py-1.5 bg-[#FF3B00] hover:bg-[#E03400] text-black font-black transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-hard"
+                    >
+                      ⚡ Disparo Concurrente (0ms)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Log Terminal Screen */}
+                <div className="p-4 bg-[#090A0C] font-mono text-xs space-y-2 h-[290px] overflow-y-auto">
+                  {logs.map((log) => {
+                    const statusColor = 
+                      log.status === 'success' ? 'text-[#00FF66]' :
+                      log.status === 'warn' ? 'text-[#FFB800]' :
+                      log.status === 'error' ? 'text-[#FF3B00]' : 'text-[#808694]';
+                    
+                    const tagBg =
+                      log.source === 'SAGA' ? 'bg-[#181B22] text-[#38BDF8] border-[#20242C]' :
+                      log.source === 'ML' ? 'bg-[#FFE600]/10 text-[#FFE600] border-[#FFE600]/30' :
+                      log.source === 'SHOPIFY' ? 'bg-[#96BF48]/10 text-[#96BF48] border-[#96BF48]/30' :
+                      'bg-[#2A1715] text-[#FF5555] border-[#442220]';
+
+                    return (
+                      <div key={log.id} className="flex items-start gap-2 leading-relaxed animate-fade-in">
+                        <span className="text-[#555C6E] shrink-0 text-[11px]">{log.timestamp}</span>
+                        <span className={`px-1.5 py-0.2 text-[10px] font-bold border uppercase shrink-0 ${tagBg}`}>
+                          {log.source}
+                        </span>
+                        <span className={`break-words ${statusColor}`}>{log.message}</span>
+                      </div>
+                    );
+                  })}
+                  <div ref={logsEndRef} />
+                </div>
+
+                {/* Footer de la Terminal */}
+                <div className="px-4 py-2.5 bg-[#0E1015] border-t border-[#20242C] flex items-center justify-between text-[11px] font-mono text-[#666D7E]">
+                  <span className="flex items-center gap-1.5">
+                    <Database size={12} className="text-[#00FF66]" />
+                    DB LOCK SERIALIZER: <strong className="text-[#EDEDED]">SQLite WAL / PostgreSQL (Row-level)</strong>
+                  </span>
+                  <span>IDEMPOTENCY: <strong className="text-[#00FF66]">ENABLED</strong></span>
+                </div>
+
+              </div>
             </div>
 
           </div>
+
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-20 max-w-4xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">Resolvemos tus Dudas</span>
-          <h2 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">Preguntas Frecuentes</h2>
-        </div>
+      {/* 4. ANATOMÍA DE LA SAGA (ARQUITECTURA DESPIEZADA) */}
+      <section id="arquitectura" className="border-b border-[#20242C] py-16 bg-[#0B0D11]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          
+          <div className="max-w-3xl mb-12">
+            <span className="text-xs font-mono text-[#00FF66] uppercase tracking-widest font-bold">
+              // 02. ANATOMÍA_DEL_SISTEMA
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-2">
+              Cómo resolvemos el problema de la sobreventa a nivel de base de datos.
+            </h2>
+            <p className="text-sm text-[#9CA3AF] mt-2 font-sans">
+              Las herramientas de automatización comunes usan webhooks lineales que fallan ante micro-cortes. Nosotros implementamos una máquina de estados con compensación transaccional:
+            </p>
+          </div>
 
-        <div className="space-y-4">
-          {[
-            {
-              q: '¿Cómo evita InventorySync las sobreventas?',
-              a: 'InventorySync funciona como un orquestador central en tiempo real. Cuando una venta entra por Shopify, Mercado Libre o TikTok Shop, nuestro worker atómico descuenta inmediatamente el inventario en todas las demás tiendas en menos de 3 segundos, evitando que dos clientes compren la misma unidad.'
-            },
-            {
-              q: '¿Por qué TikTok Shop rechaza mis productos con medidas reales?',
-              a: 'Cuando usas el envío integrado de TikTok (Platform Shipping), su sistema impone límites estrictos de paquetería de máximo 100 × 100 × 100 cm y 30 kg. Si tu producto mide más, el robot de TikTok lo rechaza en automático. Nuestro sistema lo ajusta al tope de plataforma o activa la modalidad de Envío del Vendedor para que pase sin problemas.'
-            },
-            {
-              q: '¿Modifica mis productos en mi tienda web de Shopify?',
-              a: 'No altera tus títulos ni tus fotos. Solo inyecta de forma segura los atributos de empaque, peso limpio y etiquetas estructuradas que TikTok necesita para autorizar la venta.'
-            },
-            {
-              q: '¿Cómo funciona la prueba de $197 MXN?',
-              a: 'Pagas únicamente $197 pesos por tu primer mes completo. Conectas tu tienda, desbloqueas tu catálogo y compruebas que tus productos queden sincronizados. A partir del segundo mes continuas con la tarifa regular de $497/mes. Puedes cancelar en cualquier momento con un clic.'
-            },
-            {
-              q: '¿Qué pasa si tengo mi inventario en un sistema contable como CONTPAQi SAE?',
-              a: 'Tenemos el conector directo para sincronizar CONTPAQi SAE en tu computadora con Shopify, TikTok Shop y Mercado Libre simultáneamente. Selecciona el Plan Agencia o contáctanos por WhatsApp para una cotización personalizada.'
-            }
-          ].map((item, idx) => (
-            <div
-              key={idx}
-              className="bg-white border border-slate-200 rounded-2xl p-5 cursor-pointer transition-colors hover:border-slate-300 shadow-sm"
-              onClick={() => toggleFaq(idx)}
-            >
-              <div className="flex items-center justify-between gap-4">
-                <h3 className="font-semibold text-slate-900 text-base">{item.q}</h3>
-                {openFaq === idx ? (
-                  <ChevronUp size={18} className="text-blue-600 shrink-0" />
-                ) : (
-                  <ChevronDown size={18} className="text-slate-400 shrink-0" />
-                )}
-              </div>
-              {openFaq === idx && (
-                <p className="mt-3 text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
-                  {item.a}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            
+            {/* Paso 1 */}
+            <div className="border border-[#20242C] bg-[#111317] p-5 flex flex-col justify-between hover:border-[#3A4050] transition-colors shadow-hard">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-mono text-xs text-[#00FF66] font-bold">FASE 01</span>
+                  <Zap size={16} className="text-[#808694]" />
+                </div>
+                <h3 className="font-mono font-bold text-white text-sm mb-2">Ingesta Asíncrona</h3>
+                <p className="text-xs text-[#9CA3AF] leading-relaxed">
+                  FastAPI recibe el webhook en menos de 35ms. Valida firma criptográfica HMAC y persiste la orden en la tabla de colas con estado <code className="text-[#00FF66]">PENDING</code>.
                 </p>
-              )}
+              </div>
+              <div className="mt-6 pt-3 border-t border-[#1C2029] font-mono text-[10px] text-[#606775]">
+                HTTP 202 Accepted inmediato
+              </div>
             </div>
-          ))}
+
+            {/* Paso 2 */}
+            <div className="border border-[#20242C] bg-[#111317] p-5 flex flex-col justify-between hover:border-[#3A4050] transition-colors shadow-hard">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-mono text-xs text-[#00FF66] font-bold">FASE 02</span>
+                  <Lock size={16} className="text-[#808694]" />
+                </div>
+                <h3 className="font-mono font-bold text-white text-sm mb-2">Atomic CAS Lock</h3>
+                <p className="text-xs text-[#9CA3AF] leading-relaxed">
+                  El worker reclama la venta con un <code className="text-white">Compare-And-Swap</code> atómico a nivel de fila. Si dos procesos tocan la misma orden, uno recibe 0 filas afectadas y aborta.
+                </p>
+              </div>
+              <div className="mt-6 pt-3 border-t border-[#1C2029] font-mono text-[10px] text-[#606775]">
+                0 colisiones concurrentes
+              </div>
+            </div>
+
+            {/* Paso 3 */}
+            <div className="border border-[#20242C] bg-[#111317] p-5 flex flex-col justify-between hover:border-[#3A4050] transition-colors shadow-hard">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-mono text-xs text-[#00FF66] font-bold">FASE 03</span>
+                  <GitBranch size={16} className="text-[#808694]" />
+                </div>
+                <h3 className="font-mono font-bold text-white text-sm mb-2">Sync Relativo vs Absoluto</h3>
+                <p className="text-xs text-[#9CA3AF] leading-relaxed">
+                  Shopify recibe ajustes con clave de idempotencia única. Mercado Libre y Amazon reciben el stock absoluto maestro. Si la red cae y se reintenta, el stock no se resta dos veces.
+                </p>
+              </div>
+              <div className="mt-6 pt-3 border-t border-[#1C2029] font-mono text-[10px] text-[#606775]">
+                Idempotency-Key obligatoria
+              </div>
+            </div>
+
+            {/* Paso 4 */}
+            <div className="border border-[#20242C] bg-[#111317] p-5 flex flex-col justify-between hover:border-[#3A4050] transition-colors shadow-hard">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-mono text-xs text-[#00FF66] font-bold">FASE 04</span>
+                  <Activity size={16} className="text-[#808694]" />
+                </div>
+                <h3 className="font-mono font-bold text-white text-sm mb-2">Backoff Progresivo Rápido</h3>
+                <p className="text-xs text-[#9CA3AF] leading-relaxed">
+                  Ante errores 503 o timeouts, no esperamos minutos enteros. El 1er reintento se ejecuta a los <strong>5 segundos</strong>, pasando a 20s, 60s y 180s antes de fallar con alerta en panel.
+                </p>
+              </div>
+              <div className="mt-6 pt-3 border-t border-[#1C2029] font-mono text-[10px] text-[#606775]">
+                5s recovery vs 60s standard
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 py-10 bg-slate-900 text-slate-400 text-xs text-center">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
+      {/* 5. CALCULADORA DE SANGRADO FINANCIERO (CONVERSIÓN DIRECTA) */}
+      <section id="calculadora" className="border-b border-[#20242C] py-16 bg-[#090A0C]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            
+            <div className="lg:col-span-6 space-y-6">
+              <span className="text-xs font-mono text-[#FF3B00] uppercase tracking-widest font-bold">
+                // 03. CALCULADORA_DE_SANGRADO
+              </span>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                ¿Cuánto dinero estás tirando a la basura por cancelaciones de stock?
+              </h2>
+              <p className="text-sm text-[#9CA3AF] font-sans leading-relaxed">
+                Mercado Libre te baja de categoría de MercadoLíder Platinum si cancelas más del 1.5% de tus ventas por falta de stock. Además de perder la venta y el cliente, te cobran comisiones de castigo.
+              </p>
+
+              {/* Sliders interactivos */}
+              <div className="space-y-5 pt-2">
+                <div>
+                  <div className="flex justify-between text-xs font-mono mb-2">
+                    <span className="text-[#808694]">ÓRDENES MENSUALES MULTICANAL:</span>
+                    <span className="font-bold text-[#00FF66]">{monthlyOrders} ventas/mes</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="3000"
+                    step="50"
+                    value={monthlyOrders}
+                    onChange={(e) => setMonthlyOrders(Number(e.target.value))}
+                    className="w-full accent-[#00FF66] bg-[#1C2029] h-2 rounded-none cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-mono mb-2">
+                    <span className="text-[#808694]">TICKET PROMEDIO POR PRODUCTO:</span>
+                    <span className="font-bold text-[#00FF66]">${averageTicket.toLocaleString('es-MX')} MXN</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="200"
+                    max="5000"
+                    step="50"
+                    value={averageTicket}
+                    onChange={(e) => setAverageTicket(Number(e.target.value))}
+                    className="w-full accent-[#00FF66] bg-[#1C2029] h-2 rounded-none cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Tarjeta de impacto financiero */}
+            <div className="lg:col-span-6">
+              <div className="border border-[#2D1A18] bg-[#140D0C] p-6 sm:p-8 shadow-hard relative overflow-hidden">
+                <div className="absolute top-0 right-0 px-3 py-1 bg-[#FF3B00] text-black font-mono font-black text-[10px] uppercase">
+                  PÉRDIDA ANUALIZADA PROMEDIO
+                </div>
+
+                <div className="space-y-4">
+                  <div className="text-xs font-mono text-[#FF734B] uppercase tracking-wider">
+                    Impacto calculado en tu negocio:
+                  </div>
+
+                  <div className="text-4xl sm:text-5xl font-mono font-black text-white tracking-tight">
+                    ${(totalMonthlyBleed * 12).toLocaleString('es-MX')} <span className="text-sm font-normal text-[#808694]">MXN / año</span>
+                  </div>
+
+                  <div className="border-t border-[#2D1A18] pt-4 space-y-2.5 text-xs font-mono text-[#D1D5DB]">
+                    <div className="flex justify-between">
+                      <span className="text-[#808694]">Cancelaciones estimadas por mes:</span>
+                      <strong className="text-[#FF734B]">{estimatedCancellations} pedidos cancelados</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#808694]">Venta bruta perdida mensual:</span>
+                      <strong>${lossInSales.toLocaleString('es-MX')} MXN</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#808694]">Multas y comisiones de castigo ML:</span>
+                      <strong>${mlPenalties.toLocaleString('es-MX')} MXN</strong>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-[#2D1A18]">
+                    <div className="p-3 bg-[#1F1210] border border-[#3E1D19] text-xs font-mono text-[#EDEDED] flex items-center justify-between">
+                      <span>Costo de InventorySync:</span>
+                      <strong className="text-[#00FF66] font-bold text-sm">$197 MXN / mes</strong>
+                    </div>
+                    <p className="text-[11px] text-[#808694] font-mono mt-2 text-center">
+                      El software se paga solo con evitar exactamente 1 cancelación cada dos meses.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* 6. COMPARATIVA TÉCNICA BRUTALISTA (TABLA SIN HUMO) */}
+      <section className="border-b border-[#20242C] py-16 bg-[#0B0D11]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          
+          <div className="max-w-2xl mb-10">
+            <span className="text-xs font-mono text-[#00FF66] uppercase tracking-widest font-bold">
+              // 04. BENCHMARK_TÉCNICO
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">
+              ¿Por qué Zapier, Make o un plugin de WordPress no sirven para e-commerce serio?
+            </h2>
+          </div>
+
+          <div className="overflow-x-auto border border-[#20242C] bg-[#0E1015] shadow-hard">
+            <table className="w-full text-left text-xs font-mono border-collapse">
+              <thead>
+                <tr className="border-b border-[#20242C] bg-[#12151C] text-[#808694]">
+                  <th className="p-4 uppercase">Criterio Técnico</th>
+                  <th className="p-4 uppercase text-[#FF5555]">Zapier / Make / Webhooks Simples</th>
+                  <th className="p-4 uppercase text-[#00FF66] bg-[#00FF66]/5 border-l border-r border-[#20242C]">
+                    InventorySync (Saga Engine)
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#1D212A] text-[#EDEDED]">
+                <tr>
+                  <td className="p-4 font-bold">Ventas concurrentes simultáneas (&lt; 100ms)</td>
+                  <td className="p-4 text-[#FF734B]">❌ Race condition. Se cobran las dos ventas y sobrevendes.</td>
+                  <td className="p-4 text-[#00FF66] bg-[#00FF66]/5 border-l border-r border-[#20242C]">
+                    ✓ Atomic CAS Lock a nivel DB. Una gana, la otra se rechaza en 0ms.
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold">Caída temporal de la API de Mercado Libre</td>
+                  <td className="p-4 text-[#FF734B]">❌ Pierde el evento o arroja error genérico 500 sin retry seguro.</td>
+                  <td className="p-4 text-[#00FF66] bg-[#00FF66]/5 border-l border-r border-[#20242C]">
+                    ✓ Estado retenido en cola. Reintento a los 5s con backoff progresivo.
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold">Riesgo de doble resta de inventario</td>
+                  <td className="p-4 text-[#FF734B]">❌ Alto. Si un reintento manual pasa, descuenta 2 piezas.</td>
+                  <td className="p-4 text-[#00FF66] bg-[#00FF66]/5 border-l border-r border-[#20242C]">
+                    ✓ 0%. Uso estricto de Idempotency Keys e inventario absoluto.
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold">Integración con ERPs locales (CONTPAQi / SAE)</td>
+                  <td className="p-4 text-[#FF734B]">❌ Imposible sin servidores intermediarios costosos.</td>
+                  <td className="p-4 text-[#00FF66] bg-[#00FF66]/5 border-l border-r border-[#20242C]">
+                    ✓ Compatible nativo vía ODBC SQL Server o importación Excel rápida.
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold">Costo al escalar a 5,000 órdenes al mes</td>
+                  <td className="p-4 text-[#FF734B]">❌ $80 a $150 USD mensuales por cobro por tarea.</td>
+                  <td className="p-4 text-[#00FF66] bg-[#00FF66]/5 border-l border-r border-[#20242C] font-bold">
+                    ✓ $197 MXN planos. Sin cobros ocultos por orden sincronizada.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 7. PAYLOAD INSPECTOR (TRANSPARENCIA DE CÓDIGO REAL) */}
+      <section id="payloads" className="border-b border-[#20242C] py-16 bg-[#090A0C]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+            <div>
+              <span className="text-xs font-mono text-[#00FF66] uppercase tracking-widest font-bold">
+                // 05. PAYLOAD_INSPECTOR
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
+                Transparencia total de datos: el código que viaja a tus APIs.
+              </h2>
+            </div>
+
+            {/* Selector de Tabs */}
+            <div className="flex items-center gap-1 bg-[#12151C] border border-[#20242C] p-1 font-mono text-xs">
+              <button
+                onClick={() => setActivePayloadTab('saga')}
+                className={`px-3 py-1.5 transition-colors ${activePayloadTab === 'saga' ? 'bg-[#00FF66] text-black font-bold' : 'text-[#808694] hover:text-white'}`}
+              >
+                SAGA_SCHEMA.sql
+              </button>
+              <button
+                onClick={() => setActivePayloadTab('shopify')}
+                className={`px-3 py-1.5 transition-colors ${activePayloadTab === 'shopify' ? 'bg-[#00FF66] text-black font-bold' : 'text-[#808694] hover:text-white'}`}
+              >
+                SHOPIFY_GRAPHQL.gql
+              </button>
+              <button
+                onClick={() => setActivePayloadTab('ml')}
+                className={`px-3 py-1.5 transition-colors ${activePayloadTab === 'ml' ? 'bg-[#00FF66] text-black font-bold' : 'text-[#808694] hover:text-white'}`}
+              >
+                MERCADOLIBRE_REST.json
+              </button>
+            </div>
+          </div>
+
+          {/* Bloque de código */}
+          <div className="border border-[#20242C] bg-[#0E1015] shadow-hard relative">
+            <div className="px-4 py-2.5 bg-[#13161C] border-b border-[#20242C] flex items-center justify-between text-xs font-mono">
+              <span className="text-[#808694]">Payload verificado y listo para producción</span>
+              <button
+                onClick={copyPayload}
+                className="flex items-center gap-1.5 text-xs text-[#808694] hover:text-[#00FF66] transition-colors"
+              >
+                {copiedCode ? <CheckCheck size={14} className="text-[#00FF66]" /> : <Copy size={14} />}
+                <span>{copiedCode ? 'Copiado al portapapeles' : 'Copiar snippet'}</span>
+              </button>
+            </div>
+
+            <pre className="p-5 font-mono text-xs text-[#00FF66] overflow-x-auto leading-relaxed bg-[#090A0C]">
+              <code>{payloads[activePayloadTab]}</code>
+            </pre>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 8. PRECIO ÚNICO SIN HUMO */}
+      <section id="precios" className="border-b border-[#20242C] py-20 bg-grid-tech">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          
+          <span className="text-xs font-mono text-[#00FF66] uppercase tracking-widest font-bold">
+            // 06. PRICING_SIN_LETRAS_CHIQUITAS
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-2">
+            Un solo precio. Cero comisiones sobre tus ventas.
+          </h2>
+          <p className="text-sm text-[#9CA3AF] mt-2 max-w-xl mx-auto font-sans">
+            Otras plataformas te castigan cobrándote más conforme más vendes. En InventorySync pagas una suscripción plana y procesas las órdenes que quieras.
+          </p>
+
+          <div className="mt-10 border-2 border-[#00FF66] bg-[#0E1015] p-8 sm:p-12 shadow-hard-accent text-left max-w-xl mx-auto relative">
+            
+            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 border-b border-[#20242C] pb-6">
+              <div>
+                <span className="px-2.5 py-0.5 text-[10px] font-mono font-black uppercase bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/40">
+                  ACCESO TOTAL MULTICANAL
+                </span>
+                <h3 className="text-2xl font-mono font-bold text-white mt-2">Plan Producción Ilimitado</h3>
+              </div>
+              <div className="text-left sm:text-right">
+                <span className="text-4xl sm:text-5xl font-mono font-black text-white">$197</span>
+                <span className="text-xs font-mono text-[#808694]"> MXN / mes</span>
+              </div>
+            </div>
+
+            <div className="py-6 space-y-3 font-mono text-xs text-[#D1D5DB]">
+              <div className="flex items-center gap-2.5">
+                <Check size={16} className="text-[#00FF66] shrink-0" />
+                <span>Sincronización en vivo entre Mercado Libre, Shopify y Amazon.</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Check size={16} className="text-[#00FF66] shrink-0" />
+                <span>Orquestador Saga distribuido con prevención de sobreventa.</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Check size={16} className="text-[#00FF66] shrink-0" />
+                <span>Importación y exportación masiva de Excel (.xlsx / .csv).</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Check size={16} className="text-[#00FF66] shrink-0" />
+                <span>Catálogo ilimitado de SKUs y órdenes mensuales sin límite.</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Check size={16} className="text-[#00FF66] shrink-0" />
+                <span>Soporte técnico directo vía tickets y WhatsApp prioritario.</span>
+              </div>
+            </div>
+
+            <Link
+              href="/register"
+              className="block w-full py-4 text-center bg-[#00FF66] hover:bg-[#00E05A] text-[#090A0C] font-mono font-black text-sm uppercase tracking-wider transition-all shadow-hard"
+            >
+              Comenzar prueba ahora mismo
+            </Link>
+
+            <div className="mt-4 flex items-center justify-center gap-4 text-[11px] font-mono text-[#606775]">
+              <span>✓ Cancela cuando quieras con 1 clic</span>
+              <span>•</span>
+              <span>✓ Facturación CFDI mexicana</span>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* 9. FOOTER MONOLÍTICO INDUSTRIAL */}
+      <footer className="bg-[#07080A] py-12 text-xs font-mono text-[#606775]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 bg-[#00FF66] flex items-center justify-center text-[#090A0C] font-black text-xs">
               IS
             </div>
-            <span className="font-bold text-white text-sm">InventorySync</span>
+            <span>InventorySync Cloud Enterprise © 2026 • Fabricado para e-commerce en México.</span>
           </div>
-          <p>© 2026 InventorySync México. Todos los derechos reservados.</p>
-          <div className="flex items-center gap-4 text-slate-400">
-            <Link href="/inventory" className="hover:text-white">Inventario</Link>
-            <Link href="/login" className="hover:text-white">Acceso Clientes</Link>
-            <a href={whatsappLink('Soporte')} target="_blank" rel="noopener noreferrer" className="hover:text-white flex items-center gap-1">
-              <MessageCircle size={14} /> WhatsApp
-            </a>
+
+          <div className="flex items-center gap-6 text-[#808694]">
+            <Link href="/inventory" className="hover:text-white transition-colors">Inventario</Link>
+            <Link href="/sales" className="hover:text-white transition-colors">Ventas</Link>
+            <Link href="/tickets" className="hover:text-white transition-colors">Soporte Técnico</Link>
+            <Link href="/login" className="hover:text-white transition-colors">Portal Clientes</Link>
           </div>
         </div>
       </footer>
+
     </div>
   );
 }

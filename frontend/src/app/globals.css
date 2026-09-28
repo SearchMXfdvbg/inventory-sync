@@ -1,36 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #f8fafc; /* slate-50 */
-  color: #0f172a; /* slate-900 */
-  transition: background-color 0.2s ease, color 0.2s ease;
+@layer base {
+  body {
+    background-color: #090a0c;
+    color: #ededed;
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.015em;
+  }
 }
 
-html.dark body {
-  background-color: #0b0f19; /* dark slate background */
-  color: #f1f5f9; /* slate-100 */
+.font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
 }
 
-/* Custom scrollbar styles */
+.font-sans {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Rejilla de ingeniería milimétrica */
+.bg-grid-tech {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+}
+
+.bg-dot-matrix {
+  background-size: 24px 24px;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+}
+
+/* Bordes y sombras duras sin desenfoques */
+.border-hard {
+  border: 1px solid #20242c;
+}
+
+.shadow-hard {
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.shadow-hard-accent {
+  box-shadow: 4px 4px 0px #00ff66;
+}
+
+/* Custom scrollbar ultra-delgado estilo terminal */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #090a0c;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1; /* slate-300 */
-  border-radius: 4px;
-}
-html.dark ::-webkit-scrollbar-thumb {
-  background: #334155; /* slate-700 */
+  background: #20242c;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8; /* slate-400 */
-}
-html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #475569; /* slate-600 */
+  background: #00ff66;
 }
