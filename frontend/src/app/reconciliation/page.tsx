@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, RefreshCw, AlertTriangle, CheckCircle2, Database, ShoppingCart } from 'lucide-react';
-import { getInventory, reconcileProduct, Product } from '@/lib/api';
+import { getInventory, Product } from '@/lib/api';
+import LoadingSkeleton from '@/components/LoadingSkeleton';
 
 interface ReconcileItem extends Product {
   status: 'MATCH' | 'DESYNC';
@@ -22,9 +23,9 @@ export default function ReconciliationPage() {
       const products = await getInventory();
       
       // Simular datos de conciliación
-      const reconciledItems = products.map(product => ({
+      const reconciledItems: ReconcileItem[] = products.map(product => ({
         ...product,
-        status: 'MATCH', // En una implementación real, esto vendría de la API
+        status: 'MATCH' as 'MATCH', // En una implementación real, esto vendría de la API
         sae_stock: product.stock,
         shopify_stock: product.shopify_stock ?? product.stock,
         ml_stock: product.ml_stock ?? product.stock,
@@ -47,7 +48,7 @@ export default function ReconciliationPage() {
     item.nombre.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: 'MATCH' | 'DESYNC') => {
     switch (status) {
       case 'MATCH':
         return <CheckCircle2 className="w-4 h-4 text-[#00ff66]" />;
@@ -98,7 +99,9 @@ export default function ReconciliationPage() {
       {/* Product Rows */}
       <div className="border border-[#20242c] bg-[#0d0e12] shadow-hard">
         {loading ? (
-          <div className="p-8 text-center text-[#555d6e]">Cargando datos de conciliación...</div>
+          <div className="p-8 text-center text-[#555d6e]">
+            <LoadingSkeleton />
+          </div>
         ) : filteredItems.length === 0 ? (
           <div className="p-8 text-center text-[#555d6e]">No hay productos para conciliar</div>
         ) : (
