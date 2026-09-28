@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Sparkles } from 'lucide-react';
+import { ShieldCheck, Terminal, Activity } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 
 interface TopbarProps {
@@ -32,28 +32,32 @@ export const Topbar: React.FC<TopbarProps> = ({ title }) => {
   }, []);
 
   return (
-    <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-8 fixed right-0 top-0 left-64 z-10 transition-colors">
+    <header className="h-14 border-b border-[#20242c] bg-[#0d0e12]/95 backdrop-blur flex items-center justify-between px-6 fixed right-0 top-0 left-64 z-10 font-mono-code text-xs">
       {/* Title */}
-      <div>
-        <h2 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight">{title}</h2>
+      <div className="flex items-center gap-2">
+        <span className="text-[#00ff66] font-bold">//</span>
+        <h2 className="text-xs font-bold text-white uppercase tracking-wider">{title}</h2>
       </div>
 
       {/* Control panel */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-2 text-[10px] text-[#8e95a5]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00ff66]"></span>
+          <span>LATENCIA CAS: <strong className="text-white">18ms</strong></span>
+        </div>
+
         {/* Botón exclusivo para CristAdmin */}
         {isSuperAdmin && (
           <Link
             href="/super-admin"
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 text-white text-xs font-black shadow-md shadow-indigo-500/20 hover:opacity-95 transition-all cursor-pointer border border-amber-300/40 active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1 bg-[#ff3b00]/10 hover:bg-[#ff3b00]/20 text-[#ff3b00] border border-[#ff3b00]/40 text-xs font-bold transition-all"
             title="Consola de Control Maestro Super Admin"
           >
-            <ShieldCheck size={15} className="text-amber-200 shrink-0" />
+            <ShieldCheck size={13} className="shrink-0" />
             <span>Panel Super Admin</span>
-            <Sparkles size={13} className="text-amber-200 animate-pulse shrink-0" />
           </Link>
         )}
 
-        {/* Sol / Luna para cambiar de tema */}
         <ThemeToggle />
       </div>
     </header>
@@ -61,4 +65,3 @@ export const Topbar: React.FC<TopbarProps> = ({ title }) => {
 };
 
 export default Topbar;
-

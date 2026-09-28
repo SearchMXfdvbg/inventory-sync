@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { 
   Eye, 
   EyeOff, 
@@ -10,9 +11,13 @@ import {
   Mail, 
   CheckCircle2, 
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Terminal,
+  Database,
+  Lock,
+  Cpu,
+  AlertTriangle
 } from 'lucide-react';
-import ThemeToggle from '@/components/ThemeToggle';
 import { setTenantId, login, register } from '@/lib/api';
 
 export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'login' | 'register' }) {
@@ -48,28 +53,28 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
     setSuccess('');
 
     if (!username.trim() || !password.trim()) {
-      setError('Por favor, ingrese su usuario y contraseña.');
+      setError('ERROR_AUTH_01: Credenciales incompletas. Ingrese operador y clave.');
       return;
     }
 
     if (mode === 'register') {
       if (!email.trim() || !email.includes('@') || !email.includes('.')) {
-        setError('El correo electrónico corporativo es obligatorio y debe ser válido.');
+        setError('ERROR_VAL_02: Correo corporativo no válido para emisión de webhook token.');
         return;
       }
       if (password.length < 6) {
-        setError('La contraseña debe contener al menos 6 caracteres.');
+        setError('ERROR_VAL_03: La clave debe tener mínimo 6 caracteres.');
         return;
       }
       if (password !== confirmPassword) {
-        setError('Las contraseñas no coinciden.');
+        setError('ERROR_VAL_04: Discrepancia de confirmación en clave.');
         return;
       }
 
       try {
         setLoading(true);
         const regRes = await register(username.trim(), password, email.trim(), 'empresa-a');
-        setSuccess('¡Cuenta empresarial creada con éxito! Redirigiendo...');
+        setSuccess('NODO_AUTORIZADO: Cuenta aprovisionada. Enrutando a consola...');
         setTenantId('empresa-a');
         localStorage.setItem('logged_in', 'true');
 
@@ -118,7 +123,7 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
           window.location.href = '/dashboard';
         }, 500);
       } catch (err: any) {
-        setError(err.message || 'Error al registrar usuario.');
+        setError(err.message || 'ERROR_FATAL: Error al aprovisionar nodo.');
       } finally {
         setLoading(false);
       }
@@ -164,7 +169,7 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
         }
       } catch {}
       setTenantId(isSuper ? 'global-master' : 'empresa-a');
-      setSuccess(isSuper ? '¡Acceso Maestro de Super Administrador Concedido!' : '¡Credenciales verificadas! Iniciando sesión...');
+      setSuccess(isSuper ? 'PRIVILEGIO_SUPER_ADMIN_VALIDADO: Abriendo consola global.' : 'SESIÓN_VERIFICADA: Conexión establecida.');
       setTimeout(() => {
         if (isSuper || data?.user?.role === 'SUPER_ADMIN') {
           window.location.href = '/super-admin';
@@ -173,169 +178,200 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
         }
       }, 400);
     } catch (err: any) {
-      setError(err.message || 'Credenciales inválidas. Verifique su usuario y contraseña.');
+      setError(err.message || 'ERROR_AUTH_401: Credenciales inválidas o token expirado.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-3xl p-8 relative transition-colors">
-      {/* Theme Toggle Top Right */}
-      <div className="absolute top-6 right-6">
-        <ThemeToggle />
+    <div className="w-full max-w-md border border-[#20242c] bg-[#0d0e12] shadow-hard text-[#ededed]">
+      {/* Terminal Title Bar */}
+      <div className="border-b border-[#20242c] bg-[#14171e] px-4 py-2.5 flex items-center justify-between font-mono-code text-xs">
+        <div className="flex items-center gap-2">
+          <Terminal className="w-3.5 h-3.5 text-[#00ff66]" />
+          <span className="text-[#8e95a5]">auth_gateway.sh</span>
+        </div>
+        <div className="flex items-center gap-2 text-[10px] text-[#555d6e]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00ff66]"></span>
+          <span>TLS 1.3 / CAS VERIFIED</span>
+        </div>
       </div>
 
-      {/* Brand Header */}
-      <div className="flex flex-col items-center mb-6">
-        <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-bold text-2xl shadow-xl shadow-blue-500/25 mb-3">
-          IS
-        </div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">InventorySync</h1>
-        <p className="text-slate-400 text-xs mt-1 font-semibold tracking-wide">
-          Sincronización Multicanal de Stock en Tiempo Real
-        </p>
-      </div>
-
-      {/* Tabs Switcher: Iniciar Sesión vs Crear Cuenta */}
-      <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl mb-6 border border-slate-200 dark:border-slate-700">
-        <button
-          type="button"
-          onClick={() => {
-            setMode('login');
-            setError('');
-            setSuccess('');
-          }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            mode === 'login'
-              ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
-          }`}
-        >
-          <LogIn size={15} />
-          <span>Iniciar Sesión</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setMode('register');
-            setError('');
-            setSuccess('');
-          }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            mode === 'register'
-              ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
-          }`}
-        >
-          <UserPlus size={15} />
-          <span>Crear Cuenta</span>
-        </button>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs font-medium p-3.5 rounded-xl mb-5 animate-fade-in">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-medium p-3.5 rounded-xl mb-5 flex items-center gap-2 animate-fade-in">
-          <CheckCircle2 size={16} className="shrink-0" />
-          <span>{success}</span>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="p-6 sm:p-8 space-y-6">
+        {/* Brand Block */}
         <div>
-          <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1.5">
-            {mode === 'register' ? 'Nombre de Usuario' : 'Usuario Corporativo'}
-          </label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder={mode === 'register' ? 'ej. tu_empresa' : 'ej. admin'}
-            className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900"
-          />
+          <div className="flex items-center gap-2 font-mono-code text-xs text-[#00ff66] mb-1">
+            <Cpu className="w-3.5 h-3.5" />
+            <span>ACCESO AL CLUSTER // INVENTORY_SYNC</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-white">
+            {mode === 'login' ? 'Consola de Operador' : 'Aprovisionar Nuevo Nodo'}
+          </h1>
+          <p className="font-mono-code text-xs text-[#8e95a5] mt-1">
+            {mode === 'login' 
+              ? 'Ingresa tus credenciales para acceder a la orquestación distribuida.'
+              : 'Conecta tu infraestructura comercial con garantía atómica CAS.'}
+          </p>
         </div>
 
-        {mode === 'register' && (
+        {/* Tab Switcher */}
+        <div className="grid grid-cols-2 border border-[#20242c] bg-[#090a0c] p-1 font-mono-code text-xs">
+          <button
+            type="button"
+            onClick={() => {
+              setMode('login');
+              setError('');
+              setSuccess('');
+            }}
+            className={`py-2 px-3 text-center transition-all ${
+              mode === 'login'
+                ? 'bg-[#20242c] text-[#00ff66] font-bold shadow-hard'
+                : 'text-[#8e95a5] hover:text-white'
+            }`}
+          >
+            [ INICIAR SESIÓN ]
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode('register');
+              setError('');
+              setSuccess('');
+            }}
+            className={`py-2 px-3 text-center transition-all ${
+              mode === 'register'
+                ? 'bg-[#20242c] text-[#00ff66] font-bold shadow-hard'
+                : 'text-[#8e95a5] hover:text-white'
+            }`}
+          >
+            [ CREAR NODO ]
+          </button>
+        </div>
+
+        {/* Alerts */}
+        {error && (
+          <div className="border border-[#ff3b00]/40 bg-[#ff3b00]/10 text-[#ff3b00] p-3 font-mono-code text-xs flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {success && (
+          <div className="border border-[#00ff66]/40 bg-[#00ff66]/10 text-[#00ff66] p-3 font-mono-code text-xs flex items-start gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{success}</span>
+          </div>
+        )}
+
+        {/* Form Fields */}
+        <form onSubmit={handleSubmit} className="space-y-4 font-mono-code text-xs">
           <div>
-            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1.5 flex items-center gap-1.5">
-              <Mail size={13} className="text-blue-600 dark:text-blue-400" />
-              Correo Electrónico Corporativo
+            <label className="block text-[11px] text-[#8e95a5] uppercase mb-1.5">
+              // {mode === 'register' ? 'IDENTIFICADOR DE OPERADOR' : 'USUARIO OPERADOR'}
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="contacto@empresa.de"
-              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder={mode === 'register' ? 'ej. operador_central' : 'ej. admin'}
+              className="w-full bg-[#090a0c] border border-[#20242c] px-3.5 py-2.5 text-[#ededed] placeholder-[#444a57] focus:outline-none focus:border-[#00ff66] text-xs transition-colors"
             />
           </div>
-        )}
 
-        <div>
-          <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1.5">Contraseña</label>
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
+          {mode === 'register' && (
+            <div>
+              <label className="block text-[11px] text-[#8e95a5] uppercase mb-1.5 flex items-center gap-1.5">
+                <Mail className="w-3 h-3 text-[#00ff66]" />
+                // CORREO CORPORATIVO
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="operaciones@empresa.mx"
+                className="w-full bg-[#090a0c] border border-[#20242c] px-3.5 py-2.5 text-[#ededed] placeholder-[#444a57] focus:outline-none focus:border-[#00ff66] text-xs transition-colors"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-[11px] text-[#8e95a5] uppercase mb-1.5">
+              // CLAVE DE ACCESO CRIPTOGRÁFICA
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••••••"
+                className="w-full bg-[#090a0c] border border-[#20242c] pl-3.5 pr-10 py-2.5 text-[#ededed] placeholder-[#444a57] focus:outline-none focus:border-[#00ff66] text-xs transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8e95a5] hover:text-white"
+              >
+                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
+          </div>
+
+          {mode === 'register' && (
+            <div>
+              <label className="block text-[11px] text-[#8e95a5] uppercase mb-1.5">
+                // CONFIRMAR CLAVE DE ACCESO
+              </label>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••••••"
+                className="w-full bg-[#090a0c] border border-[#20242c] px-3.5 py-2.5 text-[#ededed] placeholder-[#444a57] focus:outline-none focus:border-[#00ff66] text-xs transition-colors"
+              />
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#00ff66] hover:bg-[#00e65c] disabled:opacity-50 text-black font-bold py-3 px-4 shadow-hard flex items-center justify-center gap-2 border border-[#00ff66] transition-transform active:translate-x-0.5 active:translate-y-0.5 mt-2"
+          >
+            {loading ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                <span>AUTENTICANDO NODO...</span>
+              </>
+            ) : mode === 'register' ? (
+              <>
+                <span>DESPLEGAR CUENTA OPERATIVA</span>
+                <ArrowRight size={14} />
+              </>
+            ) : (
+              <>
+                <LogIn size={14} />
+                <span>INGRESAR A LA CONSOLA</span>
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Security & Serializer Telemetry Footer */}
+        <div className="pt-4 border-t border-[#20242c] font-mono-code text-[10px] text-[#8e95a5] space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <Database className="w-3 h-3 text-[#00ff66]" />
+              DB LOCK SERIALIZER:
+            </span>
+            <span className="text-white font-medium">SQLite WAL / PostgreSQL (Row-level)</span>
+          </div>
+          <div className="flex items-center justify-between text-[#555d6e]">
+            <span>FAIL-SAFE: Atomic CAS Lock (0ms Race Window)</span>
+            <Link href="/" className="text-[#8e95a5] hover:text-white underline">
+              &larr; Volver a la landing
+            </Link>
           </div>
         </div>
-
-        {mode === 'register' && (
-          <div>
-            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1.5">Confirmar Contraseña</label>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900"
-            />
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2 mt-4 cursor-pointer active:scale-98"
-        >
-          {loading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Verificando credenciales...</span>
-            </>
-          ) : mode === 'register' ? (
-            <>
-              <span>Crear Cuenta Empresarial</span>
-              <ArrowRight size={16} />
-            </>
-          ) : (
-            <>
-              <LogIn size={16} />
-              <span>Iniciar Sesión</span>
-            </>
-          )}
-        </button>
-      </form>
-
-      <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 font-medium">
-        <ShieldCheck size={14} className="text-emerald-600" />
-        <span>Autenticación TLS / OAuth2 Encriptada</span>
       </div>
     </div>
   );

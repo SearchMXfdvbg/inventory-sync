@@ -39,15 +39,10 @@ export default function RootLayout({
   useEffect(() => {
     setMounted(true);
 
-    // Sincronizar tema oscuro por defecto
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-      document.documentElement.classList.remove('dark');
-    } else {
-      document.documentElement.classList.add('dark');
-      if (!savedTheme) {
-        localStorage.setItem('theme', 'dark');
-      }
+    // Forzar modo oscuro terminal
+    document.documentElement.classList.add('dark');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('theme', 'dark');
     }
 
     // Verificar si el usuario ha iniciado sesión en rutas protegidas
@@ -103,7 +98,6 @@ export default function RootLayout({
               const plan = found.plan || 'Plan Guest';
               const reason = found.suspension_reason || '';
 
-              // Actualizar estado reactivo
               setCurrentUser({
                 username: found.name,
                 role: 'CLIENT_ADMIN',
@@ -112,7 +106,6 @@ export default function RootLayout({
                 suspension_reason: reason
               });
 
-              // Sincronizar localStorage
               localStorage.setItem('user_session', JSON.stringify({
                 ...parsed,
                 plan: plan,
@@ -180,30 +173,30 @@ export default function RootLayout({
   );
 
   return (
-    <html lang="es" suppressHydrationWarning>
-      <body className="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 transition-colors" suppressHydrationWarning>
+    <html lang="es" className="dark" suppressHydrationWarning>
+      <body className="bg-[#090a0c] min-h-screen text-[#ededed] font-sans antialiased" suppressHydrationWarning>
         {isPublicPage ? (
-          <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
+          <main className="min-h-screen bg-[#090a0c] text-[#ededed]">
             {children}
           </main>
         ) : !mounted ? (
-          <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+          <div className="min-h-screen bg-[#090a0c] flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-[#00ff66] border-t-transparent animate-spin font-mono-code text-xs text-[#00ff66]" />
           </div>
         ) : !isAuthenticated ? (
-          <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+          <div className="min-h-screen bg-[#090a0c] flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-[#00ff66] border-t-transparent animate-spin font-mono-code text-xs text-[#00ff66]" />
           </div>
         ) : isRestrictedClient && !cleanPath.startsWith('/tickets') ? (
           <AccessGate user={currentUser!} onRefresh={() => setMounted(false)} />
         ) : (
-          <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950">
+          <div className="min-h-screen flex bg-[#090a0c]">
             <Sidebar />
 
-            <div className="flex-1 flex flex-col pl-64 bg-slate-50 dark:bg-slate-950 min-h-screen">
+            <div className="flex-1 flex flex-col pl-64 bg-[#090a0c] min-h-screen">
               <Topbar title={topbarTitle} />
 
-              <main className="flex-1 p-8 pt-24 min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
+              <main className="flex-1 p-8 pt-20 min-h-[calc(100vh-3.5rem)] bg-[#090a0c] text-[#ededed] bg-grid-tech">
                 {children}
               </main>
             </div>
@@ -213,4 +206,3 @@ export default function RootLayout({
     </html>
   );
 }
-

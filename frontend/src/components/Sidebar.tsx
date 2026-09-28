@@ -14,14 +14,16 @@ import {
   LogOut,
   User,
   LifeBuoy,
-  Sparkles
+  ShieldCheck,
+  Terminal,
+  Cpu
 } from 'lucide-react';
 import { clearSession } from '@/lib/api';
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const [currentUser, setCurrentUser] = React.useState('Administrador');
+  const [currentUser, setCurrentUser] = React.useState('Operador');
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -57,34 +59,36 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between border-r border-slate-800 h-screen fixed left-0 top-0 z-20">
+    <aside className="w-64 bg-[#0d0e12] text-[#ededed] flex flex-col justify-between border-r border-[#20242c] h-screen fixed left-0 top-0 z-20 font-mono-code text-xs">
       <div>
-        {/* Logo Section */}
-        <div className="p-6 border-b border-slate-800 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
-            IS
+        {/* Brand Header */}
+        <div className="p-5 border-b border-[#20242c] flex items-center gap-3">
+          <div className="w-8 h-8 bg-[#00ff66] text-black font-bold flex items-center justify-center text-sm shadow-hard">
+            //
           </div>
           <div>
-            <h1 className="font-bold text-white text-base leading-none">InventorySync</h1>
-            <p className="text-[10px] text-slate-500 mt-1 font-semibold tracking-wider uppercase">Saga Pattern Sync</p>
+            <h1 className="font-bold text-white text-sm tracking-tight leading-none">INVENTORY_SYNC</h1>
+            <p className="text-[10px] text-[#8e95a5] mt-1 tracking-wider uppercase">Saga Distributed Core</p>
           </div>
         </div>
 
         {/* Navigation Links */}
-        <nav className="p-4 space-y-1">
+        <nav className="p-3 space-y-1">
           {currentUser.toLowerCase() === 'cristadmin' && (
             <Link
               href="/super-admin"
-              className={`flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl text-xs font-black transition-all mb-3 bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-indigo-500/20 text-amber-300 border border-amber-500/40 hover:border-amber-400 shadow-md ${
-                pathname === '/super-admin' ? 'bg-amber-500 text-slate-950 font-black' : ''
+              className={`flex items-center justify-between gap-3 px-3 py-2 text-xs font-bold border border-[#ff3b00]/40 transition-all mb-3 ${
+                pathname === '/super-admin' 
+                  ? 'bg-[#ff3b00] text-black shadow-hard' 
+                  : 'bg-[#ff3b00]/10 text-[#ff3b00] hover:bg-[#ff3b00]/20'
               }`}
             >
-              <div className="flex items-center gap-2.5">
-                <Sparkles size={16} className="text-amber-400 shrink-0" />
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={14} className="shrink-0" />
                 <span>Panel Super Admin</span>
               </div>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-200 border border-amber-400/40 uppercase font-black tracking-wider">
-                Master
+              <span className="text-[9px] px-1 py-0.2 border border-current uppercase">
+                MASTER
               </span>
             </Link>
           )}
@@ -96,13 +100,13 @@ export const Sidebar: React.FC = () => {
               <Link
                 key={item.path}
                 href={item.path}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`flex items-center gap-3 px-3 py-2.5 transition-all ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
-                    : 'hover:bg-slate-800 hover:text-white'
+                    ? 'bg-[#181b22] text-[#00ff66] border-l-2 border-[#00ff66] font-bold'
+                    : 'text-[#8e95a5] hover:text-white hover:bg-[#14171e]'
                 }`}
               >
-                <Icon size={18} />
+                <Icon size={16} />
                 <span>{item.name}</span>
               </Link>
             );
@@ -110,31 +114,31 @@ export const Sidebar: React.FC = () => {
         </nav>
       </div>
 
-      {/* Footer Section */}
-      <div className="p-4 border-t border-slate-800 space-y-3">
-        <div className="flex items-center justify-between px-2">
+      {/* Footer Section with Operator Status */}
+      <div className="p-4 border-t border-[#20242c] bg-[#090a0c] space-y-3">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+            <div className={`w-7 h-7 flex items-center justify-center font-bold text-xs shrink-0 border ${
               currentUser.toLowerCase() === 'cristadmin'
-                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50'
-                : 'bg-blue-600/20 text-blue-400'
+                ? 'border-[#ff3b00] bg-[#ff3b00]/20 text-[#ff3b00]'
+                : 'border-[#00ff66] bg-[#00ff66]/20 text-[#00ff66]'
             }`}>
               {currentUser.charAt(0).toUpperCase()}
             </div>
             <div className="leading-tight min-w-0">
-              <p className="text-xs font-semibold text-white truncate max-w-[120px]">{currentUser}</p>
-              <p className="text-[9px] text-slate-500 font-medium">
-                {currentUser.toLowerCase() === 'cristadmin' ? 'Super Administrador' : 'Propietario / Admin'}
+              <p className="text-xs font-bold text-white truncate max-w-[120px]">{currentUser}</p>
+              <p className="text-[10px] text-[#555d6e]">
+                {currentUser.toLowerCase() === 'cristadmin' ? 'SUPER_OPERADOR' : 'OPERADOR_CLIENTE'}
               </p>
             </div>
           </div>
           
           <button 
             onClick={handleLogout}
-            title="Cerrar sesión"
-            className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-red-400 transition-colors shrink-0 cursor-pointer"
+            title="Desconectar consola"
+            className="p-1.5 border border-[#20242c] hover:border-[#ff3b00] text-[#8e95a5] hover:text-[#ff3b00] transition-colors shrink-0"
           >
-            <LogOut size={16} />
+            <LogOut size={14} />
           </button>
         </div>
       </div>
@@ -143,4 +147,3 @@ export const Sidebar: React.FC = () => {
 };
 
 export default Sidebar;
-
