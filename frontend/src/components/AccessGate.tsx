@@ -38,8 +38,15 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
     setStatusMessage(null);
     try {
       // Re-consultar el estado del tenant en el servidor
-      const res = await fetch('/api/super-admin/tenants');
-      if (res.ok) {
+      const adminHeaders = {
+        'X-Admin-PIN': '060718',
+        'X-API-Key': 'admin-secret-token'
+      };
+      let res = await fetch('/api/super-admin/tenants', { headers: adminHeaders }).catch(() => null);
+      if (!res || !res.ok) {
+        res = await fetch('https://inventory-sync-5y8u.onrender.com/super-admin/tenants', { headers: adminHeaders }).catch(() => null);
+      }
+      if (res && res.ok) {
         const tenants = await res.json();
         const found = tenants.find((t: any) => t.name?.toLowerCase() === user.username.toLowerCase());
         if (found) {

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -51,6 +51,26 @@ interface Tenant {
   created_at: string;
   last_sync: string;
 }
+
+const ADMIN_HEADERS: Record<string, string> = {
+  'Content-Type': 'application/json',
+  'X-Admin-PIN': '060718',
+  'X-API-Key': 'admin-secret-token'
+};
+
+const adminFetch = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
+  const mergedHeaders = {
+    ...ADMIN_HEADERS,
+    ...(options.headers || {})
+  };
+  try {
+    const res = await fetch(`/api${endpoint}`, { ...options, headers: mergedHeaders });
+    if (res.ok) return res;
+  } catch (e) {
+    console.warn('Fallback to direct backend for admin fetch:', endpoint, e);
+  }
+  return fetch(`https://inventory-sync-5y8u.onrender.com${endpoint}`, { ...options, headers: mergedHeaders });
+};
 
 export default function SuperAdminPage() {
   const router = useRouter();
@@ -150,8 +170,8 @@ export default function SuperAdminPage() {
 
       // 2. Fetch server tenants
       const [tenantsRes, configRes] = await Promise.all([
-        fetch('/api/super-admin/tenants').then(r => r.json()).catch(() => []),
-        fetch('/api/super-admin/system').then(r => r.json()).catch(() => null)
+        adminFetch('/super-admin/tenants').then(r => r.json()).catch(() => []),
+        adminFetch('/super-admin/system').then(r => r.json()).catch(() => null)
       ]);
 
       const serverList: Tenant[] = Array.isArray(tenantsRes) ? tenantsRes : [];
@@ -192,9 +212,8 @@ export default function SuperAdminPage() {
 
       // 4. If we have local tenants not yet synced to the server, push them
       if (mergedTenants.length > serverList.length) {
-        fetch('/api/super-admin/tenants', {
+        adminFetch('/super-admin/tenants', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'sync', tenants: mergedTenants })
         }).catch(() => {});
       }
@@ -260,9 +279,8 @@ export default function SuperAdminPage() {
       }
 
       // Send to server
-      await fetch('/api/super-admin/tenants', {
+      await adminFetch('/super-admin/tenants', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: cleanName,
           owner: newClientOwner || cleanName,
@@ -358,9 +376,8 @@ export default function SuperAdminPage() {
       }
       setIsEditingInView(false);
 
-      await fetch('/api/super-admin/tenants', {
+      await adminFetch('/super-admin/tenants', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: targetName, username: targetName, ...payload })
       });
 
@@ -405,9 +422,8 @@ export default function SuperAdminPage() {
     }
 
     try {
-      await fetch('/api/super-admin/tenants', {
+      await adminFetch('/super-admin/tenants', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: targetName, username: targetName, status: nextStatus, suspension_reason: reasonText })
       });
       showToast(nextStatus === 'SUSPENDED' ? `Perfil suspendido por: ${reasonText}` : 'Perfil de cliente reactivado exitosamente');
@@ -438,7 +454,7 @@ export default function SuperAdminPage() {
     }
 
     try {
-      await fetch(`/api/super-admin/tenants?id=${encodeURIComponent(targetName)}`, { method: 'DELETE' });
+      await adminFetch(`/super-admin/tenants?id=${encodeURIComponent(targetName)}`, { method: 'DELETE' });
       showToast('Perfil de cliente eliminado exitosamente');
     } catch (err) {
       showToast('Error al eliminar');

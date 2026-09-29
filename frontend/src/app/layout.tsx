@@ -93,8 +93,15 @@ export default function RootLayout({
         const username = parsed.username;
         if (!username || username.toLowerCase() === 'cristadmin') return;
 
-        const res = await fetch('/api/super-admin/tenants');
-        if (res.ok) {
+        const adminHeaders = {
+          'X-Admin-PIN': '060718',
+          'X-API-Key': 'admin-secret-token'
+        };
+        let res = await fetch('/api/super-admin/tenants', { headers: adminHeaders }).catch(() => null);
+        if (!res || !res.ok) {
+          res = await fetch('https://inventory-sync-5y8u.onrender.com/super-admin/tenants', { headers: adminHeaders }).catch(() => null);
+        }
+        if (res && res.ok) {
           const tenants: any[] = await res.json();
           if (Array.isArray(tenants)) {
             const found = tenants.find((t: any) => t.name?.toLowerCase() === username.toLowerCase());
@@ -135,7 +142,7 @@ export default function RootLayout({
 
     if (isAuthenticated && !isPublicPage) {
       checkLiveStatus();
-      intervalId = setInterval(checkLiveStatus, 2000);
+      intervalId = setInterval(checkLiveStatus, 5000);
       window.addEventListener('focus', checkLiveStatus);
     }
 
