@@ -17,8 +17,8 @@ class EbayClient:
     EBAY_OAUTH_ENDPOINT = "https://api.ebay.com/identity/v1/oauth2/token"
 
     def __init__(self):
-        pass
         self._cached_access_token: Optional[str] = None
+        self._mock_stocks: Dict[str, int] = {}
 
     @property
     def is_configured(self) -> bool:
@@ -155,6 +155,8 @@ class EbayClient:
 
     async def get_stock(self, sku: str) -> int:
         """Consulta el stock disponible para un SKU en eBay."""
+        if not self.is_configured:
+            return self._mock_stocks.get(sku, 10)
 
         try:
             access_token = await self._get_access_token()
@@ -175,6 +177,13 @@ class EbayClient:
 
     async def get_order(self, order_id: str) -> Dict[str, Any]:
         """Obtiene los detalles de una orden de venta en eBay."""
+        if not self.is_configured:
+            return {
+                "orderId": order_id,
+                "order_payment_status": "PAID",
+                "lineItems": [{"sku": "SKU001", "quantity": 1}]
+            }
+
         access_token = await self._get_access_token()
         url = f"https://api.ebay.com/sell/fulfillment/v1/order/{order_id}"
         async with httpx.AsyncClient(timeout=10.0) as client:

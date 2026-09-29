@@ -659,7 +659,7 @@ export default function SuperAdminPage() {
                       <tr key={t.id} className="hover:bg-slate-800/40 transition-colors">
                         <td className="px-6 py-4">
                           <p className="font-bold text-white">{t.name}</p>
-                          <p className="text-xs text-slate-400 font-mono">{t.owner} â€¢ {t.email}</p>
+                          <p className="text-xs text-slate-400 font-mono">{t.owner} • {t.email}</p>
                         </td>
                         <td className="px-6 py-4">
                           <span className="px-2.5 py-1 rounded-lg bg-indigo-950 text-indigo-300 border border-indigo-800 text-xs font-bold">

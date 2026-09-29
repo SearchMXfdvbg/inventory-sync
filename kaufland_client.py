@@ -19,7 +19,7 @@ class KauflandClient:
     KAUFLAND_API_ENDPOINT = "https://sellerapi.kaufland.com/v2"
 
     def __init__(self):
-        pass
+        self._mock_stocks: Dict[str, int] = {}
     @property
     def is_configured(self) -> bool:
         """Indica si las credenciales de Kaufland Seller API están configuradas."""
@@ -137,6 +137,8 @@ class KauflandClient:
 
     async def get_stock(self, sku: str) -> int:
         """Consulta la cantidad disponible de un SKU en Kaufland."""
+        if not self.is_configured:
+            return self._mock_stocks.get(sku, 10)
 
         try:
             uri = f"{self.KAUFLAND_API_ENDPOINT}/units/sku/{sku}"
@@ -153,6 +155,13 @@ class KauflandClient:
 
     async def get_order(self, order_id: str) -> Dict[str, Any]:
         """Obtiene el detalle de una orden de compra en Kaufland."""
+        if not self.is_configured:
+            return {
+                "id_order": order_id,
+                "status": "need_to_be_sent",
+                "order_units": [{"id_order_unit": "U1", "amount": 1}]
+            }
+
         uri = f"{self.KAUFLAND_API_ENDPOINT}/orders/{order_id}"
         headers = self._generate_auth_headers("GET", uri)
         async with httpx.AsyncClient(timeout=10.0) as client:

@@ -112,6 +112,18 @@ export default function IntegrationsSettingsPage() {
           secret_key: settings.KAUFLAND_SECRET_KEY,
           storefront: settings.KAUFLAND_STOREFRONT,
         };
+      } else if (channel === 'amazon') {
+        payload = {
+          seller_id: settings.AMAZON_SELLER_ID,
+          client_id: settings.AMAZON_CLIENT_ID,
+          refresh_token: settings.AMAZON_REFRESH_TOKEN,
+          marketplace_id: settings.AMAZON_MARKETPLACE_ID,
+        };
+      } else if (channel === 'tiktok') {
+        payload = {
+          app_key: settings.TIKTOK_APP_KEY,
+          access_token: settings.TIKTOK_ACCESS_TOKEN,
+        };
       }
       const res = await testConnection(channel, payload);
       setTestResults(prev => ({ ...prev, [channel]: res }));
@@ -656,6 +668,38 @@ export default function IntegrationsSettingsPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 dark:border-[#20242c] space-y-2">
+                <button
+                  type="button"
+                  onClick={() => handleTestConnection('amazon')}
+                  disabled={testingChannel === 'amazon'}
+                  className="w-full py-2 border border-slate-300 dark:border-[#20242c] bg-slate-100 dark:bg-[#14171e] hover:border-orange-500 font-bold text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                >
+                  {testingChannel === 'amazon' ? (
+                    <>
+                      <RefreshCw size={13} className="animate-spin text-orange-500" />
+                      <span>PROBANDO CONEXIÓN SP-API...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Activity size={13} className="text-orange-500" />
+                      <span>PROBAR CONEXIÓN EN VIVO</span>
+                    </>
+                  )}
+                </button>
+
+                {testResults['amazon'] && (
+                  <div className={`p-2 border text-xs flex items-start gap-2 ${
+                    testResults['amazon'].success 
+                      ? 'border-[#00ff66]/40 bg-[#00ff66]/10 text-[#008f39] dark:text-[#00ff66]' 
+                      : 'border-[#ff3b00]/40 bg-[#ff3b00]/10 text-[#ff3b00]'
+                  }`}>
+                    {testResults['amazon'].success ? <Check size={14} className="shrink-0 mt-0.5" /> : <AlertCircle size={14} className="shrink-0 mt-0.5" />}
+                    <span>{testResults['amazon'].message}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}

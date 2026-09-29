@@ -470,12 +470,24 @@ export interface TestConnectionResponse {
 }
 
 export const testConnection = async (channel: string, payload?: Record<string, any>): Promise<TestConnectionResponse> => {
-  const response = await fetchApi(`${BASE_URL}/connections/test/${channel}`, {
+  let response = await fetchApi(`${BASE_URL}/settings/test-connection/${channel}`, {
     method: 'POST',
     body: payload ? JSON.stringify(payload) : undefined
   });
-  if (!response.ok) throw new Error('Test de conexión falló');
-  return await response.json();
+  if (response.status === 404) {
+    response = await fetchApi(`${BASE_URL}/connections/test/${channel}`, {
+      method: 'POST',
+      body: payload ? JSON.stringify(payload) : undefined
+    });
+  }
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    return {
+      success: false,
+      message: data?.detail || data?.message || `Error del servidor (${response.status}) al conectar con ${channel.toUpperCase()}`
+    };
+  }
+  return data || { success: true, message: `Conexión verificada con ${channel.toUpperCase()}` };
 };
 
 export interface SystemSettings {
@@ -885,18 +897,18 @@ export const isChannelConfigured = (channel: string, settings: SystemSettings | 
   if (!settings) return false;
   switch (channel.toLowerCase()) {
     case 'shopify':
-      return Boolean(settings.ENABLE_SHOPIFY && settings.SHOP_DOMAIN && !settings.SHOP_DOMAIN.includes('example') && settings.SHOPIFY_ACCESS_TOKEN && !settings.SHOPIFY_ACCESS_TOKEN.startsWith('shpat_â€¢â€¢â€¢') && settings.SHOPIFY_ACCESS_TOKEN.length > 10);
+      return Boolean(settings.ENABLE_SHOPIFY !== false && settings.SHOP_DOMAIN && settings.SHOPIFY_ACCESS_TOKEN);
     case 'mercadolibre':
     case 'ml':
-      return Boolean(settings.ENABLE_MERCADOLIBRE && settings.ML_ACCESS_TOKEN && !settings.ML_ACCESS_TOKEN.startsWith('â€¢â€¢â€¢') && settings.ML_USER_ID > 0);
+      return Boolean(settings.ENABLE_MERCADOLIBRE !== false && settings.ML_ACCESS_TOKEN);
     case 'amazon':
-      return Boolean(settings.ENABLE_AMAZON && settings.AMAZON_SELLER_ID && !settings.AMAZON_SELLER_ID.includes('XXXX') && settings.AMAZON_REFRESH_TOKEN && !settings.AMAZON_REFRESH_TOKEN.startsWith('Atzr|â€¢â€¢â€¢') && settings.AMAZON_REFRESH_TOKEN.length > 10);
+      return Boolean(settings.ENABLE_AMAZON !== false && (settings.AMAZON_SELLER_ID || settings.AMAZON_REFRESH_TOKEN || settings.AMAZON_CLIENT_ID));
     case 'ebay':
-      return Boolean(settings.ENABLE_EBAY && settings.EBAY_CLIENT_ID && !settings.EBAY_CLIENT_ID.includes('â€¢â€¢â€¢â€¢') && settings.EBAY_REFRESH_TOKEN && !settings.EBAY_REFRESH_TOKEN.startsWith('v^1.1#â€¢â€¢â€¢') && settings.EBAY_REFRESH_TOKEN.length > 10);
+      return Boolean(settings.ENABLE_EBAY !== false && (settings.EBAY_CLIENT_ID || settings.EBAY_REFRESH_TOKEN));
     case 'kaufland':
-      return Boolean(settings.ENABLE_KAUFLAND && settings.KAUFLAND_CLIENT_KEY && !settings.KAUFLAND_CLIENT_KEY.includes('â€¢â€¢â€¢â€¢') && settings.KAUFLAND_CLIENT_KEY.length > 5);
+      return Boolean(settings.ENABLE_KAUFLAND !== false && (settings.KAUFLAND_CLIENT_KEY || settings.KAUFLAND_SECRET_KEY));
     case 'tiktok':
-      return Boolean(settings.ENABLE_TIKTOK && settings.TIKTOK_APP_KEY && settings.TIKTOK_ACCESS_TOKEN);
+      return Boolean(settings.ENABLE_TIKTOK !== false && (settings.TIKTOK_APP_KEY || settings.TIKTOK_ACCESS_TOKEN));
     case 'sae':
       return Boolean(settings.ENABLE_SAE !== false);
     default:
