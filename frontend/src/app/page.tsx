@@ -499,7 +499,7 @@ export default function LandingPage() {
             <div className="mt-8 p-4 bg-[#14171e] border border-[#20242c] flex items-center justify-between flex-wrap gap-4 font-mono-code text-xs">
               <div className="flex items-center gap-3">
                 <AlertTriangle className="w-5 h-5 text-[#ff3b00]" />
-                <span>Costo de suscripción: <strong>$197 MXN/mes</strong> vs Pérdida: <strong className="text-[#ff3b00]">${monthlyMoneyLoss.toLocaleString()} MXN</strong></span>
+                <span>Costo de suscripción: <strong>$299 MXN/mes</strong> (por apertura) vs Pérdida: <strong className="text-[#ff3b00]">${monthlyMoneyLoss.toLocaleString()} MXN</strong></span>
               </div>
               <Link
                 href="/register"
@@ -556,7 +556,12 @@ export default function LandingPage() {
                 </tr>
                 <tr>
                   <td className="p-4 font-semibold text-white">Costo por 10,000 Transacciones</td>
-                  <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">$197 MXN Tarifa Plana</td>
+                  <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">
+                    $299 MXN / mes
+                    <span className="block text-[11px] font-normal text-[#8e95a5] mt-0.5">
+                      <span className="line-through text-[#ff3b00]/80">$499 MXN</span> (precio real)
+                    </span>
+                  </td>
                   <td className="p-4 text-[#ff3b00]">$70+ USD (~$1,250 MXN)</td>
                   <td className="p-4 text-[#8e95a5]">$50+ USD/mes</td>
                 </tr>
@@ -669,17 +674,29 @@ Content-Type: application/json
 
           <div className="border-2 border-[#00ff66] bg-[#090a0c] p-8 sm:p-10 shadow-hard-accent relative">
             <div className="absolute -top-3.5 right-6 bg-[#00ff66] text-black font-mono-code font-bold text-[10px] px-3 py-1 uppercase tracking-widest">
-              PRODUCCIÓN COMPLETA
+              OFERTA DE APERTURA
             </div>
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-8 border-b border-[#20242c]">
               <div>
+                <div className="inline-block bg-[#00ff66]/10 text-[#00ff66] border border-[#00ff66]/30 text-[10px] font-bold px-2.5 py-0.5 uppercase tracking-widest font-mono-code mb-2">
+                  PRECIO POR APERTURA
+                </div>
                 <h3 className="text-2xl font-bold tracking-tight">Saga Core Engine</h3>
                 <p className="text-xs text-[#8e95a5] mt-1 font-mono-code">Sincronización continua Shopify &harr; Mercado Libre</p>
               </div>
               <div className="font-mono-code text-left md:text-right">
-                <div className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">$197 <span className="text-xs text-[#8e95a5] font-normal">MXN / mes</span></div>
-                <div className="text-[11px] text-[#00ff66] mt-1">Facturable con CFDI 4.0 al instante</div>
+                <div className="flex items-baseline gap-2 justify-start md:justify-end">
+                  <span className="text-4xl sm:text-5xl font-extrabold text-[#00ff66] tracking-tight">$299</span>
+                  <span className="text-xs text-[#8e95a5] font-normal">MXN / mes</span>
+                </div>
+                <div className="mt-1.5 flex items-center gap-2 justify-start md:justify-end text-xs font-mono-code">
+                  <span className="text-[#8e95a5]">Precio real:</span>
+                  <span className="line-through text-[#ff3b00] font-bold text-sm tracking-wide decoration-[#ff3b00] decoration-2">
+                    $499 MXN / mes
+                  </span>
+                </div>
+                <div className="text-[11px] text-[#00ff66] mt-1.5">Facturable con CFDI 4.0 al instante</div>
               </div>
             </div>
 
