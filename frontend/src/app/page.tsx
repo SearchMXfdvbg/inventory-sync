@@ -41,14 +41,14 @@ export default function LandingPage() {
       time: '00:00.012',
       channel: 'SAGA_CORE',
       type: 'INFO',
-      text: 'Orchestrator online. Redis CAS Mutex activo sobre SKU: SKU-PRO-4090.'
+      text: 'Redis listo en 18ms. Cuidando stock del SKU: SKU-PRO-4090.'
     },
     {
       id: 'init-2',
       time: '00:00.015',
       channel: 'SAGA_CORE',
       type: 'INFO',
-      text: 'DB Lock Serializer: SQLite WAL / PostgreSQL (Row-level) en sincronía con Almacén Central.'
+      text: 'Inventario asegurado. Esperando ventas en Shopify y Mercado Libre.'
     }
   ]);
 
@@ -106,7 +106,7 @@ export default function LandingPage() {
         time: now(),
         channel: 'SAGA_CORE',
         type: 'ALERT',
-        text: 'EVENTO: Dos compras entran simultáneamente en Shopify y Mercado Libre con stock físico = 1 (Δt = 12ms).'
+        text: 'ALERTA: Entran dos compras al mismo segundo y solo queda 1 pieza física.'
       }
     ]);
 
@@ -118,14 +118,14 @@ export default function LandingPage() {
           time: now(),
           channel: 'SHOPIFY',
           type: 'INFO',
-          text: 'Webhook Shopify: Ingesta Order #9812 por $1,299 MXN (1x SKU-PRO-4090).'
+          text: 'Shopify: Cayó compra Order #9812 por $1,299 MXN (1x SKU-PRO-4090).'
         },
         {
           id: `sim-${Date.now()}-2`,
           time: now(),
           channel: 'MERCADOLIBRE',
           type: 'INFO',
-          text: 'Webhook Mercado Libre: Ingesta Pack #20000084 por $1,299 MXN (1x SKU-PRO-4090).'
+          text: 'Mercado Libre: Al mismo instante cayó compra Pack #20000084 por $1,299 MXN.'
         }
       ]);
     }, 280);
@@ -138,7 +138,7 @@ export default function LandingPage() {
           time: now(),
           channel: 'SAGA_CORE',
           type: 'LOCK',
-          text: 'ATOMIC CAS LOCK: Shopify obtiene lock de memoria (Redis key lock:sku:SKU-PRO-4090). ML entra a cola de espera.'
+          text: 'MUTEX EN REDIS: Shopify apartó la última pieza en 18ms. Mercado Libre entra a fila.'
         }
       ]);
     }, 550);
@@ -152,7 +152,7 @@ export default function LandingPage() {
           time: now(),
           channel: 'SAGA_CORE',
           type: 'SYNC',
-          text: 'Stock decrece: 1 -> 0. Transacción confirmada en SQLite WAL / Postgres. Notificando a Mercado Libre PUT /items/MLM9918.'
+          text: 'STOCK ACTUALIZADO: Quedan 0 piezas. Avisando a Mercado Libre para pausar.'
         }
       ]);
     }, 850);
@@ -165,14 +165,14 @@ export default function LandingPage() {
           time: now(),
           channel: 'MERCADOLIBRE',
           type: 'REJECT',
-          text: 'COMPROBACIÓN ATÓMICA: La transacción en espera de ML lee stock = 0 antes de comprometer inventario.'
+          text: 'REVISIÓN DE PIEZAS: Mercado Libre ve stock = 0 antes de confirmar.'
         },
         {
           id: `sim-${Date.now()}-6`,
           time: now(),
           channel: 'SAGA_CORE',
           type: 'ALERT',
-          text: 'COMPENSACIÓN SAGA: Se cancela la orden excedente automáticamente. Cero sobreventas, reputación verde intacta.'
+          text: 'SAGA: Cancela la compra sin stock al instante. Cero ventas dobles, reputación verde intacta.'
         }
       ]);
       setIsSimulating(false);
@@ -188,12 +188,12 @@ export default function LandingPage() {
         time: '00:00.000',
         channel: 'SAGA_CORE',
         type: 'INFO',
-        text: 'Estado restablecido: SKU-PRO-4090 con stock = 1.'
+        text: 'Listo de nuevo: SKU-PRO-4090 con 1 pieza en stock.'
       }
     ]);
   };
 
-  // Cálculos de sangrado financiero
+  // Cálculos de pérdidas por vender sin stock
   const oversellRate = 0.018;
   const oversoldOrders = Math.round(monthlyOrders * oversellRate);
   const cancelPenaltyPerOrder = averageTicket * 0.15 + 120;
@@ -211,15 +211,15 @@ export default function LandingPage() {
             </div>
             <div>
               <span className="font-bold tracking-tight text-lg block leading-none">INVENTORY_SYNC</span>
-              <span className="font-mono-code text-[10px] text-[#8e95a5] tracking-widest uppercase">Distributed Saga Core</span>
+              <span className="font-mono-code text-[10px] text-[#8e95a5] tracking-widest uppercase">Sync en 18ms con Redis</span>
             </div>
           </div>
 
           <div className="hidden md:flex items-center gap-8 font-mono-code text-xs text-[#8e95a5]">
-            <a href="#simulador" className="hover:text-white transition-colors">01. PRUEBA_COLISIÓN</a>
-            <a href="#arquitectura" className="hover:text-white transition-colors">02. ARQUITECTURA_SAGA</a>
-            <a href="#calculadora" className="hover:text-white transition-colors">03. IMPACTO_FINANCIERO</a>
-            <a href="#benchmark" className="hover:text-white transition-colors">04. BENCHMARK</a>
+            <a href="#simulador" className="hover:text-white transition-colors">01. VENTA_DOBLE</a>
+            <a href="#arquitectura" className="hover:text-white transition-colors">02. CÓMO_FUNCIONA</a>
+            <a href="#calculadora" className="hover:text-white transition-colors">03. CUÁNTO_PIERDES</a>
+            <a href="#benchmark" className="hover:text-white transition-colors">04. VS_ZAPIER</a>
             <a href="#pricing" className="hover:text-white transition-colors">05. PRECIO</a>
           </div>
 
@@ -247,7 +247,7 @@ export default function LandingPage() {
           <div className="lg:col-span-7 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#13161c] border border-[#20242c] font-mono-code text-xs text-[#00ff66]">
               <Cpu className="w-3.5 h-3.5" />
-              SISTEMA DE SINCRONIZACIÓN DE STOCK EN TIEMPO REAL
+              SINCRONIZACIÓN DE STOCK EN 18MS
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05]">
@@ -262,27 +262,31 @@ export default function LandingPage() {
               .
             </h1>
 
-            <p className="text-lg text-[#a1a7b5] leading-relaxed max-w-2xl font-light">
-              Los webhooks sin buffer fallan bajo picos de tráfico. Nuestro motor desacoplado utiliza el patrón
-              <strong className="text-white font-medium"> Saga con Mutex Distribuido</strong> para bloquear y decrementar existencias en Shopify y Mercado Libre con latencia de 18ms.
-            </p>
+            <div className="space-y-2">
+              <p className="text-lg text-[#a1a7b5] leading-relaxed max-w-2xl font-light">
+                Si te queda una pieza y compran al mismo tiempo, te tumban la cuenta.
+              </p>
+              <p className="text-base text-[#8e95a5] leading-relaxed max-w-2xl font-light">
+                Con Mutex en Redis y Saga apartamos tu stock en 18ms para no vender doble.
+              </p>
+            </div>
 
             {/* Quick Metrics Strip */}
             <div className="grid grid-cols-3 gap-3 pt-4 font-mono-code">
               <div className="border border-[#20242c] bg-[#0e1015] p-3 shadow-hard">
-                <div className="text-[10px] text-[#8e95a5] uppercase">VENTAS DUPLICADAS</div>
+                <div className="text-[10px] text-[#8e95a5] uppercase">VENTAS DOBLES</div>
                 <div className="text-2xl font-bold text-[#00ff66] mt-1">0.00%</div>
-                <div className="text-[10px] text-[#555d6e]">Garantía estricta CAS</div>
+                <div className="text-[10px] text-[#555d6e]">Apartado real con Mutex</div>
               </div>
               <div className="border border-[#20242c] bg-[#0e1015] p-3 shadow-hard">
-                <div className="text-[10px] text-[#8e95a5] uppercase">LATENCIA TRANSACCIÓN</div>
-                <div className="text-2xl font-bold text-white mt-1">&lt; 25ms</div>
-                <div className="text-[10px] text-[#555d6e]">In-Memory Redis Lock</div>
+                <div className="text-[10px] text-[#8e95a5] uppercase">TIEMPO DE RESPUESTA</div>
+                <div className="text-2xl font-bold text-white mt-1">&lt; 18ms</div>
+                <div className="text-[10px] text-[#555d6e]">En memoria con Redis</div>
               </div>
               <div className="border border-[#20242c] bg-[#0e1015] p-3 shadow-hard">
-                <div className="text-[10px] text-[#8e95a5] uppercase">REINTENTOS EXPONENCIALES</div>
+                <div className="text-[10px] text-[#8e95a5] uppercase">SI SE CAE EL CANAL</div>
                 <div className="text-2xl font-bold text-white mt-1">5s Max</div>
-                <div className="text-[10px] text-[#555d6e]">Dead-Letter Auto Healing</div>
+                <div className="text-[10px] text-[#555d6e]">Reintenta sin trabarse</div>
               </div>
             </div>
 
@@ -299,7 +303,7 @@ export default function LandingPage() {
                 className="bg-[#12141a] hover:bg-[#1a1e27] text-[#ededed] font-mono-code text-xs px-5 py-3.5 border border-[#20242c] flex items-center gap-2"
               >
                 <Play className="w-3.5 h-3.5 text-[#00ff66]" />
-                VER PRUEBA DE COLISIÓN
+                VER PRUEBA EN VIVO
               </a>
             </div>
           </div>
@@ -309,7 +313,7 @@ export default function LandingPage() {
             <div className="border-b border-[#20242c] bg-[#14171e] px-4 py-2.5 flex items-center justify-between">
               <div className="flex items-center gap-2 font-mono-code text-xs text-[#8e95a5]">
                 <Terminal className="w-3.5 h-3.5 text-[#00ff66]" />
-                <span>worker.py --benchmark-race-condition</span>
+                <span>simulador-venta-doble.sh</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-mono-code text-[#00ff66]">STOCK: {stock}</span>
@@ -356,7 +360,7 @@ export default function LandingPage() {
                 className="bg-[#00ff66] disabled:opacity-50 hover:bg-[#00d957] text-black font-mono-code font-bold text-xs px-4 py-2 flex items-center gap-2 transition-all shadow-hard"
               >
                 <Play className="w-3.5 h-3.5" />
-                {isSimulating ? 'EVALUANDO LOCK...' : 'PROBAR COLISIÓN (VENTA DOBLE)'}
+                {isSimulating ? 'APARTANDO PIEZA EN REDIS...' : 'SIMULAR VENTA DOBLE'}
               </button>
               <button
                 onClick={resetSimulation}
@@ -375,12 +379,12 @@ export default function LandingPage() {
       <section id="arquitectura" className="px-6 py-20 border-b border-[#20242c] bg-[#0c0d11]">
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="space-y-3">
-            <span className="font-mono-code text-xs text-[#00ff66] tracking-widest uppercase">// Arquitectura de Resiliencia</span>
+            <span className="font-mono-code text-xs text-[#00ff66] tracking-widest uppercase">// CÓMO EVITAMOS QUE VENDAS DOBLE</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Cómo eliminamos la condición de carrera en 4 fases
+              Así evitamos que vendas lo que ya no tienes
             </h2>
             <p className="text-[#8e95a5] max-w-2xl text-sm">
-              No hacemos peticiones HTTP directas ni usamos automatizadores genéricos. Cada mutación pasa por una máquina de estados distribuida.
+              No usamos Zapier ni truquitos que se traban. Cuidamos cada pieza con Redis y Saga paso a paso.
             </p>
           </div>
 
@@ -389,9 +393,9 @@ export default function LandingPage() {
               <div className="w-8 h-8 bg-[#14171e] border border-[#20242c] flex items-center justify-center font-mono-code text-xs text-[#00ff66] font-bold">
                 01
               </div>
-              <h3 className="text-base font-bold tracking-tight">Ingesta Asíncrona (Buffer)</h3>
+              <h3 className="text-base font-bold tracking-tight">Recibe la venta en 5ms</h3>
               <p className="text-xs text-[#8e95a5] leading-relaxed">
-                El webhook entrante responde HTTP 200 en &lt;5ms y deposita el evento en una cola en memoria Redis Streams, absorbiendo picos sin degradar la tienda.
+                En cuanto alguien compra en tu tienda, Redis guarda el pedido de inmediato para que tu página nunca se alente ni se caiga en Hot Sale.
               </p>
             </div>
 
@@ -399,9 +403,9 @@ export default function LandingPage() {
               <div className="w-8 h-8 bg-[#14171e] border border-[#20242c] flex items-center justify-center font-mono-code text-xs text-[#00ff66] font-bold">
                 02
               </div>
-              <h3 className="text-base font-bold tracking-tight">Mutex Distribuido CAS</h3>
+              <h3 className="text-base font-bold tracking-tight">Aparta la pieza con Mutex</h3>
               <p className="text-xs text-[#8e95a5] leading-relaxed">
-                Bloqueo Compare-And-Swap por SKU. Si dos ventas ocurren en el mismo milisegundo, la segunda espera la resolución del lock o ejecuta compensación.
+                Si dos clientes compran la última pieza al mismo milisegundo, Mutex bloquea el SKU en Redis en 18ms. Uno se la lleva y el otro no te tumba la cuenta.
               </p>
             </div>
 
@@ -409,9 +413,9 @@ export default function LandingPage() {
               <div className="w-8 h-8 bg-[#14171e] border border-[#20242c] flex items-center justify-center font-mono-code text-xs text-[#00ff66] font-bold">
                 03
               </div>
-              <h3 className="text-base font-bold tracking-tight">Mutación Absoluta y Relativa</h3>
+              <h3 className="text-base font-bold tracking-tight">Ajusta el stock real</h3>
               <p className="text-xs text-[#8e95a5] leading-relaxed">
-                No confiamos en la aritmética del canal. Calculamos el delta real y ejecutamos una sincronización de inventario absoluto contra Mercado Libre y Shopify.
+                No le creemos a las sumas que hacen las plataformas. Ponemos las piezas exactas en Mercado Libre y Shopify para que no haya descuadres.
               </p>
             </div>
 
@@ -419,9 +423,9 @@ export default function LandingPage() {
               <div className="w-8 h-8 bg-[#14171e] border border-[#20242c] flex items-center justify-center font-mono-code text-xs text-[#00ff66] font-bold">
                 04
               </div>
-              <h3 className="text-base font-bold tracking-tight">Backoff Progresivo (5s)</h3>
+              <h3 className="text-base font-bold tracking-tight">Si el canal se traba, no se pierde nada</h3>
               <p className="text-xs text-[#8e95a5] leading-relaxed">
-                Si la API de Mercado Libre devuelve error 429 (Rate Limit) o 503, el worker reintenta a intervalos calculados sin duplicar la deducción del stock.
+                Si Mercado Libre se satura o tira error 429, Saga reintenta solo en 5 segundos sin duplicar piezas ni dejar colgado tu inventario.
               </p>
             </div>
           </div>
@@ -432,19 +436,19 @@ export default function LandingPage() {
       <section id="calculadora" className="px-6 py-20 border-b border-[#20242c]">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-5 space-y-6">
-            <span className="font-mono-code text-xs text-[#ff3b00] tracking-widest uppercase">// Calculadora de Sangrado Financiero</span>
+            <span className="font-mono-code text-xs text-[#ff3b00] tracking-widest uppercase">// CALCULADORA DE MULTAS Y CANCELACIONES</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              ¿Cuánto te cuesta vender sin atomicidad?
+              ¿Cuánto dinero pierdes por vender sin stock?
             </h2>
             <p className="text-sm text-[#8e95a5] leading-relaxed">
-              Mercado Libre penaliza cancelaciones por falta de stock con hasta el 15% del valor de venta, además de degradar tu medalla a naranja o roja, hundiendo tu visibilidad orgánica.
+              Mercado Libre te cobra hasta el 15% de multa por cancelar ventas sin piezas. Peor aún: te bajan a reputación naranja o roja y dejan de mostrar tus publicaciones.
             </p>
 
             <div className="space-y-5 pt-2">
               <div>
                 <div className="flex justify-between text-xs font-mono-code mb-2">
-                  <span className="text-[#8e95a5]">ÓRDENES MENSUALES TOTALES:</span>
-                  <span className="text-white font-bold">{monthlyOrders.toLocaleString()} pedidos</span>
+                  <span className="text-[#8e95a5]">VENTAS TOTALES AL MES:</span>
+                  <span className="text-white font-bold">{monthlyOrders.toLocaleString()} ventas</span>
                 </div>
                 <input
                   type="range"
@@ -459,7 +463,7 @@ export default function LandingPage() {
 
               <div>
                 <div className="flex justify-between text-xs font-mono-code mb-2">
-                  <span className="text-[#8e95a5]">TICKET PROMEDIO POR PRODUCTO:</span>
+                  <span className="text-[#8e95a5]">PRECIO PROMEDIO POR PRODUCTO:</span>
                   <span className="text-white font-bold">${averageTicket} MXN</span>
                 </div>
                 <input
@@ -478,34 +482,34 @@ export default function LandingPage() {
           <div className="lg:col-span-7 border border-[#20242c] bg-[#0e1015] p-8 shadow-hard">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 font-mono-code">
               <div className="border-b sm:border-b-0 sm:border-r border-[#20242c] pb-4 sm:pb-0 sm:pr-4">
-                <div className="text-[10px] text-[#ff3b00] uppercase font-bold">SOBREVENTAS ESTIMADAS</div>
+                <div className="text-[10px] text-[#ff3b00] uppercase font-bold">VENTAS DOBLES AL MES</div>
                 <div className="text-3xl font-extrabold text-white mt-2">~{oversoldOrders}</div>
-                <div className="text-[10px] text-[#555d6e] mt-1">Concurrencias no resueltas/mes</div>
+                <div className="text-[10px] text-[#555d6e] mt-1">Pedidos sin piezas reales</div>
               </div>
 
               <div className="border-b sm:border-b-0 sm:border-r border-[#20242c] pb-4 sm:pb-0 sm:pr-4">
-                <div className="text-[10px] text-[#ff3b00] uppercase font-bold">PÉRDIDA DIRECTA EN MULTAS</div>
+                <div className="text-[10px] text-[#ff3b00] uppercase font-bold">DINERO TIRADO EN MULTAS</div>
                 <div className="text-3xl font-extrabold text-[#ff3b00] mt-2">${monthlyMoneyLoss.toLocaleString()}</div>
-                <div className="text-[10px] text-[#555d6e] mt-1">MXN tirados a la basura/mes</div>
+                <div className="text-[10px] text-[#555d6e] mt-1">MXN perdidos al mes</div>
               </div>
 
               <div>
-                <div className="text-[10px] text-[#8e95a5] uppercase font-bold">HORAS EN DISPUTAS</div>
+                <div className="text-[10px] text-[#8e95a5] uppercase font-bold">HORAS ACLARANDO BRONCAS</div>
                 <div className="text-3xl font-extrabold text-white mt-2">{reputationRiskHours} hrs</div>
-                <div className="text-[10px] text-[#555d6e] mt-1">Tiempo de soporte desperdiciado</div>
+                <div className="text-[10px] text-[#555d6e] mt-1">Peleando con soporte y clientes</div>
               </div>
             </div>
 
             <div className="mt-8 p-4 bg-[#14171e] border border-[#20242c] flex items-center justify-between flex-wrap gap-4 font-mono-code text-xs">
               <div className="flex items-center gap-3">
                 <AlertTriangle className="w-5 h-5 text-[#ff3b00]" />
-                <span>Costo de suscripción: <strong>$299 MXN/mes</strong> (por apertura) vs Pérdida: <strong className="text-[#ff3b00]">${monthlyMoneyLoss.toLocaleString()} MXN</strong></span>
+                <span>Por solo <strong>$299 MXN/mes</strong> (válido 6 meses) evitas tirar <strong className="text-[#ff3b00]">${monthlyMoneyLoss.toLocaleString()} MXN</strong> en multas.</span>
               </div>
               <Link
                 href="/register"
                 className="bg-[#00ff66] hover:bg-[#00e65c] text-black font-bold px-4 py-2 shadow-hard"
               >
-                PROTEGER MI CUENTA
+                SALVAR MI REPUTACIÓN
               </Link>
             </div>
           </div>
@@ -516,12 +520,12 @@ export default function LandingPage() {
       <section id="benchmark" className="px-6 py-20 border-b border-[#20242c] bg-[#0c0d11]">
         <div className="max-w-7xl mx-auto space-y-10">
           <div className="space-y-3">
-            <span className="font-mono-code text-xs text-[#00ff66] tracking-widest uppercase">// Benchmark Técnico</span>
+            <span className="font-mono-code text-xs text-[#00ff66] tracking-widest uppercase">// COMPARATIVA REAL</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Saga Engine vs Automatizadores Genéricos
+              Por qué Zapier y Make te van a fallar
             </h2>
             <p className="text-[#8e95a5] text-sm">
-              Zapier y Make fueron diseñados para transferir contactos de CRM, no para resolver atomicidad de inventario e-commerce.
+              Zapier y Make se inventaron para mover correos de Excel a Gmail, no para cuidar stock en tiempo real cuando caen ventas al mismo segundo.
             </p>
           </div>
 
@@ -530,32 +534,32 @@ export default function LandingPage() {
               <thead className="bg-[#14171e] border-b border-[#20242c] text-[#8e95a5]">
                 <tr>
                   <th className="p-4">CAPACIDAD TÉCNICA</th>
-                  <th className="p-4 text-[#00ff66] bg-[#00ff66]/5">INVENTORY_SYNC SAGA</th>
+                  <th className="p-4 text-[#00ff66] bg-[#00ff66]/5">INVENTORY_SYNC (SAGA)</th>
                   <th className="p-4">ZAPIER / MAKE</th>
-                  <th className="p-4">PLUGINS DE TERCEROS</th>
+                  <th className="p-4">PLUGINS TÍPICOS</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#20242c] bg-[#090a0c]">
                 <tr>
-                  <td className="p-4 font-semibold text-white">Manejo de Concurrencia (Race Conditions)</td>
-                  <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">CAS Mutex en Redis (&lt;20ms)</td>
-                  <td className="p-4 text-[#ff3b00]">Nulo (Sobrevende ambas tiendas)</td>
-                  <td className="p-4 text-[#8e95a5]">Cron job (Retraso de 15 a 60 min)</td>
+                  <td className="p-4 font-semibold text-white">Si caen 2 compras al mismo segundo</td>
+                  <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">Mutex en Redis (&lt;18ms) — Una pasa, la otra no vende doble</td>
+                  <td className="p-4 text-[#ff3b00]">Vendes doble y te cae reclamo en ML</td>
+                  <td className="p-4 text-[#8e95a5]">Tardan de 15 a 60 min en enterarse</td>
                 </tr>
                 <tr>
-                  <td className="p-4 font-semibold text-white">Rate Limit Handling (429 Too Many Requests)</td>
-                  <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">Reintento progresivo 5s con Jitter</td>
-                  <td className="p-4 text-[#ff3b00]">Falla el Zap y cobra la tarea</td>
-                  <td className="p-4 text-[#8e95a5]">Cuelga el servidor de la tienda</td>
+                  <td className="p-4 font-semibold text-white">Si Mercado Libre se frena (Error 429)</td>
+                  <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">Reintenta solo cada 5s con Saga sin trabarse</td>
+                  <td className="p-4 text-[#ff3b00]">Falla la tarea, te la cobran y no actualiza</td>
+                  <td className="p-4 text-[#8e95a5]">Tumba el servidor de tu tienda</td>
                 </tr>
                 <tr>
-                  <td className="p-4 font-semibold text-white">Sincronización Bidireccional</td>
-                  <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">Simétrica (Shopify &harr; ML)</td>
-                  <td className="p-4 text-[#8e95a5]">Loop infinito si no se filtra manual</td>
-                  <td className="p-4 text-[#8e95a5]">Unidireccional en planes base</td>
+                  <td className="p-4 font-semibold text-white">Sincronización de ida y vuelta</td>
+                  <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">Shopify &harr; Mercado Libre al tiro</td>
+                  <td className="p-4 text-[#8e95a5]">Se cicla en loop infinito si no le sabes mover</td>
+                  <td className="p-4 text-[#8e95a5]">Solo manda de un lado al otro</td>
                 </tr>
                 <tr>
-                  <td className="p-4 font-semibold text-white">Costo por 10,000 Transacciones</td>
+                  <td className="p-4 font-semibold text-white">Costo mensual aproximado</td>
                   <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">
                     $299 MXN / mes
                     <span className="block text-[11px] font-normal text-[#8e95a5] mt-0.5">
@@ -576,8 +580,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-2">
-              <span className="font-mono-code text-xs text-[#00ff66] tracking-widest uppercase">// Esquemas de Transacción</span>
-              <h2 className="text-3xl font-bold tracking-tight">Inspección de Carga Útil en Memoria</h2>
+              <span className="font-mono-code text-xs text-[#00ff66] tracking-widest uppercase">// CÓMO VIAJAN TUS DATOS</span>
+              <h2 className="text-3xl font-bold tracking-tight">Así se cuida cada pedido por dentro</h2>
             </div>
             <div className="flex border border-[#20242c] font-mono-code text-xs bg-[#0e1015]">
               <button
@@ -590,13 +594,13 @@ export default function LandingPage() {
                 onClick={() => setActiveSchemaTab('mercadolibre')}
                 className={`px-4 py-2 border-l border-[#20242c] ${activeSchemaTab === 'mercadolibre' ? 'bg-[#20242c] text-[#00ff66]' : 'text-[#8e95a5]'}`}
               >
-                ML_MUTATION
+                MERCADOLIBRE_PUT
               </button>
               <button
                 onClick={() => setActiveSchemaTab('compensate')}
                 className={`px-4 py-2 border-l border-[#20242c] ${activeSchemaTab === 'compensate' ? 'bg-[#20242c] text-[#00ff66]' : 'text-[#8e95a5]'}`}
               >
-                COMPENSATION_EVENT
+                CANCELACION_AUTOMATICA
               </button>
             </div>
           </div>
@@ -667,9 +671,9 @@ Content-Type: application/json
       <section id="pricing" className="px-6 py-20 border-b border-[#20242c] bg-[#0c0d11]">
         <div className="max-w-4xl mx-auto space-y-12">
           <div className="text-center space-y-3">
-            <span className="font-mono-code text-xs text-[#00ff66] tracking-widest uppercase">// Tarifa de Producción</span>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Un solo plan. Sin comisiones sorpresa.</h2>
-            <p className="text-sm text-[#8e95a5]">Sin límites artificiales de SKUs, sin cobrar porcentaje de tus ventas.</p>
+            <span className="font-mono-code text-xs text-[#00ff66] tracking-widest uppercase">// PRECIO TRANSPARENTE</span>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Un solo precio. Sin letras chiquitas ni comisiones por venta.</h2>
+            <p className="text-sm text-[#8e95a5]">Conecta todos los productos que tengas. No te quitamos ni un centavo de tus ganancias.</p>
           </div>
 
           <div className="border-2 border-[#00ff66] bg-[#090a0c] p-8 sm:p-10 shadow-hard-accent relative">
@@ -687,8 +691,8 @@ Content-Type: application/json
                     • Válido por los primeros 6 meses
                   </span>
                 </div>
-                <h3 className="text-2xl font-bold tracking-tight">Saga Core Engine</h3>
-                <p className="text-xs text-[#8e95a5] mt-1 font-mono-code">Sincronización continua Shopify &harr; Mercado Libre</p>
+                <h3 className="text-2xl font-bold tracking-tight">Plan Todo Incluido</h3>
+                <p className="text-xs text-[#8e95a5] mt-1 font-mono-code">Stock sincronizado en 18ms entre Shopify y Mercado Libre</p>
               </div>
               <div className="font-mono-code text-left md:text-right">
                 <div className="flex items-baseline gap-2 justify-start md:justify-end">
@@ -711,27 +715,27 @@ Content-Type: application/json
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-8 font-mono-code text-xs">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#00ff66] shrink-0" />
-                <span>SKUs ilimitados en ambas plataformas</span>
+                <span>SKUs y productos ilimitados</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#00ff66] shrink-0" />
-                <span>Mutex CAS anti-sobreventa (&lt;20ms)</span>
+                <span>Mutex en Redis: cero ventas dobles (&lt;18ms)</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#00ff66] shrink-0" />
-                <span>Reintentos automáticos progresivos (5s)</span>
+                <span>Reintentos automáticos si la plataforma se traba</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#00ff66] shrink-0" />
-                <span>Detección automática de Catálogo & CSV/Excel</span>
+                <span>Carga masiva por Excel / CSV con detección automática</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#00ff66] shrink-0" />
-                <span>Panel de conciliación de discrepancias</span>
+                <span>Panel para ver si hay diferencias de stock</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#00ff66] shrink-0" />
-                <span>Soporte directo vía tickets de ingeniería</span>
+                <span>Soporte directo por tickets con ingenieros</span>
               </div>
             </div>
 
@@ -740,7 +744,7 @@ Content-Type: application/json
                 href="/register"
                 className="w-full sm:w-auto flex-1 bg-[#00ff66] hover:bg-[#00d957] text-black font-mono-code font-bold text-sm py-4 px-8 text-center shadow-hard flex items-center justify-center gap-2"
               >
-                COMENZAR PRUEBA DE 14 DÍAS SIN RIESGO
+                PROBAR 14 DÍAS GRATIS SIN RIESGO
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
@@ -760,7 +764,7 @@ Content-Type: application/json
           <div className="flex items-center gap-3 text-[#ededed]">
             <span className="font-bold">// INVENTORY_SYNC</span>
             <span className="text-[#3a3f4d]">|</span>
-            <span className="text-[#8e95a5]">Arquitectura de sincronización distribuida para comercio electrónico</span>
+            <span className="text-[#8e95a5]">Sincronización de stock en 18ms para que nunca vendas doble.</span>
           </div>
 
           <div className="flex items-center gap-6">
