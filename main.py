@@ -1554,4 +1554,152 @@ async def bulk_update_catalog(payload: BulkCatalogUpdateRequest, current_user: d
     )
 
 
+# === RUTAS DE SUPER ADMINISTRADOR ===
 
+@app.get("/super-admin/tenants", dependencies=[Depends(verify_admin_auth)])
+def get_tenants(db: Session = Depends(get_db)):
+    """
+    Endpoint GET para obtener todos los tenants (clientes).
+    Requiere autenticación de administrador.
+    """
+    try:
+        # Obtener todos los usuarios con sus configuraciones
+        users = db.query(User).all()
+        tenants_data = []
+        
+        for user in users:
+            settings = db.query(TenantSettings).filter(TenantSettings.user_id == user.id).first()
+            products_count = db.query(TenantProduct).filter(TenantProduct.user_id == user.id).count()
+            sales_count = db.query(Venta).filter(Venta.user_id == user.id).count()
+            
+            tenant_info = {
+                "id": user.id,
+                "name": user.username,
+                "email": user.email,
+                "plan": settings.inventario_principal if settings else "Basic",
+                "status": "active" if user.is_active else "suspended",
+                "createdAt": user.created_at.isoformat() if user.created_at else None,
+                "lastSync": settings.updated_at.isoformat() if settings and settings.updated_at else None,
+                "productsCount": products_count,
+                "salesCount": sales_count
+            }
+            tenants_data.append(tenant_info)
+        
+        return tenants_data
+    except Exception as e:
+        logger.error(f"[SUPER_ADMIN:TENANTS] Error obteniendo tenants: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/super-admin/tenants", dependencies=[Depends(verify_admin_auth)])
+def create_tenant(payload: dict, db: Session = Depends(get_db)):
+    """
+    Endpoint POST para crear un nuevo tenant (cliente).
+    Requiere autenticación de administrador.
+    """
+    try:
+        # Crear nuevo usuario
+        new_user = User(
+            username=payload.get("name", ""),
+            email=payload.get("email", ""),
+            hashed_password="",  # En producción se debería hashear una contraseña
+            role="user",
+            tenant_id=f"tenant-{int(time.time())}",
+            is_active=True,
+            email_verified=True
+        )
+        db.add(new_user)
+        db.flush()  # Para obtener el ID del nuevo usuario
+        
+        # Crear configuración del tenant
+        new_settings = TenantSettings(
+            user_id=new_user.id,
+            tenant_id=new_user.tenant_id,
+            inventario_principal=payload.get("plan", "Basic").lower()
+        )
+        db.add(new_settings)
+        db.commit()
+        
+        return {"message": "Tenant creado exitosamente", "id": new_user.id}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[SUPER_ADMIN:TENANTS] Error creando tenant: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/super-admin/tenants/{tenant_id}", dependencies=[Depends(verify_admin_auth)])
+def update_tenant(tenant_id: int, payload: dict, db: Session = Depends(get_db)):
+    """
+    Endpoint PUT para actualizar un tenant (cliente).
+    Requiere autenticación de administrador.
+    """
+    try:
+        # Actualizar usuario
+        user = db.query(User).filter(User.id == tenant_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+        user.username = payload.get("name", user.username)
+        user.email = payload.get("email", user.email)
+        user.is_active = payload.get("is_active", user.is_active)
+        
+        # Actualizar configuración del tenant
+        settings = db.query(TenantSettings).filter(TenantSettings.user_id == tenant_id).first()
+        if settings:
+            settings.inventario_principal = payload.get("plan", settings.inventario_principal)
+        else:
+            # Crear configuración si no existe
+            new_settings = TenantSettings(
+                user_id=tenant_id,
+                tenant_id=user.tenant_id,
+                inventario_principal=payload.get("plan", "Basic").lower()
+            )
+            db.add(new_settings)
+        
+        db.commit()
+        return {"message": "Tenant actualizado exitosamente"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[SUPER_ADMIN:TENANTS] Error actualizando tenant: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/super-admin/tenants/{tenant_id}", dependencies=[Depends(verify_admin_auth)])
+def delete_tenant(tenant_id: int, db: Session = Depends(get_db)):
+    """
+    Endpoint DELETE para eliminar un tenant (cliente).
+    Requiere autenticación de administrador.
+    """
+    try:
+        # Eliminar configuración del tenant
+        settings = db.query(TenantSettings).filter(TenantSettings.user_id == tenant_id).first()
+        if settings:
+            db.delete(settings)
+        
+        # Eliminar productos del tenant
+        products = db.query(TenantProduct).filter(TenantProduct.user_id == tenant_id).all()
+        for product in products:
+            db.delete(product)
+        
+        # Eliminar ventas del tenant
+        sales = db.query(Venta).filter(Venta.user_id == tenant_id).all()
+        for sale in sales:
+            db.delete(sale)
+        
+        # Eliminar usuario
+        user = db.query(User).filter(User.id == tenant_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+        db.delete(user)
+        db.commit()
+        
+        return {"message": "Tenant eliminado exitosamente"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[SUPER_ADMIN:TENANTS] Error eliminando tenant: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

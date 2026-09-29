@@ -89,183 +89,196 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-6 sm:p-10 relative overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute -top-32 -left-32 w-96 h-96 rounded-full blur-3xl opacity-20 ${isSuspended ? 'bg-red-600' : 'bg-amber-500'}`} />
-        <div className={`absolute -bottom-32 -right-32 w-96 h-96 rounded-full blur-3xl opacity-20 ${isSuspended ? 'bg-orange-600' : 'bg-blue-600'}`} />
-      </div>
-
+    <div className="min-h-screen bg-[#090a0c] text-[#ededed] bg-grid-tech flex flex-col justify-between p-4 sm:p-8 relative selection:bg-[#00ff66] selection:text-black">
       {/* Top Header */}
-      <header className="relative z-10 flex items-center justify-between max-w-5xl w-full mx-auto pb-6 border-b border-slate-800/80">
+      <header className="relative z-10 flex flex-wrap items-center justify-between max-w-5xl w-full mx-auto pb-4 border-b border-[#20242c] gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black shadow-lg shadow-blue-500/20">
-            IS
+          <div className="w-8 h-8 bg-[#00ff66] text-black font-bold font-mono-code flex items-center justify-center text-sm shadow-hard">
+            //
           </div>
           <div>
-            <h1 className="font-extrabold text-white text-base tracking-tight flex items-center gap-2">
-              InventorySync <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-800">Enterprise</span>
+            <h1 className="font-bold text-white text-sm tracking-tight flex items-center gap-2 font-mono-code">
+              INVENTORY_SYNC <span className="text-[10px] uppercase px-1.5 py-0.5 border border-[#20242c] text-[#8e95a5]">GATEKEEPER</span>
             </h1>
-            <p className="text-xs text-slate-400 font-mono">Plataforma de Sincronización Multicanal</p>
+            <p className="text-[11px] text-[#8e95a5] font-mono-code">Control de Acceso y Licenciamiento</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 font-mono-code text-xs">
           <Link
             href="/tickets"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-xs font-bold transition-all cursor-pointer shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#14171e] hover:bg-[#1a1e27] text-[#00ff66] border border-[#20242c] hover:border-[#00ff66]/40 transition-colors shadow-hard"
           >
-            <LifeBuoy size={14} />
+            <LifeBuoy size={13} />
             <span>Tickets de Soporte</span>
           </Link>
           <ThemeToggle />
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-bold transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#14171e] hover:bg-[#1a1e27] text-[#8e95a5] hover:text-[#ff3b00] border border-[#20242c] hover:border-[#ff3b00]/40 transition-colors"
           >
-            <LogOut size={14} />
+            <LogOut size={13} />
             <span>Cerrar Sesión</span>
           </button>
         </div>
       </header>
 
       {/* Main Locked Card */}
-      <main className="relative z-10 flex-1 flex items-center justify-center py-12 max-w-2xl w-full mx-auto">
+      <main className="relative z-10 flex-1 flex items-center justify-center py-10 max-w-xl w-full mx-auto">
         {isSuspended ? (
           /* PANTALLA CUENTA SUSPENDIDA */
-          <div className="w-full bg-slate-900/90 border border-red-500/30 backdrop-blur-xl rounded-3xl p-8 sm:p-10 shadow-2xl shadow-red-950/40 space-y-6 text-center animate-fade-in">
-            <div className="w-20 h-20 rounded-3xl bg-red-500/10 border-2 border-red-500/30 flex items-center justify-center text-red-400 mx-auto shadow-inner">
-              <ShieldAlert size={40} className="animate-pulse" />
-            </div>
-
-            <div className="space-y-2">
-              <span className="px-3 py-1 rounded-full bg-red-950 text-red-400 border border-red-800 text-[11px] font-mono font-bold uppercase tracking-wider">
-                Acceso Pausado
+          <div className="w-full bg-[#0d0e12] border-2 border-[#ff3b00] p-6 sm:p-8 shadow-hard space-y-6">
+            <div className="border-b border-[#20242c] bg-[#14171e] -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 px-4 py-2.5 flex items-center justify-between font-mono-code text-xs">
+              <span className="text-[#ff3b00] font-bold flex items-center gap-1.5">
+                <AlertTriangle size={13} />
+                AUTH_GATE // ACCOUNT_SUSPENDED
               </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-                Tu Cuenta Está Suspendida
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
-                El acceso a tus datos de inventario, catálogo y sincronización en tiempo real ha sido pausado.
-              </p>
+              <span className="text-[10px] text-[#8e95a5] uppercase">ESTADO: PAUSADO</span>
             </div>
 
-            {/* Motivo de Suspensión Destacado */}
-            <div className="bg-red-950/60 border border-red-800/80 rounded-2xl p-5 text-left space-y-1.5 shadow-inner">
-              <div className="flex items-center gap-2 text-red-400 text-xs font-bold uppercase tracking-wider">
-                <AlertTriangle size={15} />
-                <span>Motivo de Suspensión:</span>
+            <div className="text-center space-y-3 pt-2">
+              <div className="w-12 h-12 border border-[#ff3b00]/40 bg-[#ff3b00]/10 flex items-center justify-center text-[#ff3b00] mx-auto shadow-hard">
+                <ShieldAlert size={26} />
               </div>
-              <p className="text-sm font-semibold text-white pl-6">
+
+              <div>
+                <span className="inline-block px-2 py-0.5 border border-[#ff3b00]/40 bg-[#ff3b00]/5 text-[#ff3b00] text-[10px] font-mono-code font-bold uppercase tracking-wider mb-2">
+                  ACCESO PAUSADO TEMPORALMENTE
+                </span>
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-mono-code">
+                  Tu Cuenta Está Suspendida
+                </h2>
+                <p className="text-xs text-[#8e95a5] mt-1">
+                  El acceso a tu inventario y la sincronización con canales fue pausado.
+                </p>
+              </div>
+            </div>
+
+            {/* Motivo de Suspensión */}
+            <div className="bg-[#090a0c] border border-[#ff3b00]/40 p-4 font-mono-code text-xs space-y-1">
+              <div className="text-[10px] text-[#ff3b00] font-bold uppercase tracking-wider">
+                MOTIVO INDICADO:
+              </div>
+              <p className="text-white text-xs font-semibold">
                 "{user.suspension_reason || 'Falta de pago de mensualidad'}"
               </p>
             </div>
 
             {/* Info y Contacto */}
-            <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs text-slate-300 space-y-2 text-left">
-              <p className="font-bold text-slate-200">¿Cómo reactivar tu cuenta?</p>
-              <p className="text-slate-400 leading-relaxed">
-                Ponte en contacto con el Super Administrador o abre un ticket de apelación para solventar el motivo indicado y restaurar inmediatamente la sincronización con tus canales de venta.
+            <div className="bg-[#090a0c] border border-[#20242c] p-4 font-mono-code text-xs space-y-2 text-[#8e95a5]">
+              <p className="text-white font-bold text-xs">// ¿CÓMO REACTIVAR EL SERVICIO?</p>
+              <p className="text-[11px] leading-relaxed">
+                Abre un ticket de soporte o contacta al administrador para liquidar el pendiente y restaurar la sincronización de inmediato.
               </p>
-              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between font-mono text-[11px]">
-                <span className="text-slate-400">Contacto Administrador:</span>
-                <span className="text-blue-400 font-bold">cristadmin@inventorysync.io</span>
+              <div className="pt-2 border-t border-[#20242c] flex flex-wrap justify-between items-center text-[11px]">
+                <span>Super Administrador:</span>
+                <span className="text-white font-bold">CristAdmin (cristadmin@inventorysync.io)</span>
               </div>
             </div>
 
             {statusMessage && (
-              <p className="text-xs font-semibold text-amber-300 bg-amber-950/40 p-3 rounded-xl border border-amber-800/50 animate-fade-in">
+              <div className="text-xs font-mono-code p-3 border border-[#ff9900]/40 bg-[#ff9900]/10 text-[#ff9900]">
                 {statusMessage}
-              </p>
+              </div>
             )}
 
             {/* Acciones */}
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="pt-2 flex flex-col sm:flex-row items-stretch gap-2.5 font-mono-code">
               <Link
                 href="/tickets"
-                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-lg shadow-red-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="flex-1 px-4 py-3 bg-[#ff3b00] hover:bg-[#e03400] text-black font-bold text-xs shadow-hard flex items-center justify-center gap-2 border border-[#ff3b00] transition-colors"
               >
-                <Ticket size={15} />
-                <span>Abrir Ticket / Apelar Suspensión</span>
+                <Ticket size={14} />
+                <span>ABRIR TICKET DE APELACIÓN</span>
               </Link>
               <button
                 onClick={handleCheckStatus}
                 disabled={checking}
-                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                className="px-4 py-3 bg-[#14171e] hover:bg-[#1a1e27] text-white border border-[#20242c] font-semibold text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
               >
-                <RefreshCw size={15} className={checking ? 'animate-spin' : ''} />
-                <span>{checking ? 'Verificando con Servidor...' : 'Comprobar Reactivación'}</span>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 font-bold text-xs cursor-pointer transition-colors border border-slate-800"
-              >
-                Cerrar Sesión
+                <RefreshCw size={13} className={checking ? 'animate-spin' : ''} />
+                <span>{checking ? 'VERIFICANDO...' : 'REVISAR REACTIVACIÓN'}</span>
               </button>
             </div>
           </div>
         ) : (
-          /* PANTALLA PLAN GUEST / ESPERA DE APROBACIÓN */
-          <div className="w-full bg-slate-900/90 border border-amber-500/30 backdrop-blur-xl rounded-3xl p-8 sm:p-10 shadow-2xl shadow-amber-950/20 space-y-6 text-center animate-fade-in">
-            <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border-2 border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto shadow-inner">
-              <Hourglass size={40} className="animate-pulse" />
+          /* PANTALLA PLAN GUEST / ESPERA DE ACTIVACIÓN */
+          <div className="w-full bg-[#0d0e12] border-2 border-[#ff9900] p-6 sm:p-8 shadow-hard space-y-6">
+            <div className="border-b border-[#20242c] bg-[#14171e] -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 px-4 py-2.5 flex items-center justify-between font-mono-code text-xs">
+              <span className="text-[#ff9900] font-bold flex items-center gap-1.5">
+                <Hourglass size={13} />
+                AUTH_GATE // PENDING_APPROVAL
+              </span>
+              <span className="text-[10px] text-[#8e95a5] uppercase">PLAN GUEST</span>
             </div>
 
-            <div className="space-y-2">
-              <span className="px-3 py-1 rounded-full bg-amber-950 text-amber-400 border border-amber-800 text-[11px] font-mono font-bold uppercase tracking-wider">
-                Plan Guest — Asignación Pendiente
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-                Cuenta en Espera de Aprobación
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
-                Tu perfil de cliente ha sido registrado correctamente con el <strong className="text-amber-300 font-bold">Plan Guest</strong>.
-              </p>
+            <div className="text-center space-y-3 pt-2">
+              <div className="w-12 h-12 border border-[#ff9900]/40 bg-[#ff9900]/10 flex items-center justify-center text-[#ff9900] mx-auto shadow-hard">
+                <Hourglass size={24} className="animate-pulse" />
+              </div>
+
+              <div>
+                <span className="inline-block px-2.5 py-0.5 border border-[#ff9900]/40 bg-[#ff9900]/5 text-[#ff9900] text-[10px] font-mono-code font-bold uppercase tracking-wider mb-2">
+                  PLAN GUEST — ASIGNACIÓN PENDIENTE
+                </span>
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-mono-code">
+                  Cuenta en Espera de Aprobación
+                </h2>
+                <p className="text-xs text-[#8e95a5] mt-1 font-mono-code">
+                  Tu registro está listo con el <strong className="text-white">Plan Guest</strong>.
+                </p>
+              </div>
             </div>
 
             {/* Cuadro de Instrucciones */}
-            <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-6 text-left space-y-3">
-              <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
-                <ShieldCheck size={16} />
-                <span>Acceso Restringido</span>
+            <div className="bg-[#090a0c] border border-[#20242c] p-4 sm:p-5 text-left font-mono-code text-xs space-y-3">
+              <div className="flex items-center gap-2 text-[#ff9900] text-[11px] font-bold uppercase tracking-wider border-b border-[#20242c] pb-2">
+                <ShieldCheck size={14} />
+                <span>[!] ACCESO RESTRINGIDO</span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Hola, <strong className="text-white">{user.username}</strong>. Para ver tu catálogo, órdenes y comenzar a sincronizar tu inventario con Shopify y Mercado Libre, genera un <strong className="text-amber-300">Ticket de Activación</strong> para que el administrador apruebe tu cuenta y te asigne un plan de sincronización.
+              <p className="text-[#a1a7b5] text-xs leading-relaxed">
+                Hola, <strong className="text-white">{user.username}</strong>. Para ver tu catálogo, órdenes y comenzar a sincronizar stock con Shopify y Mercado Libre, necesitas que el administrador active tu cuenta.
               </p>
-              <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 font-mono text-xs">
-                <span className="text-slate-400">Super Administrador:</span>
-                <span className="text-blue-400 font-bold">CristAdmin (cristadmin@inventorysync.io)</span>
+              <div className="pt-2 border-t border-[#20242c] space-y-1 text-[11px]">
+                <div className="flex justify-between flex-wrap gap-1">
+                  <span className="text-[#8e95a5]">Super Administrador:</span>
+                  <span className="text-[#00ff66] font-bold">CristAdmin (cristadmin@inventorysync.io)</span>
+                </div>
+                <div className="flex justify-between flex-wrap gap-1">
+                  <span className="text-[#8e95a5]">Instrucción:</span>
+                  <span className="text-white">Genera un Ticket de Activación abajo.</span>
+                </div>
               </div>
             </div>
 
             {statusMessage && (
-              <p className="text-xs font-semibold text-amber-300 bg-amber-950/40 p-3 rounded-xl border border-amber-800/50 animate-fade-in">
+              <div className="text-xs font-mono-code p-3 border border-[#00ff66]/40 bg-[#00ff66]/10 text-[#00ff66]">
                 {statusMessage}
-              </p>
+              </div>
             )}
 
             {/* Acciones */}
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="pt-2 flex flex-col sm:flex-row items-stretch gap-2.5 font-mono-code">
               <Link
                 href="/tickets"
-                className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.02]"
+                className="flex-1 px-4 py-3 bg-[#00ff66] hover:bg-[#00e65c] text-black font-bold text-xs shadow-hard flex items-center justify-center gap-2 border border-[#00ff66] transition-colors"
               >
-                <Ticket size={16} />
-                <span>Abrir Ticket de Soporte / Activación</span>
+                <Ticket size={14} />
+                <span>ABRIR TICKET DE ACTIVACIÓN</span>
               </Link>
               <button
                 onClick={handleCheckStatus}
                 disabled={checking}
-                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                className="px-4 py-3 bg-[#14171e] hover:bg-[#1a1e27] text-white border border-[#20242c] hover:border-[#8e95a5] font-semibold text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
               >
-                <RefreshCw size={15} className={checking ? 'animate-spin' : ''} />
-                <span>{checking ? 'Consultando Servidor...' : 'Verificar si ya fue Asignado'}</span>
+                <RefreshCw size={13} className={checking ? 'animate-spin' : ''} />
+                <span>{checking ? 'CONSULTANDO...' : 'VERIFICAR ACTIVACIÓN'}</span>
               </button>
               <button
                 onClick={handleLogout}
-                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 font-bold text-xs cursor-pointer transition-colors border border-slate-800"
+                className="px-3 py-3 text-[#8e95a5] hover:text-[#ff3b00] border border-[#20242c] hover:border-[#ff3b00]/40 font-semibold text-xs transition-colors"
               >
-                Cerrar Sesión
+                SALIR
               </button>
             </div>
           </div>
@@ -273,8 +286,8 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 text-center text-xs text-slate-500 font-mono pt-6 border-t border-slate-800/80">
-        InventorySync Cloud Enterprise © 2026 • Protección de Datos y Alta Disponibilidad
+      <footer className="relative z-10 text-center text-[11px] text-[#555d6e] font-mono-code pt-4 border-t border-[#20242c]">
+        // INVENTORY_SYNC | GATEWAY SERVICE | ACCESO POR AUTORIZACIÓN
       </footer>
     </div>
   );
