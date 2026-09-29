@@ -149,28 +149,32 @@ export default function AlertsPage() {
   const sortedAlerts = [...alerts].sort((a, b) => severityWeight[b.severity] - severityWeight[a.severity]);
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="bg-white dark:bg-[#0d0e12] p-5 border border-slate-200 dark:border-[#20242c] shadow-hard flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
         <div>
-          <h3 className="font-semibold text-slate-800 dark:text-white">Centro de Alertas Consolidadas</h3>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Control de fallos, stock bajo y desalineamiento multicanal</p>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-[#ff3b00] animate-ping" />
+            <h3 className="font-bold font-mono-code text-sm uppercase tracking-wider text-slate-800 dark:text-white">Centro de Alertas Consolidadas</h3>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-[#8e95a5] mt-1 font-mono-code">Control de fallos, stock bajo y desalineamiento multicanal</p>
         </div>
-        <div className="flex gap-4">
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono border border-slate-200 dark:border-slate-700">
-            Total Alertas: {alerts.length}
+        <div className="flex items-center gap-2 font-mono-code text-xs">
+          <span className="px-3 py-1 bg-slate-100 dark:bg-[#14171e] text-slate-700 dark:text-[#8e95a5] border border-slate-200 dark:border-[#20242c]">
+            TOTAL: <strong className="text-slate-900 dark:text-white">{alerts.length}</strong>
           </span>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 dark:bg-rose-950/40 text-red-700 dark:text-rose-300 font-mono border border-red-200 dark:border-rose-900/50">
-            Gravedad Alta: {alerts.filter((a) => a.severity === 'HIGH').length}
+          <span className="px-3 py-1 bg-[#ff3b00]/10 text-[#ff3b00] border border-[#ff3b00]/30 font-bold">
+            GRAVEDAD ALTA: {alerts.filter((a) => a.severity === 'HIGH').length}
           </span>
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {sortedAlerts.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 p-12 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-center flex flex-col items-center justify-center transition-colors">
-            <CheckCircle2 size={40} className="text-emerald-500 mb-3" />
-            <h4 className="font-bold text-slate-700 dark:text-slate-200">Sistema Operando Limpio</h4>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-xs mx-auto">
+          <div className="bg-white dark:bg-[#0d0e12] p-12 border border-slate-200 dark:border-[#20242c] shadow-hard text-center flex flex-col items-center justify-center transition-colors">
+            <CheckCircle2 size={36} className="text-[#00ff66] mb-3" />
+            <h4 className="font-bold font-mono-code text-sm uppercase text-slate-800 dark:text-white">Sistema Operando Limpio</h4>
+            <p className="text-xs text-slate-400 dark:text-[#8e95a5] mt-1 max-w-xs mx-auto font-mono-code">
               No hay alertas activas de stock ni fallos de procesamiento reportados en la red.
             </p>
           </div>
@@ -178,35 +182,37 @@ export default function AlertsPage() {
           sortedAlerts.map((alert) => (
             <div 
               key={alert.id} 
-              className={`p-5 rounded-xl border bg-white dark:bg-slate-900 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all hover:border-slate-300 dark:hover:border-slate-700 ${
-                alert.severity === 'HIGH' ? 'border-l-4 border-l-rose-500 border-slate-200 dark:border-slate-800' : 'border-l-4 border-l-amber-500 border-slate-200 dark:border-slate-800'
+              className={`p-4 border bg-white dark:bg-[#0d0e12] shadow-hard flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all ${
+                alert.severity === 'HIGH' 
+                  ? 'border-l-4 border-l-[#ff3b00] border-slate-200 dark:border-[#20242c]' 
+                  : 'border-l-4 border-l-amber-500 border-slate-200 dark:border-[#20242c]'
               }`}
             >
-              <div className="space-y-2 flex-1 min-w-0">
-                <div className="flex items-center gap-2.5">
+              <div className="space-y-1.5 flex-1 min-w-0">
+                <div className="flex items-center gap-2">
                   <StatusBadge status={alert.severity} />
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase font-mono bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] text-slate-400 dark:text-[#8e95a5] font-bold uppercase font-mono-code bg-slate-50 dark:bg-[#14171e] border border-slate-200 dark:border-[#20242c] px-1.5 py-0.5">
                     {alert.source}
                   </span>
                   {alert.sku && (
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold font-mono">
+                    <span className="text-[10px] text-slate-600 dark:text-[#8e95a5] font-bold font-mono-code">
                       SKU: {alert.sku}
                     </span>
                   )}
                 </div>
                 
-                <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-snug">{alert.title}</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{alert.description}</p>
-                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold font-mono">Reportado: {new Date(alert.date).toLocaleString()}</p>
+                <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{alert.title}</h4>
+                <p className="text-xs text-slate-500 dark:text-[#8e95a5] leading-relaxed">{alert.description}</p>
+                <p className="text-[10px] text-slate-400 dark:text-[#555d6e] font-mono-code">Reportado: {new Date(alert.date).toLocaleString()}</p>
               </div>
 
               {alert.sku && (
                 <div className="w-full sm:w-auto">
                   <Link
                     href={alert.type === 'desync' ? `/reconciliation?sku=${alert.sku}` : `/inventory/${alert.sku}`}
-                    className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 border border-slate-300 dark:border-[#20242c] bg-white dark:bg-[#14171e] hover:border-[#00ff66]/40 text-slate-800 dark:text-white hover:text-[#00ff66] text-xs font-mono-code font-bold shadow-hard transition-colors"
                   >
-                    Resolver Incidente
+                    RESOLVER INCIDENTE →
                   </Link>
                 </div>
               )}
