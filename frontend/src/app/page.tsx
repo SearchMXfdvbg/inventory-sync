@@ -559,7 +559,7 @@ export default function LandingPage() {
                   <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">
                     $299 MXN / mes
                     <span className="block text-[11px] font-normal text-[#8e95a5] mt-0.5">
-                      <span className="line-through text-[#ff3b00]/80">$499 MXN</span> (precio real)
+                      <span className="line-through text-[#ff3b00]/80">$499 MXN</span> (precio real) • Válido 6 meses
                     </span>
                   </td>
                   <td className="p-4 text-[#ff3b00]">$70+ USD (~$1,250 MXN)</td>
@@ -674,13 +674,18 @@ Content-Type: application/json
 
           <div className="border-2 border-[#00ff66] bg-[#090a0c] p-8 sm:p-10 shadow-hard-accent relative">
             <div className="absolute -top-3.5 right-6 bg-[#00ff66] text-black font-mono-code font-bold text-[10px] px-3 py-1 uppercase tracking-widest">
-              OFERTA DE APERTURA
+              OFERTA DE APERTURA — VÁLIDO 6 MESES
             </div>
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-8 border-b border-[#20242c]">
               <div>
-                <div className="inline-block bg-[#00ff66]/10 text-[#00ff66] border border-[#00ff66]/30 text-[10px] font-bold px-2.5 py-0.5 uppercase tracking-widest font-mono-code mb-2">
-                  PRECIO POR APERTURA
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="inline-block bg-[#00ff66]/10 text-[#00ff66] border border-[#00ff66]/30 text-[10px] font-bold px-2.5 py-0.5 uppercase tracking-widest font-mono-code">
+                    PRECIO POR APERTURA
+                  </span>
+                  <span className="text-[11px] text-[#00ff66] font-mono-code font-semibold">
+                    • Válido por los primeros 6 meses
+                  </span>
                 </div>
                 <h3 className="text-2xl font-bold tracking-tight">Saga Core Engine</h3>
                 <p className="text-xs text-[#8e95a5] mt-1 font-mono-code">Sincronización continua Shopify &harr; Mercado Libre</p>
@@ -696,7 +701,10 @@ Content-Type: application/json
                     $499 MXN / mes
                   </span>
                 </div>
-                <div className="text-[11px] text-[#00ff66] mt-1.5">Facturable con CFDI 4.0 al instante</div>
+                <div className="text-[11px] text-[#8e95a5] mt-1 font-mono-code">
+                  * Válido por los primeros 6 meses
+                </div>
+                <div className="text-[11px] text-[#00ff66] mt-0.5">Facturable con CFDI 4.0 al instante</div>
               </div>
             </div>
 
