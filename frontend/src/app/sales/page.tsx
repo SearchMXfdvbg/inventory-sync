@@ -6,31 +6,47 @@ import {
   Search, 
   RefreshCw,
   Clock,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle
+  ArrowUpDown
 } from 'lucide-react';
 import { 
   getSales, 
+  getInventory, 
+  Product, 
   Venta 
 } from '@/lib/api';
+import StatusBadge from '@/components/StatusBadge';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
+import Toast, { ToastProps } from '@/components/Toast';
 
 export default function SalesPage() {
   const [loading, setLoading] = useState(true);
   const [sales, setSales] = useState<Venta[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [originFilter, setOriginFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
+  const [toasts, setToasts] = useState<ToastProps[]>([]);
+
+  const addToast = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, message, type, onClose: removeToast }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
   const loadData = async () => {
     try {
       setLoading(true);
       const salesData = await getSales();
+      const productsData = await getInventory();
       setSales(salesData);
+      setProducts(productsData);
     } catch (error: any) {
-      console.error('Error al cargar transacciones:', error);
+      addToast('Error al cargar transacciones', 'error');
     } finally {
       setLoading(false);
     }
@@ -49,62 +65,44 @@ export default function SalesPage() {
     return matchesSearch && matchesOrigin && matchesStatus;
   });
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'PROCESSED':
-        return <CheckCircle2 className="w-4 h-4 text-[#00ff66]" />;
-      case 'FAILED':
-        return <XCircle className="w-4 h-4 text-[#ff3b00]" />;
-      case 'PENDING':
-        return <Clock className="w-4 h-4 text-[#f59e0b]" />;
-      default:
-        return <AlertTriangle className="w-4 h-4 text-[#555d6e]" />;
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-[#090a0c] text-[#ededed] p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold font-mono-code">ÓRDENES DE VENTA</h1>
-        <button 
-          onClick={loadData}
-          className="px-4 py-2 border border-[#20242c] bg-[#12141a] hover:bg-[#1a1e27] text-[#8e95a5] font-mono-code text-xs flex items-center gap-2"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> ACTUALIZAR VENTAS
-        </button>
+    <div className="space-y-6 relative">
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+        {toasts.map((toast) => (
+          <Toast key={toast.id} {...toast} />
+        ))}
       </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6 p-4 border border-[#20242c] bg-[#0d0e12] shadow-hard">
-        <div className="relative w-full md:w-64">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555d6e]" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar por ID de orden o SKU..."
-            className="w-full pl-8 pr-3 py-2 bg-[#090a0c] border border-[#20242c] font-mono-code text-xs text-[#a1a7b5] focus:outline-none focus:border-[#00ff66]"
-          />
-        </div>
-        <div className="flex flex-wrap gap-2">
+      {/* Header & Controls */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-2.5 text-slate-400 dark:text-slate-500" size={14} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar SKU o ID..."
+              className="pl-9 pr-4 py-1.5 w-full border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 bg-white dark:bg-slate-950 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+            />
+          </div>
+
           <select
             value={originFilter}
             onChange={(e) => setOriginFilter(e.target.value)}
-            className="px-3 py-2 bg-[#090a0c] border border-[#20242c] font-mono-code text-xs text-[#a1a7b5] focus:outline-none focus:border-[#00ff66]"
+            className="text-xs text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-2.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-semibold font-mono"
           >
             <option value="all">Todos los Orígenes</option>
             <option value="shopify">Shopify</option>
             <option value="mercadolibre">Mercado Libre</option>
             <option value="tiktok">TikTok Shop</option>
             <option value="amazon">Amazon SP-API</option>
-            <option value="ebay">eBay</option>
-            <option value="kaufland">Kaufland</option>
           </select>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-[#090a0c] border border-[#20242c] font-mono-code text-xs text-[#a1a7b5] focus:outline-none focus:border-[#00ff66]"
+            className="text-xs text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-2.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-semibold font-mono"
           >
             <option value="all">Todos los Estados</option>
             <option value="PENDING">Pendiente</option>
@@ -113,65 +111,75 @@ export default function SalesPage() {
             <option value="FAILED">Fallido</option>
           </select>
         </div>
+
+        <button
+          onClick={loadData}
+          className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+        >
+          <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Actualizar Ventas
+        </button>
       </div>
 
-      {/* Table Header */}
-      <div className="grid grid-cols-12 gap-4 mb-2 px-4 font-mono-code text-[10px] text-[#555d6e] uppercase tracking-widest">
-        <div className="col-span-2">Fecha</div>
-        <div className="col-span-2">Canal</div>
-        <div className="col-span-3">ID Externo</div>
-        <div className="col-span-2">SKU</div>
-        <div className="col-span-1 text-center">Cantidad</div>
-        <div className="col-span-1 text-center">Estado</div>
-        <div className="col-span-1 text-center">Reintentos</div>
-      </div>
-
-      {/* Sales Rows */}
-      <div className="border border-[#20242c] bg-[#0d0e12] shadow-hard">
-        {loading ? (
-          <div className="p-8 text-center text-[#555d6e]">Cargando órdenes de venta...</div>
-        ) : filteredSales.length === 0 ? (
-          <div className="p-8 text-center text-[#555d6e]">
-            <ShoppingCart className="w-8 h-8 mx-auto mb-2 opacity-30" />
-            No hay órdenes de venta registradas
-          </div>
-        ) : (
-          filteredSales.map((sale) => (
-            <div
-              key={sale.id}
-              className="grid grid-cols-12 gap-4 items-center px-4 py-3 border-b border-[#20242c] last:border-b-0 hover:bg-[#14171e]/50 transition-colors"
-            >
-              <div className="col-span-2 font-mono-code text-xs">
-                {new Date(sale.created_at).toLocaleDateString()}
-              </div>
-              <div className="col-span-2">
-                <span className={`inline-flex items-center gap-1 px-2 py-1 font-mono-code text-[10px] uppercase ${
-                  sale.origen === 'shopify' ? 'bg-emerald-500/20 text-emerald-400' :
-                  sale.origen === 'mercadolibre' ? 'bg-yellow-500/20 text-yellow-400' :
-                  sale.origen === 'tiktok' ? 'bg-pink-500/20 text-pink-400' :
-                  sale.origen === 'amazon' ? 'bg-orange-500/20 text-orange-400' :
-                  sale.origen === 'ebay' ? 'bg-blue-500/20 text-blue-400' :
-                  sale.origen === 'kaufland' ? 'bg-red-500/20 text-red-400' :
-                  'bg-gray-500/20 text-gray-400'
-                }`}>
-                  {sale.origen}
-                </span>
-              </div>
-              <div className="col-span-3 font-mono-code text-xs truncate">{sale.external_id}</div>
-              <div className="col-span-2 font-mono-code text-xs">{sale.sku}</div>
-              <div className="col-span-1 text-center font-mono-code text-xs">{sale.cantidad}</div>
-              <div className="col-span-1 text-center">
-                <div className="flex items-center justify-center gap-1">
-                  {getStatusIcon(sale.status)}
-                  <span className="font-mono-code text-xs capitalize">{sale.status.toLowerCase()}</span>
-                </div>
-              </div>
-              <div className="col-span-1 text-center font-mono-code text-xs text-[#8e95a5]">
-                {sale.attempts} / 5
-              </div>
-            </div>
-          ))
-        )}
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider font-mono">
+                <th className="py-3 px-4">Fecha</th>
+                <th className="py-3 px-4">Canal</th>
+                <th className="py-3 px-4">External ID</th>
+                <th className="py-3 px-4">SKU</th>
+                <th className="py-3 px-4 text-center">Cant.</th>
+                <th className="py-3 px-4">Estado Saga</th>
+                <th className="py-3 px-4 text-center">Reintentos</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="p-4">
+                    <LoadingSkeleton variant="table" />
+                  </td>
+                </tr>
+              ) : filteredSales.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-12 text-slate-400 dark:text-slate-500">
+                    <ShoppingCart size={32} className="mx-auto mb-2 opacity-30" />
+                    No hay transacciones de venta registradas
+                  </td>
+                </tr>
+              ) : (
+                filteredSales.map((sale) => (
+                  <tr key={sale.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap font-mono text-[11px]">
+                      {new Date(sale.created_at).toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider font-mono ${
+                        sale.origen === 'shopify' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60' :
+                        sale.origen === 'mercadolibre' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60' :
+                        sale.origen === 'tiktok' ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60' :
+                        sale.origen === 'amazon' ? 'bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/60' :
+                        'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60'
+                      }`}>
+                        {sale.origen}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 font-mono font-bold text-slate-700 dark:text-slate-200">{sale.external_id}</td>
+                    <td className="py-3 px-4 font-mono text-slate-800 dark:text-slate-100 font-semibold">{sale.sku}</td>
+                    <td className="py-3 px-4 text-center font-bold text-slate-800 dark:text-slate-100">{sale.cantidad}</td>
+                    <td className="py-3 px-4">
+                      <StatusBadge status={sale.status} />
+                    </td>
+                    <td className="py-3 px-4 text-center font-mono text-slate-500 dark:text-slate-400">
+                      {sale.attempts} / 5
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

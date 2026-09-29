@@ -1,134 +1,203 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { RefreshCw, Activity, Database, ShoppingCart, CheckCircle2, XCircle, Clock, AlertTriangle } from 'lucide-react';
-import { getIntegrationStatus, IntegrationStatus } from '@/lib/api';
+import React, { useEffect, useState } from 'react';
+import { 
+  RefreshCw, 
+  Layers, 
+  ArrowRight, 
+  CheckCircle, 
+  Loader2 
+} from 'lucide-react';
+import { getQueue, getInventory, Product, Venta } from '@/lib/api';
+import ActivityTimeline from '@/components/ActivityTimeline';
+import Toast, { ToastProps } from '@/components/Toast';
 
 export default function SynchronizationPage() {
-  const [statuses, setStatuses] = useState<IntegrationStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [queue, setQueue] = useState<Venta[]>([]);
+  const [selectedVenta, setSelectedVenta] = useState<Venta | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [toasts, setToasts] = useState<ToastProps[]>([]);
 
-  const loadData = async () => {
+  const addToast = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, message, type, onClose: removeToast }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const loadQueue = async (silent = false) => {
     try {
-      setLoading(true);
-      const statusData = await getIntegrationStatus();
-      setStatuses(statusData);
+      if (!silent) setLoading(true);
+      const data = await getQueue();
+      setQueue(data);
+      if (data.length > 0 && !selectedVenta) {
+        setSelectedVenta(data[0]);
+      }
     } catch (error: any) {
-      console.error('Error al cargar estado de sincronización:', error);
+      if (!silent) addToast('Error al cargar la cola', 'error');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadQueue();
+    const interval = setInterval(() => {
+      loadQueue(true);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [selectedVenta]);
 
-  const getChannelStatus = (channel: string) => {
-    if (!statuses) return { status: 'offline', enabled: false };
-    
-    switch (channel) {
-      case 'shopify':
-        return statuses.shopify;
-      case 'mercadolibre':
-        return statuses.mercadolibre;
-      case 'tiktok':
-        return statuses.tiktok;
-      case 'amazon':
-        return statuses.amazon;
-      case 'ebay':
-        return statuses.ebay;
-      case 'kaufland':
-        return statuses.kaufland;
-      case 'sae':
-        return statuses.sae;
-      default:
-        return { status: 'offline', enabled: false };
+  useEffect(() => {
+    if (selectedVenta) {
+      const match = queue.find(q => q.id === selectedVenta.id);
+      if (match) {
+        setSelectedVenta(match);
+      }
     }
-  };
-
-  const getChannelIcon = (status: string) => {
-    switch (status) {
-      case 'connected':
-        return <CheckCircle2 className="w-5 h-5 text-[#00ff66]" />;
-      case 'syncing':
-        return <RefreshCw className="w-5 h-5 text-[#00ff66] animate-spin" />;
-      case 'error':
-        return <XCircle className="w-5 h-5 text-[#ff3b00]" />;
-      default:
-        return <XCircle className="w-5 h-5 text-[#555d6e]" />;
-    }
-  };
-
-  const channels = [
-    { id: 'sae', name: 'CONTPAQi SAE', icon: <Database className="w-5 h-5" /> },
-    { id: 'shopify', name: 'Shopify', icon: <ShoppingCart className="w-5 h-5" /> },
-    { id: 'mercadolibre', name: 'Mercado Libre', icon: <Activity className="w-5 h-5" /> },
-    { id: 'amazon', name: 'Amazon SP-API', icon: <Activity className="w-5 h-5" /> },
-    { id: 'ebay', name: 'eBay', icon: <Activity className="w-5 h-5" /> },
-    { id: 'kaufland', name: 'Kaufland', icon: <Activity className="w-5 h-5" /> },
-    { id: 'tiktok', name: 'TikTok Shop', icon: <Activity className="w-5 h-5" /> },
-  ];
+  }, [queue]);
 
   return (
-    <div className="min-h-screen bg-[#090a0c] text-[#ededed] p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold font-mono-code">MONITOR DE SINCRONIZACIÓN</h1>
-        <button 
-          onClick={loadData}
-          className="px-4 py-2 border border-[#20242c] bg-[#12141a] hover:bg-[#1a1e27] text-[#8e95a5] font-mono-code text-xs flex items-center gap-2"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> ACTUALIZAR ESTADO
-        </button>
+    <div className="space-y-8 relative">
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+        {toasts.map((t) => (
+          <Toast key={t.id} {...t} />
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-        {channels.map((channel) => {
-          const status = getChannelStatus(channel.id);
-          const isConnected = status?.status === 'connected';
-          
-          return (
-            <div key={channel.id} className="border border-[#20242c] bg-[#0d0e12] p-4 shadow-hard">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  {channel.icon}
-                  <h3 className="font-bold font-mono-code text-sm">{channel.name}</h3>
-                </div>
-                {getChannelIcon(status?.status || 'offline')}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between min-h-[450px] transition-colors">
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="font-semibold text-slate-800 dark:text-white">Cola Activa</h3>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-mono">Transacciones PENDING o PROCESSING</p>
               </div>
-              
+              <button 
+                onClick={() => loadQueue()} 
+                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                title="Actualizar Cola"
+              >
+                <RefreshCw size={16} />
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="space-y-4">
+                <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-md animate-pulse"></div>
+                <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-md animate-pulse"></div>
+              </div>
+            ) : queue.length === 0 ? (
+              <div className="text-center py-12">
+                <CheckCircle size={32} className="text-emerald-500 mx-auto mb-3" />
+                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">Cola de Sincronización Vacía</h4>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 max-w-[200px] mx-auto leading-normal">
+                  Todos los canales están al día. No hay transacciones pendientes de procesar.
+                </p>
+              </div>
+            ) : (
               <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span className="text-[#8e95a5]">Estado:</span>
-                  <span className="font-mono-code">
-                    {isConnected ? 'Conectado' : 'Desconectado'}
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-[#8e95a5]">Habilitado:</span>
-                  <span className="font-mono-code">
-                    {status?.enabled ? 'Sí' : 'No'}
-                  </span>
-                </div>
-                {status?.status === 'connected' && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-[#8e95a5]">Última sincronización:</span>
-                    <span className="font-mono-code">Justo ahora</span>
+                {queue.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setSelectedVenta(item)}
+                    className={`w-full text-left p-3.5 rounded-lg border transition-all flex items-center justify-between cursor-pointer ${
+                      selectedVenta?.id === item.id
+                        ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 dark:border-blue-500 shadow-sm'
+                        : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block truncate font-mono">{item.external_id}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold block uppercase font-mono">SKU: {item.sku} (Cant: {item.cantidad})</span>
+                    </div>
+                    <div>
+                      {item.status === 'PROCESSING' ? (
+                        <Loader2 size={16} className="text-blue-500 animate-spin" />
+                      ) : (
+                        <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400 uppercase font-mono">En cola</span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-6">
+            <button
+              onClick={() => loadQueue()}
+              className="w-full flex items-center justify-center gap-2 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+            >
+              <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Actualizar Cola
+            </button>
+          </div>
+        </div>
+
+        <div className="lg:col-span-2 space-y-6">
+          {selectedVenta ? (
+            <div className="space-y-6">
+              <ActivityTimeline venta={selectedVenta} />
+
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+                <h3 className="font-semibold text-slate-800 dark:text-white mb-6">Esquema Arquitectura Saga (Flujo de Datos)</h3>
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-4">
+                  <div className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 w-full sm:w-28 text-center shadow-xs">
+                    <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider font-mono ${
+                      selectedVenta.origen === 'shopify' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-300'
+                    }`}>
+                      {selectedVenta.origen}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 truncate w-full font-mono">{selectedVenta.external_id}</span>
                   </div>
-                )}
+
+                  <ArrowRight size={20} className="text-slate-300 dark:text-slate-600 hidden sm:block stroke-[2.5]" />
+
+                  <div className={`flex flex-col items-center gap-2 p-4 rounded-xl border w-full sm:w-28 text-center transition-all ${
+                    selectedVenta.sae_decremented 
+                      ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 shadow-xs' 
+                      : selectedVenta.status === 'PROCESSING' ? 'border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/30 animate-pulse' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60'
+                  }`}>
+                    <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">CONTPAQi SAE</span>
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">Stock Decrementado</span>
+                  </div>
+
+                  <ArrowRight size={20} className="text-slate-300 dark:text-slate-600 hidden sm:block stroke-[2.5]" />
+
+                  <div className={`flex flex-col items-center gap-2 p-4 rounded-xl border w-full sm:w-28 text-center transition-all ${
+                    selectedVenta.shopify_synced 
+                      ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 shadow-xs' 
+                      : selectedVenta.status === 'PROCESSING' && selectedVenta.sae_decremented ? 'border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/30 animate-pulse' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60'
+                  }`}>
+                    <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">Shopify</span>
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">Stock Sincronizado</span>
+                  </div>
+
+                  <ArrowRight size={20} className="text-slate-300 dark:text-slate-600 hidden sm:block stroke-[2.5]" />
+
+                  <div className={`flex flex-col items-center gap-2 p-4 rounded-xl border w-full sm:w-28 text-center transition-all ${
+                    selectedVenta.ml_synced 
+                      ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 shadow-xs' 
+                      : selectedVenta.status === 'PROCESSING' && selectedVenta.shopify_synced ? 'border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/30 animate-pulse' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60'
+                  }`}>
+                    <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">Mercado Libre</span>
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">Stock Sincronizado</span>
+                  </div>
+                </div>
               </div>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Sync Queue */}
-      <div className="border border-[#20242c] bg-[#0d0e12] shadow-hard">
-        <div className="px-4 py-3 border-b border-[#20242c]">
-          <h2 className="font-bold font-mono-code text-sm">COLA DE SINCRONIZACIÓN</h2>
-        </div>
-        <div className="p-4 text-center text-[#555d6e]">
-          No hay elementos en la cola de sincronización.
+          ) : (
+            <div className="bg-white dark:bg-slate-900 p-12 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-center flex flex-col items-center justify-center min-h-[450px] transition-colors">
+              <Layers size={40} className="text-slate-300 dark:text-slate-600 mb-4" />
+              <h3 className="font-bold text-slate-700 dark:text-slate-200">Ninguna Transacción Seleccionada</h3>
+              <p className="text-xs text-slate-400 dark:text-slate-500 max-w-sm mt-2 leading-relaxed">
+                Seleccione una transacción activa de la cola de la izquierda para auditar el flujo de sincronización atómica entre canales.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

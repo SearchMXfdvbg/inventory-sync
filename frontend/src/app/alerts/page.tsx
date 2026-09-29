@@ -1,146 +1,215 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Bell, X, AlertTriangle, CheckCircle2, Info, Clock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { 
+  CheckCircle2
+} from 'lucide-react';
+import { getInventory, getSales, getSettings, Product, Venta, isChannelConfigured, SystemSettings } from '@/lib/api';
+import StatusBadge from '@/components/StatusBadge';
+import LoadingSkeleton from '@/components/LoadingSkeleton';
 
-interface Alert {
+interface AlertItem {
   id: string;
+  type: 'stock_bajo' | 'desync' | 'sync_fail' | 'disconnected_channel';
   title: string;
-  message: string;
-  type: 'warning' | 'error' | 'info' | 'success';
-  timestamp: string;
-  read: boolean;
+  description: string;
+  severity: 'HIGH' | 'MEDIUM' | 'LOW';
+  sku?: string;
+  source?: string;
+  date: string;
 }
 
 export default function AlertsPage() {
-  const [alerts, setAlerts] = useState<Alert[]>([
-    {
-      id: 'ALERT-001',
-      title: 'Stock bajo en SKU-PRO-4090',
-      message: 'El stock disponible es menor a 5 unidades.',
-      type: 'warning',
-      timestamp: '2026-04-15T09:30:00Z',
-      read: false
-    },
-    {
-      id: 'ALERT-002',
-      title: 'Conexión restaurada con Shopify',
-      message: 'La conexión con Shopify se ha restablecido correctamente.',
-      type: 'success',
-      timestamp: '2026-04-15T08:45:00Z',
-      read: true
-    },
-    {
-      id: 'ALERT-003',
-      title: 'Error en sincronización con Mercado Libre',
-      message: 'No se pudo actualizar el stock de 3 productos. Reintentando...',
-      type: 'error',
-      timestamp: '2026-04-15T07:22:00Z',
-      read: false
-    },
-    {
-      id: 'ALERT-004',
-      title: 'Nuevo producto importado',
-      message: 'Se han importado 42 nuevos productos desde el catálogo.',
-      type: 'info',
-      timestamp: '2026-04-14T16:30:00Z',
-      read: true
-    }
-  ]);
+  const [loading, setLoading] = useState(true);
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [settings, setSettings] = useState<SystemSettings | null>(null);
 
-  const markAsRead = (id: string) => {
-    setAlerts(alerts.map(alert => 
-      alert.id === id ? { ...alert, read: true } : alert
-    ));
-  };
+  useEffect(() => {
+    const loadAlerts = async () => {
+      try {
+        const [products, sales, settData] = await Promise.all([
+          getInventory(),
+          getSales(),
+          getSettings()
+        ]);
+        setSettings(settData);
+        
+        const tempAlerts: AlertItem[] = [];
 
-  const dismissAlert = (id: string) => {
-    setAlerts(alerts.filter(alert => alert.id !== id));
-  };
+        const shopifyOk = isChannelConfigured('shopify', settData);
+        const mlOk = isChannelConfigured('mercadolibre', settData);
+        const amazonOk = isChannelConfigured('amazon', settData);
+        const ebayOk = isChannelConfigured('ebay', settData);
+        const kauflandOk = isChannelConfigured('kaufland', settData);
 
-  const markAllAsRead = () => {
-    setAlerts(alerts.map(alert => ({ ...alert, read: true })));
-  };
+        const hasAnyConfigured = shopifyOk || mlOk || amazonOk || ebayOk || kauflandOk;
 
-  const dismissAll = () => {
-    setAlerts([]);
-  };
+        if (!hasAnyConfigured) {
+          tempAlerts.push({
+            id: 'no-channels-connected',
+            type: 'disconnected_channel',
+            title: 'Marketplaces Externos No Vinculados',
+            description: 'El inventario opera en modo Almacén Central Local. No hay sincronización externa activa con Shopify, Mercado Libre, Amazon o eBay.',
+            severity: 'LOW',
+            source: 'Sistema Central',
+            date: new Date().toISOString()
+          });
+        }
 
-  const getAlertIcon = (type: string) => {
-    switch (type) {
-      case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-[#f59e0b]" />;
-      case 'error':
-        return <X className="w-5 h-5 text-[#ff3b00]" />;
-      case 'success':
-        return <CheckCircle2 className="w-5 h-5 text-[#00ff66]" />;
-      default:
-        return <Info className="w-5 h-5 text-[#00ff66]" />;
-    }
-  };
+        products.forEach((p) => {
+          if (p.stock === 0) {
+            tempAlerts.push({
+              id: `low-stock-zero-${p.sku}`,
+              type: 'stock_bajo',
+              title: 'Stock Agotado en Almacén Central',
+              description: `El stock físico para el producto "${p.nombre}" llegó a 0. Sincronización bloqueada.`,
+              severity: 'HIGH',
+              sku: p.sku,
+              source: 'Almacén Central',
+              date: new Date().toISOString()
+            });
+          } else if (p.stock < 5) {
+            tempAlerts.push({
+              id: `low-stock-warn-${p.sku}`,
+              type: 'stock_bajo',
+              title: 'Nivel Crítico de Inventario',
+              description: `Quedan únicamente ${p.stock} unidades de "${p.nombre}" en almacén central.`,
+              severity: 'MEDIUM',
+              sku: p.sku,
+              source: 'Almacén Central',
+              date: new Date().toISOString()
+            });
+          }
+
+          if (hasAnyConfigured) {
+            const desyncedChannels: string[] = [];
+            if (shopifyOk && p.shopify_stock !== undefined && p.shopify_stock !== p.stock) {
+              desyncedChannels.push(`Shopify (${p.shopify_stock} uds)`);
+            }
+            if (mlOk && p.ml_stock !== undefined && p.ml_stock !== p.stock) {
+              desyncedChannels.push(`Mercado Libre (${p.ml_stock} uds)`);
+            }
+            if (amazonOk && p.amazon_stock !== undefined && p.amazon_stock !== p.stock) {
+              desyncedChannels.push(`Amazon EU (${p.amazon_stock} uds)`);
+            }
+            if (ebayOk && p.ebay_stock !== undefined && p.ebay_stock !== p.stock) {
+              desyncedChannels.push(`eBay DE (${p.ebay_stock} uds)`);
+            }
+            if (kauflandOk && p.kaufland_stock !== undefined && p.kaufland_stock !== p.stock) {
+              desyncedChannels.push(`Kaufland DE (${p.kaufland_stock} uds)`);
+            }
+
+            if (desyncedChannels.length > 0) {
+              tempAlerts.push({
+                id: `desync-${p.sku}`,
+                type: 'desync',
+                title: 'Desalineamiento de Stock en Canales Conectados',
+                description: `El stock maestro es de ${p.stock} unidades, pero difiere en: ${desyncedChannels.join(', ')}.`,
+                severity: 'HIGH',
+                sku: p.sku,
+                source: 'API Sync',
+                date: new Date().toISOString()
+              });
+            }
+          }
+        });
+
+        sales.forEach((s) => {
+          if (s.status === 'FAILED') {
+            tempAlerts.push({
+              id: `fail-sale-${s.id}`,
+              type: 'sync_fail',
+              title: 'Error Crítico en Flujo de Transacción Saga',
+              description: `Venta ${s.external_id} falló al propagarse en canales. Error: ${s.last_error || 'Desconocido'}`,
+              severity: 'HIGH',
+              sku: s.sku,
+              source: s.origen,
+              date: s.updated_at
+            });
+          }
+        });
+
+        setAlerts(tempAlerts);
+      } catch (error) {
+        console.error('Error al cargar alertas', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAlerts();
+  }, []);
+
+  if (loading) {
+    return <LoadingSkeleton type="table" />;
+  }
+
+  const severityWeight = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+  const sortedAlerts = [...alerts].sort((a, b) => severityWeight[b.severity] - severityWeight[a.severity]);
 
   return (
-    <div className="min-h-screen bg-[#090a0c] text-[#ededed] p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold font-mono-code">ALERTAS DEL SISTEMA</h1>
-        <div className="flex flex-wrap gap-2">
-          <button 
-            onClick={markAllAsRead}
-            className="px-4 py-2 border border-[#20242c] bg-[#12141a] hover:bg-[#1a1e27] text-[#8e95a5] font-mono-code text-xs"
-          >
-            MARCAR TODO COMO LEÍDO
-          </button>
-          <button 
-            onClick={dismissAll}
-            className="px-4 py-2 border border-[#20242c] bg-[#12141a] hover:bg-[#1a1e27] text-[#8e95a5] font-mono-code text-xs"
-          >
-            DESCARTAR TODO
-          </button>
+    <div className="space-y-6">
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
+        <div>
+          <h3 className="font-semibold text-slate-800 dark:text-white">Centro de Alertas Consolidadas</h3>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Control de fallos, stock bajo y desalineamiento multicanal</p>
+        </div>
+        <div className="flex gap-4">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono border border-slate-200 dark:border-slate-700">
+            Total Alertas: {alerts.length}
+          </span>
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 dark:bg-rose-950/40 text-red-700 dark:text-rose-300 font-mono border border-red-200 dark:border-rose-900/50">
+            Gravedad Alta: {alerts.filter((a) => a.severity === 'HIGH').length}
+          </span>
         </div>
       </div>
 
       <div className="space-y-4">
-        {alerts.length === 0 ? (
-          <div className="border border-[#20242c] bg-[#0d0e12] p-8 text-center text-[#555d6e] shadow-hard">
-            <Bell className="w-12 h-12 mx-auto mb-4 opacity-30" />
-            <p className="font-mono-code">No hay alertas en este momento</p>
+        {sortedAlerts.length === 0 ? (
+          <div className="bg-white dark:bg-slate-900 p-12 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-center flex flex-col items-center justify-center transition-colors">
+            <CheckCircle2 size={40} className="text-emerald-500 mb-3" />
+            <h4 className="font-bold text-slate-700 dark:text-slate-200">Sistema Operando Limpio</h4>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-xs mx-auto">
+              No hay alertas activas de stock ni fallos de procesamiento reportados en la red.
+            </p>
           </div>
         ) : (
-          alerts.map((alert) => (
-            <div
-              key={alert.id}
-              className={`border border-[#20242c] bg-[#0d0e12] p-4 shadow-hard relative ${
-                alert.read ? 'opacity-70' : ''
+          sortedAlerts.map((alert) => (
+            <div 
+              key={alert.id} 
+              className={`p-5 rounded-xl border bg-white dark:bg-slate-900 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all hover:border-slate-300 dark:hover:border-slate-700 ${
+                alert.severity === 'HIGH' ? 'border-l-4 border-l-rose-500 border-slate-200 dark:border-slate-800' : 'border-l-4 border-l-amber-500 border-slate-200 dark:border-slate-800'
               }`}
             >
-              <button
-                onClick={() => dismissAlert(alert.id)}
-                className="absolute top-3 right-3 text-[#555d6e] hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              
-              <div className="flex items-start gap-3">
-                {getAlertIcon(alert.type)}
-                
-                <div className="flex-1">
-                  <h3 className="font-bold font-mono-code text-sm mb-1">{alert.title}</h3>
-                  <p className="font-mono-code text-xs text-[#a1a7b5] mb-2">{alert.message}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono-code text-[10px] text-[#555d6e]">
-                      {new Date(alert.timestamp).toLocaleString()}
+              <div className="space-y-2 flex-1 min-w-0">
+                <div className="flex items-center gap-2.5">
+                  <StatusBadge status={alert.severity} />
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase font-mono bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded">
+                    {alert.source}
+                  </span>
+                  {alert.sku && (
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold font-mono">
+                      SKU: {alert.sku}
                     </span>
-                    {!alert.read && (
-                      <button
-                        onClick={() => markAsRead(alert.id)}
-                        className="text-[#8e95a5] hover:text-white font-mono-code text-[10px]"
-                      >
-                        MARCAR COMO LEÍDO
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
+                
+                <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-snug">{alert.title}</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{alert.description}</p>
+                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold font-mono">Reportado: {new Date(alert.date).toLocaleString()}</p>
               </div>
+
+              {alert.sku && (
+                <div className="w-full sm:w-auto">
+                  <Link
+                    href={alert.type === 'desync' ? `/reconciliation?sku=${alert.sku}` : `/inventory/${alert.sku}`}
+                    className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                  >
+                    Resolver Incidente
+                  </Link>
+                </div>
+              )}
             </div>
           ))
         )}
