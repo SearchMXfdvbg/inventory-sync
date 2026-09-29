@@ -940,16 +940,16 @@ async def import_inventory_file(
         )
 
     def find_key(row_keys, candidates):
-        for k in row_keys:
-            clean = str(k).lower().strip().replace("_", "").replace(" ", "").replace("ó", "o").replace("í", "i").replace("á", "a").replace("é", "e")
-            for cand in candidates:
-                if cand in clean:
+        for cand in candidates:
+            for k in row_keys:
+                clean = str(k).lower().strip().replace("_", "").replace(" ", "").replace("ó", "o").replace("í", "i").replace("á", "a").replace("é", "e")
+                if cand == clean or cand in clean:
                     return k
         return None
 
     first_row_keys = list(rows[0].keys())
     sku_key = find_key(first_row_keys, ["sku", "codigo", "clave", "cveart", "itemid", "id", "referencia", "articulo"])
-    name_key = find_key(first_row_keys, ["nombre", "descripcion", "descr", "desc", "producto", "title", "name"])
+    name_key = find_key(first_row_keys, ["nombre", "producto", "titulo", "title", "name", "descripcion", "descr", "desc"])
     stock_key = find_key(first_row_keys, ["stock", "exist", "existencia", "inventario", "cantidad", "cant", "qty", "quantity", "disponible", "total", "saldo", "unidades", "piezas", "pzas"])
 
     if not sku_key:
