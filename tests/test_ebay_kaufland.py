@@ -17,12 +17,12 @@ def setup_db():
 @pytest.mark.asyncio
 async def test_ebay_client_mock():
     ebay = EbayClient()
-    # Test connection
+    # Sin credenciales → debe rechazar con success=False (no más fake success)
     res = await ebay.test_connection()
-    assert res["success"] is True
-    assert res["marketplace"] == "EBAY_DE"
+    assert res["success"] is False
+    assert res["status_code"] == 400
 
-    # Test update stock
+    # Test update stock (mock interno sigue funcionando cuando no está configurado)
     update_res = await ebay.update_stock("SKU001", 25)
     assert update_res["status"] == "SUCCESS"
     assert update_res["quantity"] == 25
@@ -40,12 +40,12 @@ async def test_ebay_client_mock():
 @pytest.mark.asyncio
 async def test_kaufland_client_mock():
     kaufland = KauflandClient()
-    # Test connection
+    # Sin credenciales → debe rechazar con success=False (no más fake success)
     res = await kaufland.test_connection()
-    assert res["success"] is True
-    assert res["storefront"] == "DE"
+    assert res["success"] is False
+    assert res["status_code"] == 400
 
-    # Test update stock
+    # Test update stock (mock interno sigue funcionando cuando no está configurado)
     update_res = await kaufland.update_stock("SKU001", 18)
     assert update_res["status"] == "SUCCESS"
     assert update_res["quantity"] == 18
@@ -85,14 +85,14 @@ def test_webhook_kaufland():
 
 
 def test_test_connection_endpoints():
-    # Test eBay connection endpoint
+    # Sin credenciales → ambos deben rechazar con 400, no con fake success
     res_ebay = client.post(
         "/settings/test-connection/ebay",
         headers={"X-API-Key": settings.ADMIN_API_KEY},
         json={"marketplace_id": "EBAY_DE"}
     )
     assert res_ebay.status_code == 200
-    assert res_ebay.json()["success"] is True
+    assert res_ebay.json()["success"] is False  # Correcto: sin credenciales reales
 
     # Test Kaufland connection endpoint
     res_kauf = client.post(
@@ -101,7 +101,7 @@ def test_test_connection_endpoints():
         json={"storefront": "de"}
     )
     assert res_kauf.status_code == 200
-    assert res_kauf.json()["success"] is True
+    assert res_kauf.json()["success"] is False  # Correcto: sin credenciales reales
 
 
 def test_status_includes_ebay_and_kaufland():

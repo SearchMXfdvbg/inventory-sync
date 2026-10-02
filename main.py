@@ -1467,8 +1467,70 @@ async def test_channel_connection(
         return {"success": True, "status_code": 200, "message": "Catálogo local de CONTPAQi SAE activo y listo."}
 
     elif channel == "tiktok":
-        app_key = payload.get("app_key") or (t_settings.tiktok_app_key if t_settings else None) or getattr(settings, "TIKTOK_APP_KEY", "")
-        return {"success": True, "status_code": 200, "message": f"Conexión con TikTok Shop Open API validada ({'App: ' + app_key if app_key else 'Demo'})."}
+        app_key = (payload.get("app_key") or (t_settings.tiktok_app_key if t_settings else None) or getattr(settings, "TIKTOK_APP_KEY", "")).strip()
+        app_secret = _resolve_secret_param(payload.get("app_secret"), t_settings.tiktok_app_secret if t_settings else None, getattr(settings, "TIKTOK_APP_SECRET", ""))
+        access_token = _resolve_secret_param(payload.get("access_token"), t_settings.tiktok_access_token if t_settings else None, getattr(settings, "TIKTOK_ACCESS_TOKEN", ""))
+
+        if not app_key:
+            return {
+                "success": False,
+                "status_code": 400,
+                "message": "Ingresa el App Key de tu aplicación de TikTok Shop (TikTok Developer → My Apps)."
+            }
+        if not app_secret or "••" in str(app_secret):
+            return {
+                "success": False,
+                "status_code": 400,
+                "message": "Ingresa el App Secret de tu aplicación de TikTok Shop."
+            }
+        if not access_token or "••" in str(access_token):
+            return {
+                "success": False,
+                "status_code": 400,
+                "message": "Ingresa el Access Token de TikTok Shop (obtenlo autorizando tu app en TikTok Developer Center)."
+            }
+
+        # Llamada real a TikTok Shop API — verifica el token con GET /authorization/202309
+        try:
+            import httpx as _httpx
+            async with _httpx.AsyncClient(timeout=10.0) as _client:
+                res = await _client.get(
+                    "https://open-api.tiktokglobalshop.com/authorization/202309/shops",
+                    headers={
+                        "x-tts-access-token": str(access_token).strip(),
+                        "Content-Type": "application/json"
+                    },
+                    params={"app_key": app_key}
+                )
+                if res.status_code == 200:
+                    data = res.json()
+                    if data.get("code") == 0:
+                        shops = data.get("data", {}).get("shops", [])
+                        shop_name = shops[0].get("name", "Tu tienda") if shops else "Tu tienda"
+                        return {
+                            "success": True,
+                            "status_code": 200,
+                            "shop_name": shop_name,
+                            "message": f"¡Conexión exitosa con TikTok Shop! Tienda: {shop_name}"
+                        }
+                    else:
+                        return {
+                            "success": False,
+                            "status_code": 401,
+                            "message": f"TikTok rechazó las credenciales (código {data.get('code')}): {data.get('message', 'Token inválido o expirado.')}"
+                        }
+                else:
+                    return {
+                        "success": False,
+                        "status_code": res.status_code,
+                        "message": f"Error HTTP {res.status_code} al conectar con TikTok Shop API."
+                    }
+        except Exception as e:
+            return {
+                "success": False,
+                "status_code": 500,
+                "message": f"No se pudo contactar TikTok Shop API: {str(e)}"
+            }
 
     elif channel == "amazon":
         seller_id = payload.get("seller_id") or (t_settings.amazon_seller_id if t_settings else None) or getattr(settings, "AMAZON_SELLER_ID", "")

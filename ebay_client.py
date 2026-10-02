@@ -61,16 +61,21 @@ class EbayClient:
 
     async def test_connection(self, client_id: Optional[str] = None, client_secret: Optional[str] = None, refresh_token: Optional[str] = None) -> Dict[str, Any]:
         """Prueba la conectividad y validez de credenciales con eBay Alemania / Europa."""
-        c_id = client_id or getattr(settings, "EBAY_CLIENT_ID", "")
-        c_sec = client_secret or getattr(settings, "EBAY_CLIENT_SECRET", "")
-        r_tok = refresh_token or getattr(settings, "EBAY_REFRESH_TOKEN", "")
+        c_id = (client_id or getattr(settings, "EBAY_CLIENT_ID", "")).strip()
+        c_sec = (client_secret or getattr(settings, "EBAY_CLIENT_SECRET", "")).strip()
+        r_tok = (refresh_token or getattr(settings, "EBAY_REFRESH_TOKEN", "")).strip()
 
-        if not (c_id and c_sec and r_tok):
+        if not c_id or not c_sec:
             return {
-                "success": True,
-                "status_code": 200,
-                "marketplace": getattr(settings, "EBAY_MARKETPLACE_ID", "EBAY_DE"),
-                "message": "Conexión verificada con los servidores de eBay Alemania (EBAY_DE). Canal listo para sincronización."
+                "success": False,
+                "status_code": 400,
+                "message": "Ingresa el Client ID y Client Secret de tu aplicación de eBay Developer."
+            }
+        if not r_tok or "••" in r_tok:
+            return {
+                "success": False,
+                "status_code": 400,
+                "message": "Ingresa un Refresh Token real de eBay (obtenlo desde eBay Developer → OAuth → User Token)."
             }
 
         try:

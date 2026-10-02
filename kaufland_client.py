@@ -54,16 +54,21 @@ class KauflandClient:
 
     async def test_connection(self, client_key: Optional[str] = None, secret_key: Optional[str] = None, storefront: Optional[str] = None) -> Dict[str, Any]:
         """Prueba la conectividad y las credenciales con Kaufland Seller API (Alemania)."""
-        c_key = client_key or getattr(settings, "KAUFLAND_CLIENT_KEY", "")
-        s_key = secret_key or getattr(settings, "KAUFLAND_SECRET_KEY", "")
-        store = storefront or getattr(settings, "KAUFLAND_STOREFRONT", "de")
+        c_key = (client_key or getattr(settings, "KAUFLAND_CLIENT_KEY", "")).strip()
+        s_key = (secret_key or getattr(settings, "KAUFLAND_SECRET_KEY", "")).strip()
+        store = (storefront or getattr(settings, "KAUFLAND_STOREFRONT", "de")).strip()
 
-        if not (c_key and s_key):
+        if not c_key:
             return {
-                "success": True,
-                "status_code": 200,
-                "storefront": store.upper(),
-                "message": f"Conexión verificada con Kaufland Seller API (Alemania / Storefront: {store.upper()}). Canal listo para sincronización."
+                "success": False,
+                "status_code": 400,
+                "message": "Ingresa el Client Key de tu cuenta de Kaufland Seller API."
+            }
+        if not s_key or "••" in s_key:
+            return {
+                "success": False,
+                "status_code": 400,
+                "message": "Ingresa el Secret Key de tu cuenta de Kaufland Seller API."
             }
 
         try:
