@@ -468,7 +468,11 @@ export interface TestConnectionResponse {
   success: boolean;
   channel?: string;
   message: string;
+  shop_name?: string;
+  domain?: string;
+  nickname?: string;
   details?: Record<string, any>;
+  [key: string]: any;
 }
 
 export const testConnection = async (channel: string, payload?: Record<string, any>): Promise<TestConnectionResponse> => {
@@ -490,6 +494,17 @@ export const testConnection = async (channel: string, payload?: Record<string, a
     };
   }
   return data || { success: true, message: `Conexión verificada con ${channel.toUpperCase()}` };
+};
+
+export const disconnectChannel = async (channel: string): Promise<{ success: boolean; message: string }> => {
+  const response = await fetchApi(`${BASE_URL}/settings/disconnect/${channel}`, {
+    method: 'POST'
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.detail || data?.message || `Error al desconectar ${channel.toUpperCase()}`);
+  }
+  return data || { success: true, message: `Canal ${channel.toUpperCase()} desconectado.` };
 };
 
 export interface SystemSettings {

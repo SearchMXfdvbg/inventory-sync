@@ -1493,6 +1493,90 @@ async def test_channel_connection(
         raise HTTPException(status_code=400, detail=f"Canal '{channel}' no reconocido.")
 
 
+@app.post("/settings/disconnect/{channel}")
+@app.post("/channels/{channel}/disconnect")
+def disconnect_channel(
+    channel: str,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth_ok: bool = Depends(verify_admin_auth)
+):
+    """
+    Desconecta y desvincula una tienda o canal, limpiando sus credenciales y tokens guardados.
+    """
+    channel = channel.lower().strip()
+    user = extract_user_from_request(request)
+    user_id = user.get("id") or 1
+    t_settings = db.query(TenantSettings).filter(TenantSettings.user_id == user_id).first()
+    if not t_settings:
+        t_settings = TenantSettings(user_id=user_id, tenant_id=user.get("tenant_id", "empresa-a"))
+        db.add(t_settings)
+        db.commit()
+        db.refresh(t_settings)
+
+    if channel == "shopify":
+        t_settings.shop_domain = ""
+        t_settings.shopify_access_token = ""
+        t_settings.shopify_api_secret = ""
+        t_settings.shopify_location_id = ""
+        msg = "Tienda Shopify desconectada exitosamente."
+    elif channel in ("mercadolibre", "ml"):
+        t_settings.ml_access_token = ""
+        t_settings.ml_user_id = 0
+        t_settings.ml_webhook_secret = ""
+        msg = "Cuenta de Mercado Libre desconectada exitosamente."
+    elif channel == "amazon":
+        t_settings.amazon_seller_id = ""
+        t_settings.amazon_client_id = ""
+        t_settings.amazon_client_secret = ""
+        t_settings.amazon_refresh_token = ""
+        msg = "Cuenta de Amazon SP-API desconectada exitosamente."
+    elif channel == "tiktok":
+        t_settings.tiktok_app_key = ""
+        t_settings.tiktok_app_secret = ""
+        t_settings.tiktok_access_token = ""
+        t_settings.tiktok_shop_id = ""
+        t_settings.tiktok_shop_cipher = ""
+        msg = "Tienda TikTok Shop desconectada exitosamente."
+    elif channel == "ebay":
+        t_settings.ebay_client_id = ""
+        t_settings.ebay_client_secret = ""
+        t_settings.ebay_refresh_token = ""
+        msg = "Cuenta de eBay desconectada exitosamente."
+    elif channel == "kaufland":
+        t_settings.kaufland_client_key = ""
+        t_settings.kaufland_secret_key = ""
+        msg = "Cuenta de Kaufland desconectada exitosamente."
+    else:
+        raise HTTPException(status_code=400, detail=f"Canal '{channel}' no reconocido para desconexión.")
+
+    db.commit()
+
+    # Si es el admin maestro, también limpia data/settings.json
+    if user_id == 1 or user.get("role") == "admin":
+        settings_path = "data/settings.json"
+        if os.path.exists(settings_path):
+            try:
+                with open(settings_path, "r", encoding="utf-8") as f:
+                    s_data = json.load(f)
+                if channel == "shopify":
+                    s_data["SHOP_DOMAIN"] = ""
+                    s_data["SHOPIFY_ACCESS_TOKEN"] = ""
+                    s_data["SHOPIFY_API_SECRET"] = ""
+                    s_data["SHOPIFY_LOCATION_ID"] = ""
+                elif channel in ("mercadolibre", "ml"):
+                    s_data["ML_ACCESS_TOKEN"] = ""
+                    s_data["ML_USER_ID"] = 0
+                    s_data["ML_WEBHOOK_SECRET"] = ""
+                with open(settings_path, "w", encoding="utf-8") as f:
+                    json.dump(s_data, f, indent=2, ensure_ascii=False)
+                reload_settings()
+            except Exception:
+                pass
+
+    return {"success": True, "channel": channel, "message": msg}
+
+
 @app.get("/debug/shopify")
 async def debug_shopify(auth_ok: bool = Depends(verify_admin_auth)):
     """

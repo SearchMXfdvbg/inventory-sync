@@ -9,6 +9,7 @@ import {
   CheckCircle, 
   XCircle, 
   Link2,
+  Unlink,
   Save,
   AlertCircle,
   Video,
@@ -30,6 +31,7 @@ import {
   getSettings, 
   saveSettings, 
   testConnection,
+  disconnectChannel,
   TestConnectionResponse,
   IntegrationStatus, 
   SystemSettings 
@@ -127,6 +129,28 @@ export default function IntegrationsSettingsPage() {
       }
       const res = await testConnection(channel, payload);
       setTestResults(prev => ({ ...prev, [channel]: res }));
+
+      if (res.success) {
+        try {
+          const savePayload = {
+            ...settings,
+            ML_USER_ID: Number(settings.ML_USER_ID) || 0
+          };
+          if (channel === 'shopify' && payload.shop_domain) {
+            savePayload.SHOP_DOMAIN = payload.shop_domain;
+          }
+          await saveSettings(savePayload);
+          const [statusRes, settingsRes] = await Promise.all([
+            getIntegrationStatus(),
+            getSettings()
+          ]);
+          setStatus(statusRes);
+          setSettings(prev => ({ ...prev, ...settingsRes }));
+          showToast(`¡Conexión exitosa con ${channel.toUpperCase()}! Guardado permanentemente en Neon.`, 'success');
+        } catch (saveErr) {
+          console.warn('Auto-save post test connection failed', saveErr);
+        }
+      }
     } catch (err: any) {
       setTestResults(prev => ({
         ...prev,
@@ -134,6 +158,78 @@ export default function IntegrationsSettingsPage() {
       }));
     } finally {
       setTestingChannel(null);
+    }
+  };
+
+  const handleDisconnect = async (channel: 'shopify' | 'mercadolibre' | 'tiktok' | 'amazon' | 'ebay' | 'kaufland') => {
+    if (!confirm(`¿Seguro que deseas desconectar y desvincular la tienda de ${channel.toUpperCase()}?`)) {
+      return;
+    }
+    try {
+      await disconnectChannel(channel);
+      showToast(`Tienda ${channel.toUpperCase()} desconectada exitosamente.`, 'success');
+
+      if (channel === 'shopify') {
+        setSettings(prev => ({
+          ...prev,
+          SHOP_DOMAIN: '',
+          SHOPIFY_ACCESS_TOKEN: '',
+          SHOPIFY_LOCATION_ID: '',
+          SHOPIFY_API_SECRET: ''
+        }));
+      } else if (channel === 'mercadolibre') {
+        setSettings(prev => ({
+          ...prev,
+          ML_ACCESS_TOKEN: '',
+          ML_USER_ID: 0,
+          ML_WEBHOOK_SECRET: ''
+        }));
+      } else if (channel === 'tiktok') {
+        setSettings(prev => ({
+          ...prev,
+          TIKTOK_APP_KEY: '',
+          TIKTOK_APP_SECRET: '',
+          TIKTOK_ACCESS_TOKEN: '',
+          TIKTOK_SHOP_ID: '',
+          TIKTOK_SHOP_CIPHER: ''
+        }));
+      } else if (channel === 'amazon') {
+        setSettings(prev => ({
+          ...prev,
+          AMAZON_SELLER_ID: '',
+          AMAZON_CLIENT_ID: '',
+          AMAZON_CLIENT_SECRET: '',
+          AMAZON_REFRESH_TOKEN: ''
+        }));
+      } else if (channel === 'ebay') {
+        setSettings(prev => ({
+          ...prev,
+          EBAY_CLIENT_ID: '',
+          EBAY_CLIENT_SECRET: '',
+          EBAY_REFRESH_TOKEN: ''
+        }));
+      } else if (channel === 'kaufland') {
+        setSettings(prev => ({
+          ...prev,
+          KAUFLAND_CLIENT_KEY: '',
+          KAUFLAND_SECRET_KEY: ''
+        }));
+      }
+
+      setTestResults(prev => {
+        const copy = { ...prev };
+        delete copy[channel];
+        return copy;
+      });
+
+      const [statusRes, settingsRes] = await Promise.all([
+        getIntegrationStatus(),
+        getSettings()
+      ]);
+      setStatus(statusRes);
+      setSettings(prev => ({ ...prev, ...settingsRes }));
+    } catch (err: any) {
+      showToast(err.message || `Error al desconectar ${channel.toUpperCase()}`, 'error');
     }
   };
 
@@ -364,9 +460,42 @@ export default function IntegrationsSettingsPage() {
                     <h3 className="font-bold text-slate-900 dark:text-white uppercase">Shopify Admin GraphQL</h3>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 border border-[#00ff66]/40 text-[#008f39] dark:text-[#00ff66] bg-[#00ff66]/10 font-bold uppercase">
-                    {status?.shopify.status === 'connected' ? 'CONECTADO' : 'CONFIGURADO'}
+                    {(status?.shopify.status === 'connected' || testResults['shopify']?.success) ? 'CONECTADO' : 'DESCONECTADO'}
                   </span>
                 </div>
+
+                {/* Banner de Estado Conectado / Desconectar */}
+                {((status?.shopify?.status === 'connected' || testResults['shopify']?.success) && settings.SHOP_DOMAIN && !settings.SHOP_DOMAIN.includes('your-shop')) ? (
+                  <div className="mb-4 p-3 border border-[#00ff66]/40 bg-[#00ff66]/10 text-[#00ff66] flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#00ff66] animate-pulse shrink-0" />
+                      <div className="truncate">
+                        <div className="font-bold text-[10px] uppercase tracking-wider text-[#008f39] dark:text-[#00ff66]">
+                          CONECTADO CON LA TIENDA DE SHOPIFY:
+                        </div>
+                        <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate">
+                          {testResults['shopify']?.shop_name || settings.SHOP_DOMAIN}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDisconnect('shopify')}
+                      className="px-2.5 py-1 text-[11px] font-bold text-red-500 hover:text-white border border-red-500/40 bg-red-500/10 hover:bg-red-500 transition-colors uppercase flex items-center gap-1 shrink-0 cursor-pointer"
+                    >
+                      <Unlink size={12} />
+                      <span>DESCONECTAR</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-4 p-2.5 border border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#14171e] text-slate-500 dark:text-[#8e95a5] text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-slate-400" />
+                      <span>Sin tienda Shopify vinculada</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">DESCONECTADO</span>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   <div>
@@ -466,9 +595,42 @@ export default function IntegrationsSettingsPage() {
                     <h3 className="font-bold text-slate-900 dark:text-white uppercase">Mercado Libre REST API</h3>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 border border-yellow-500/40 text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 font-bold uppercase">
-                    {status?.mercadolibre.status === 'connected' ? 'CONECTADO' : 'CONFIGURADO'}
+                    {(status?.mercadolibre.status === 'connected' || testResults['mercadolibre']?.success) ? 'CONECTADO' : 'DESCONECTADO'}
                   </span>
                 </div>
+
+                {/* Banner de Estado Conectado / Desconectar ML */}
+                {((status?.mercadolibre?.status === 'connected' || testResults['mercadolibre']?.success) && settings.ML_ACCESS_TOKEN && !settings.ML_ACCESS_TOKEN.includes('APP_USR-xxxx')) ? (
+                  <div className="mb-4 p-3 border border-yellow-500/40 bg-yellow-500/10 text-yellow-500 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse shrink-0" />
+                      <div className="truncate">
+                        <div className="font-bold text-[10px] uppercase tracking-wider text-yellow-600 dark:text-yellow-400">
+                          CONECTADO CON LA TIENDA DE MERCADO LIBRE:
+                        </div>
+                        <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate">
+                          {testResults['mercadolibre']?.nickname || (settings.ML_USER_ID ? `VENDEDOR ID: ${settings.ML_USER_ID} (${settings.ML_SITE_ID || 'MLM'})` : 'CUENTA VINCULADA')}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDisconnect('mercadolibre')}
+                      className="px-2.5 py-1 text-[11px] font-bold text-red-500 hover:text-white border border-red-500/40 bg-red-500/10 hover:bg-red-500 transition-colors uppercase flex items-center gap-1 shrink-0 cursor-pointer"
+                    >
+                      <Unlink size={12} />
+                      <span>DESCONECTAR</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-4 p-2.5 border border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#14171e] text-slate-500 dark:text-[#8e95a5] text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-slate-400" />
+                      <span>Sin cuenta de Mercado Libre vinculada</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">DESCONECTADO</span>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   <div>
@@ -556,9 +718,42 @@ export default function IntegrationsSettingsPage() {
                     <h3 className="font-bold text-slate-900 dark:text-white uppercase">TikTok Shop Open API</h3>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 border border-rose-500/40 text-rose-600 dark:text-rose-400 bg-rose-500/10 font-bold uppercase">
-                    {status?.tiktok?.status === 'connected' ? 'CONECTADO' : 'CONFIGURADO'}
+                    {(status?.tiktok?.status === 'connected' || testResults['tiktok']?.success) ? 'CONECTADO' : 'DESCONECTADO'}
                   </span>
                 </div>
+
+                {/* Banner de Estado Conectado / Desconectar TikTok */}
+                {((status?.tiktok?.status === 'connected' || testResults['tiktok']?.success) && settings.TIKTOK_APP_KEY && settings.TIKTOK_ACCESS_TOKEN) ? (
+                  <div className="mb-4 p-3 border border-rose-500/40 bg-rose-500/10 text-rose-500 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                      <div className="truncate">
+                        <div className="font-bold text-[10px] uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                          CONECTADO CON LA TIENDA DE TIKTOK SHOP:
+                        </div>
+                        <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate">
+                          {settings.TIKTOK_SHOP_ID ? `SHOP ID: ${settings.TIKTOK_SHOP_ID}` : 'TIKTOK SHOP ACTIVA'}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDisconnect('tiktok')}
+                      className="px-2.5 py-1 text-[11px] font-bold text-red-500 hover:text-white border border-red-500/40 bg-red-500/10 hover:bg-red-500 transition-colors uppercase flex items-center gap-1 shrink-0 cursor-pointer"
+                    >
+                      <Unlink size={12} />
+                      <span>DESCONECTAR</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-4 p-2.5 border border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#14171e] text-slate-500 dark:text-[#8e95a5] text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-slate-400" />
+                      <span>Sin tienda TikTok Shop vinculada</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">DESCONECTADO</span>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
@@ -595,6 +790,38 @@ export default function IntegrationsSettingsPage() {
                   </div>
                 </div>
               </div>
+
+              <div className="pt-3 border-t border-slate-200 dark:border-[#20242c] space-y-2">
+                <button
+                  type="button"
+                  onClick={() => handleTestConnection('tiktok')}
+                  disabled={testingChannel === 'tiktok'}
+                  className="w-full py-2 border border-slate-300 dark:border-[#20242c] bg-slate-100 dark:bg-[#14171e] hover:border-rose-500 font-bold text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {testingChannel === 'tiktok' ? (
+                    <>
+                      <RefreshCw size={13} className="animate-spin text-rose-500" />
+                      <span>PROBANDO CONEXIÓN TIKTOK...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Activity size={13} className="text-rose-500" />
+                      <span>PROBAR CONEXIÓN EN VIVO</span>
+                    </>
+                  )}
+                </button>
+
+                {testResults['tiktok'] && (
+                  <div className={`p-2 border text-xs flex items-start gap-2 ${
+                    testResults['tiktok'].success 
+                      ? 'border-[#00ff66]/40 bg-[#00ff66]/10 text-[#008f39] dark:text-[#00ff66]' 
+                      : 'border-[#ff3b00]/40 bg-[#ff3b00]/10 text-[#ff3b00]'
+                  }`}>
+                    {testResults['tiktok'].success ? <Check size={14} className="shrink-0 mt-0.5" /> : <AlertCircle size={14} className="shrink-0 mt-0.5" />}
+                    <span>{testResults['tiktok'].message}</span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -608,9 +835,42 @@ export default function IntegrationsSettingsPage() {
                     <h3 className="font-bold text-slate-900 dark:text-white uppercase">Amazon Selling Partner (SP-API)</h3>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 border border-orange-500/40 text-orange-600 dark:text-orange-400 bg-orange-500/10 font-bold uppercase">
-                    {status?.amazon?.status === 'connected' ? 'CONECTADO' : 'CONFIGURADO'}
+                    {(status?.amazon?.status === 'connected' || testResults['amazon']?.success) ? 'CONECTADO' : 'DESCONECTADO'}
                   </span>
                 </div>
+
+                {/* Banner de Estado Conectado / Desconectar Amazon */}
+                {((status?.amazon?.status === 'connected' || testResults['amazon']?.success) && settings.AMAZON_SELLER_ID && settings.AMAZON_REFRESH_TOKEN) ? (
+                  <div className="mb-4 p-3 border border-orange-500/40 bg-orange-500/10 text-orange-500 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse shrink-0" />
+                      <div className="truncate">
+                        <div className="font-bold text-[10px] uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                          CONECTADO CON LA CUENTA DE AMAZON:
+                        </div>
+                        <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate">
+                          SELLER ID: {settings.AMAZON_SELLER_ID} ({settings.AMAZON_MARKETPLACE_ID || 'A1AM78C64UM0Y8'})
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDisconnect('amazon')}
+                      className="px-2.5 py-1 text-[11px] font-bold text-red-500 hover:text-white border border-red-500/40 bg-red-500/10 hover:bg-red-500 transition-colors uppercase flex items-center gap-1 shrink-0 cursor-pointer"
+                    >
+                      <Unlink size={12} />
+                      <span>DESCONECTAR</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-4 p-2.5 border border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#14171e] text-slate-500 dark:text-[#8e95a5] text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-slate-400" />
+                      <span>Sin cuenta Amazon SP-API vinculada</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">DESCONECTADO</span>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
@@ -714,9 +974,42 @@ export default function IntegrationsSettingsPage() {
                     <h3 className="font-bold text-slate-900 dark:text-white uppercase">eBay Sell Inventory API</h3>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 border border-blue-500/40 text-blue-600 dark:text-blue-400 bg-blue-500/10 font-bold uppercase">
-                    {status?.ebay?.status === 'connected' ? 'CONECTADO' : 'ALEMANIA / DE'}
+                    {(status?.ebay?.status === 'connected' || testResults['ebay']?.success) ? 'CONECTADO' : 'DESCONECTADO'}
                   </span>
                 </div>
+
+                {/* Banner de Estado Conectado / Desconectar eBay */}
+                {((status?.ebay?.status === 'connected' || testResults['ebay']?.success) && settings.EBAY_CLIENT_ID) ? (
+                  <div className="mb-4 p-3 border border-blue-500/40 bg-blue-500/10 text-blue-500 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse shrink-0" />
+                      <div className="truncate">
+                        <div className="font-bold text-[10px] uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                          CONECTADO CON LA CUENTA DE EBAY:
+                        </div>
+                        <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate">
+                          APP ID: {settings.EBAY_CLIENT_ID} ({settings.EBAY_MARKETPLACE_ID || 'EBAY_DE'})
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDisconnect('ebay')}
+                      className="px-2.5 py-1 text-[11px] font-bold text-red-500 hover:text-white border border-red-500/40 bg-red-500/10 hover:bg-red-500 transition-colors uppercase flex items-center gap-1 shrink-0 cursor-pointer"
+                    >
+                      <Unlink size={12} />
+                      <span>DESCONECTAR</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-4 p-2.5 border border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#14171e] text-slate-500 dark:text-[#8e95a5] text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-slate-400" />
+                      <span>Sin cuenta de eBay vinculada</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">DESCONECTADO</span>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   <div>
@@ -780,9 +1073,42 @@ export default function IntegrationsSettingsPage() {
                     <h3 className="font-bold text-slate-900 dark:text-white uppercase">Kaufland Global Marketplace</h3>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 border border-red-500/40 text-red-600 dark:text-red-400 bg-red-500/10 font-bold uppercase">
-                    {status?.kaufland?.status === 'connected' ? 'CONECTADO' : 'ALEMANIA / DE'}
+                    {(status?.kaufland?.status === 'connected' || testResults['kaufland']?.success) ? 'CONECTADO' : 'DESCONECTADO'}
                   </span>
                 </div>
+
+                {/* Banner de Estado Conectado / Desconectar Kaufland */}
+                {((status?.kaufland?.status === 'connected' || testResults['kaufland']?.success) && settings.KAUFLAND_CLIENT_KEY) ? (
+                  <div className="mb-4 p-3 border border-red-500/40 bg-red-500/10 text-red-500 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+                      <div className="truncate">
+                        <div className="font-bold text-[10px] uppercase tracking-wider text-red-600 dark:text-red-400">
+                          CONECTADO CON LA TIENDA DE KAUFLAND:
+                        </div>
+                        <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate">
+                          STOREFRONT: Kaufland.{settings.KAUFLAND_STOREFRONT || 'de'} ({settings.KAUFLAND_CLIENT_KEY.substring(0, 10)}...)
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDisconnect('kaufland')}
+                      className="px-2.5 py-1 text-[11px] font-bold text-red-500 hover:text-white border border-red-500/40 bg-red-500/10 hover:bg-red-500 transition-colors uppercase flex items-center gap-1 shrink-0 cursor-pointer"
+                    >
+                      <Unlink size={12} />
+                      <span>DESCONECTAR</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-4 p-2.5 border border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#14171e] text-slate-500 dark:text-[#8e95a5] text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-slate-400" />
+                      <span>Sin tienda Kaufland vinculada</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">DESCONECTADO</span>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   <div>

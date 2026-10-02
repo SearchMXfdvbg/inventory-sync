@@ -55,13 +55,13 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./data/database.db"
     SAE_DATA_PATH: str = "data/productos.json"
     SAE_REPOSITORY_TYPE: str = "database"
-    SHOP_DOMAIN: str = "your-shop.myshopify.com"
-    SHOPIFY_ACCESS_TOKEN: str = "shpat_xxxx"
+    SHOP_DOMAIN: str = ""
+    SHOPIFY_ACCESS_TOKEN: str = ""
     SHOPIFY_API_VERSION: str = "2026-07"
-    SHOPIFY_LOCATION_ID: str = "gid://shopify/Location/12345"
-    SHOPIFY_API_SECRET: str = "shpss_xxxx"
-    ML_ACCESS_TOKEN: str = "APP_USR-xxxx"
-    ML_USER_ID: int = 123456789
+    SHOPIFY_LOCATION_ID: str = ""
+    SHOPIFY_API_SECRET: str = ""
+    ML_ACCESS_TOKEN: str = ""
+    ML_USER_ID: int = 0
     ML_SITE_ID: str = "MLM"
     ML_WEBHOOK_SECRET: str = ""
 
