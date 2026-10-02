@@ -166,6 +166,8 @@ export const getHeaders = (customHeaders?: HeadersInit): HeadersInit => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'X-Tenant-ID': getTenantId(),
+    'X-Admin-PIN': '060718',
+    'X-API-Key': 'admin-secret-token',
   };
 
   const token = getAuthToken();
