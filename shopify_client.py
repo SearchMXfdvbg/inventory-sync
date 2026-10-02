@@ -51,7 +51,11 @@ class ShopifyClient:
 
     @property
     def shop_domain(self) -> str:
-        return self._shop_domain or settings.SHOP_DOMAIN
+        domain = self._shop_domain or settings.SHOP_DOMAIN
+        if domain:
+            # FIX: Limpia "https://", "http://" y barras finales para evitar URLs duplicadas
+            domain = domain.replace("https://", "").replace("http://", "").strip("/")
+        return domain
 
     @shop_domain.setter
     def shop_domain(self, value: str):
@@ -59,7 +63,10 @@ class ShopifyClient:
 
     @property
     def access_token(self) -> str:
-        return self._access_token or settings.SHOPIFY_ACCESS_TOKEN
+        token = self._access_token or settings.SHOPIFY_ACCESS_TOKEN
+        if token:
+            return token.strip()
+        return token
 
     @access_token.setter
     def access_token(self, value: str):
@@ -75,6 +82,7 @@ class ShopifyClient:
 
     @property
     def url(self) -> str:
+        # Ahora es seguro que no habrá un doble https://
         return f"https://{self.shop_domain}/admin/api/{self.api_version}/graphql.json"
 
     @property
@@ -83,7 +91,6 @@ class ShopifyClient:
             "X-Shopify-Access-Token": self.access_token,
             "Content-Type": "application/json"
         }
-
 
     async def adjust_inventory(
         self,
@@ -542,8 +549,14 @@ class ShopifyClient:
         """
         Verifica la conectividad y validez de las credenciales contra la GraphQL Admin API de Shopify.
         """
-        domain = (shop_domain or self.shop_domain or "").strip()
-        token = (access_token or self.access_token or "").strip()
+        # Usamos las propiedades para que apliquen la limpieza de URL automáticamente
+        if shop_domain:
+            self.shop_domain = shop_domain
+        if access_token:
+            self.access_token = access_token
+
+        domain = self.shop_domain
+        token = self.access_token
 
         if not domain or "myshopify.com" not in domain or domain == "your-shop.myshopify.com":
             return {
@@ -552,23 +565,20 @@ class ShopifyClient:
                 "message": "Ingrese un dominio válido de Shopify (ej: mi-tienda.myshopify.com)."
             }
 
-        if not token or token.startswith("shpat_xxxx") or len(token) < 15:
+        # FIX: Validación estricta para evitar que pongan el API Key o el Secret Key
+        if not token or not token.startswith("shpat_"):
             return {
                 "success": False,
                 "status_code": 400,
-                "message": "Ingrese un Admin API Access Token válido (ej: shpat_...)."
+                "message": "Credenciales inválidas. Debes usar el 'Admin API Access Token' (empieza con shpat_), NO la API Key ni la Secret Key."
             }
 
-        url = f"https://{domain}/admin/api/{self.api_version}/graphql.json"
-        headers = {
-            "X-Shopify-Access-Token": token,
-            "Content-Type": "application/json"
-        }
         query = "{ shop { name myshopifyDomain currencyCode email } }"
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                resp = await client.post(url, headers=headers, json={"query": query})
+                resp = await client.post(self.url, headers=self.headers, json={"query": query})
+                
                 if resp.status_code == 200:
                     data = resp.json()
                     if "errors" in data:
@@ -590,13 +600,13 @@ class ShopifyClient:
                     return {
                         "success": False,
                         "status_code": 401,
-                        "message": "Error 401: Access Token de Shopify inválido o revocado."
+                        "message": "Error 401: El Admin API Access Token es inválido o no tiene los permisos necesarios."
                     }
                 elif resp.status_code == 404:
                     return {
                         "success": False,
                         "status_code": 404,
-                        "message": f"Error 404: No se encontró la tienda '{domain}'. Verifique el subdominio de Shopify."
+                        "message": f"Error 404: No se encontró la tienda '{domain}'. Verifique el subdominio."
                     }
                 else:
                     return {
