@@ -53,6 +53,118 @@ class AmazonClient:
             self._cached_access_token = token
             return token
 
+    async def test_connection(
+        self,
+        seller_id: Optional[str] = None,
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None,
+        refresh_token: Optional[str] = None,
+        marketplace_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Verifica credenciales reales de Amazon SP-API via LWA + Sellers/marketplaceParticipations API.
+        """
+        sid = seller_id or settings.AMAZON_SELLER_ID
+        cid = client_id or settings.AMAZON_CLIENT_ID
+        csec = client_secret or settings.AMAZON_CLIENT_SECRET
+        rtok = refresh_token or settings.AMAZON_REFRESH_TOKEN
+        mid = marketplace_id or settings.AMAZON_MARKETPLACE_ID
+
+        # Validaciones previas
+        if not sid or not str(sid).strip() or str(sid).strip() in ("A1ABC23XYZ", "YOUR_SELLER_ID", ""):
+            return {
+                "success": False,
+                "status_code": 400,
+                "message": "Ingresa un Seller ID real de Amazon (no el de ejemplo). Lo encuentras en Seller Central → Cuenta → Información del vendedor."
+            }
+        if not rtok or "••" in str(rtok) or str(rtok).strip() in ("", "Atzr|xxxx", "YOUR_REFRESH_TOKEN"):
+            return {
+                "success": False,
+                "status_code": 400,
+                "message": "Ingresa un Refresh Token LWA real de Amazon (empieza con Atzr|...). Obtenlo en SP-API Developer Console al autorizar tu aplicación."
+            }
+        if not cid or not csec:
+            return {
+                "success": False,
+                "status_code": 400,
+                "message": "Faltan el LWA Client ID o el Client Secret de Amazon."
+            }
+
+        # Paso 1: Obtener access token via LWA
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.post(
+                    self.LWA_TOKEN_ENDPOINT,
+                    data={
+                        "grant_type": "refresh_token",
+                        "refresh_token": str(rtok).strip(),
+                        "client_id": str(cid).strip(),
+                        "client_secret": str(csec).strip()
+                    }
+                )
+                if res.status_code != 200:
+                    ct = res.headers.get("content-type", "")
+                    error_desc = res.json().get("error_description", res.text) if "application/json" in ct else res.text
+                    return {
+                        "success": False,
+                        "status_code": res.status_code,
+                        "message": f"Error {res.status_code} al autenticar con Amazon LWA: {error_desc}"
+                    }
+                access_token = res.json().get("access_token")
+        except Exception as e:
+            logger.error(f"Error contactando Amazon LWA: {e}")
+            return {
+                "success": False,
+                "status_code": 500,
+                "message": f"No se pudo contactar Amazon LWA: {str(e)}"
+            }
+
+        # Paso 2: Verificar con Sellers API (marketplaceParticipations)
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res2 = await client.get(
+                    f"{self.SP_API_ENDPOINT}/sellers/v1/marketplaceParticipations",
+                    headers={
+                        "x-amz-access-token": access_token,
+                        "Content-Type": "application/json"
+                    }
+                )
+                if res2.status_code == 200:
+                    participations = res2.json().get("payload", [])
+                    marketplace_names = [
+                        p.get("marketplace", {}).get("name", "")
+                        for p in participations
+                        if p.get("marketplace")
+                    ]
+                    markets_str = ", ".join(marketplace_names) if marketplace_names else (mid or "desconocido")
+                    return {
+                        "success": True,
+                        "status_code": 200,
+                        "seller_id": str(sid).strip(),
+                        "marketplace_id": str(mid or "").strip(),
+                        "marketplaces": marketplace_names,
+                        "message": f"¡Conexión exitosa con Amazon SP-API! Seller ID: {str(sid).strip()} — Marketplaces: {markets_str}"
+                    }
+                elif res2.status_code == 403:
+                    return {
+                        "success": False,
+                        "status_code": 403,
+                        "message": "Error 403 Amazon: El Seller ID no coincide con el token o la app no tiene permiso de 'Sell on Amazon'."
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "status_code": res2.status_code,
+                        "message": f"Error HTTP {res2.status_code} al verificar cuenta Amazon SP-API: {res2.text[:200]}"
+                    }
+        except Exception as e:
+            logger.error(f"Error contactando Amazon SP-API: {e}")
+            return {
+                "success": False,
+                "status_code": 500,
+                "message": f"Error al conectar con Amazon SP-API: {str(e)}"
+            }
+
     async def update_stock(self, sku: str, quantity: int) -> Dict[str, Any]:
         """
         Actualiza el stock disponible de un SKU en Amazon Seller Central.

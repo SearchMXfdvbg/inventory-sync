@@ -1472,10 +1472,17 @@ async def test_channel_connection(
 
     elif channel == "amazon":
         seller_id = payload.get("seller_id") or (t_settings.amazon_seller_id if t_settings else None) or getattr(settings, "AMAZON_SELLER_ID", "")
-        seller_id = str(seller_id or "").strip()
-        if seller_id and not seller_id.startswith("A1ABC"):
-            return {"success": True, "status_code": 200, "message": f"Conexión con Amazon SP-API verificada exitosamente para Seller ID: {seller_id}."}
-        return {"success": True, "status_code": 200, "message": f"Simulación de conexión Amazon SP-API exitosa (Seller ID: {seller_id or 'Demo'}). Canal listo para sincronizar."}
+        client_id = payload.get("client_id") or (t_settings.amazon_client_id if t_settings else None) or getattr(settings, "AMAZON_CLIENT_ID", "")
+        client_secret = _resolve_secret_param(payload.get("client_secret"), t_settings.amazon_client_secret if t_settings else None, getattr(settings, "AMAZON_CLIENT_SECRET", ""))
+        refresh_token = _resolve_secret_param(payload.get("refresh_token"), t_settings.amazon_refresh_token if t_settings else None, getattr(settings, "AMAZON_REFRESH_TOKEN", ""))
+        marketplace_id = payload.get("marketplace_id") or (t_settings.amazon_marketplace_id if t_settings else None) or getattr(settings, "AMAZON_MARKETPLACE_ID", "")
+        return await amazon_client.test_connection(
+            seller_id=str(seller_id or "").strip(),
+            client_id=str(client_id or "").strip(),
+            client_secret=str(client_secret or "").strip(),
+            refresh_token=str(refresh_token or "").strip(),
+            marketplace_id=str(marketplace_id or "").strip()
+        )
 
     elif channel == "ebay":
         c_id = payload.get("client_id") or (t_settings.ebay_client_id if t_settings else None) or getattr(settings, "EBAY_CLIENT_ID", "")
