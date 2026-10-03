@@ -593,12 +593,18 @@ export const getSettings = async (): Promise<SystemSettings> => {
 };
 
 export const saveSettings = async (settings: Partial<SystemSettings>): Promise<{ message: string }> => {
+  const cleanSettings: any = { ...settings };
+  delete cleanSettings.DATABASE_URL;
+  if (cleanSettings.SHOP_DOMAIN) {
+    cleanSettings.SHOP_DOMAIN = cleanSettings.SHOP_DOMAIN.replace(/^https?:\/\//, '').replace(/\/+$/, '').trim();
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 55000); // 55s — aguanta el cold start de Render
   try {
     const response = await fetchApi(`${BASE_URL}/settings`, {
       method: 'POST',
-      body: JSON.stringify(settings),
+      body: JSON.stringify(cleanSettings),
       signal: controller.signal,
     });
     if (!response.ok) {

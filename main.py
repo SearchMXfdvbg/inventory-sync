@@ -1359,6 +1359,10 @@ def update_settings(payload: SettingsUpdate, request: Request, db: Session = Dep
                     s_val = str(val).strip()
                     if not s_val or "••" in s_val or s_val.startswith("*"):
                         continue
+                if key == "SHOP_DOMAIN" and val:
+                    val = str(val).replace("https://", "").replace("http://", "").strip("/").strip()
+                if key == "SHOPIFY_LOCATION_ID" and val:
+                    val = str(val).strip()
                 setattr(t_settings, field_mapping[key], val)
 
         db.commit()

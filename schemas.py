@@ -120,7 +120,12 @@ class SettingsUpdate(BaseModel):
     @classmethod
     def validate_database_url(cls, v: Optional[str]) -> Optional[str]:
         # Vulnerabilidad #7: Prohibir alterar la conexión a la base de datos
-        if v is not None and v != "sqlite:///./data/database.db":
+        from config import settings
+        allowed = {
+            "sqlite:///./data/database.db",
+            getattr(settings, "DATABASE_URL", ""),
+        }
+        if v is not None and v not in allowed:
             raise ValueError(
                 "Modificar DATABASE_URL no está permitido para prevenir ataques SSRF y manipulación de archivos de base de datos."
             )
