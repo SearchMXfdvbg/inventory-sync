@@ -10,7 +10,8 @@ import {
   FileSpreadsheet,
   Database,
   Upload,
-  XCircle
+  XCircle,
+  Download
 } from 'lucide-react';
 import { getQueue, getInventory, Product, Venta, getHeaders, API_BASE_URL } from '@/lib/api';
 import ActivityTimeline from '@/components/ActivityTimeline';
@@ -69,6 +70,10 @@ export default function SynchronizationPage() {
     } finally {
       setSyncingDb(false);
     }
+  };
+
+  const handleDownloadTemplate = () => {
+    window.open(`${API_BASE_URL}/sync/template`, '_blank');
   };
 
   const addToast = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
@@ -145,6 +150,15 @@ export default function SynchronizationPage() {
               disabled={syncingExcel || syncingDb}
             />
           </label>
+
+          {/* Botón Descargar Plantilla */}
+          <button
+            type="button"
+            onClick={handleDownloadTemplate}
+            className="flex items-center gap-2 px-4 py-2.5 border border-slate-300 dark:border-[#20242c] text-slate-700 dark:text-slate-200 hover:border-amber-400/50 hover:text-amber-400 hover:bg-amber-500/5 font-mono-code text-xs font-bold transition-colors cursor-pointer"
+          >
+            <Download size={13} /> DESCARGAR PLANTILLA
+          </button>
 
           {/* Botón BD */}
           <button

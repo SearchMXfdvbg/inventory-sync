@@ -10,7 +10,7 @@ import csv
 import openpyxl
 
 from fastapi import Depends, HTTPException, Request, UploadFile, File
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
 from sqlalchemy.orm import Session
 
@@ -2021,6 +2021,31 @@ def get_system_status(db: Session = Depends(get_db)):
 # ──────────────────────────────────────────────────────────────────────────────
 # Endpoints: Sincronizar inventario desde Excel o desde la BD
 # ──────────────────────────────────────────────────────────────────────────────
+
+@app.get("/sync/template")
+def download_sync_template():
+    """Genera y descarga una plantilla Excel lista para sincronización con Shopify."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Inventario"
+
+    ws.append(["SKU", "Stock"])
+    ws.append(["DEMO-001", 200])
+    ws.append(["DEMO-002", 229])
+    ws.append(["DEMO-003", 300])
+
+    ws.column_dimensions["A"].width = 18
+    ws.column_dimensions["B"].width = 14
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=inventario_demo.xlsx"}
+    )
+
 
 @app.post("/sync/from-excel")
 async def sync_inventory_from_excel(
