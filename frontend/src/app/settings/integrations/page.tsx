@@ -281,26 +281,40 @@ export default function IntegrationsSettingsPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    try {
-      const payload = {
-        ...settings,
-        ML_USER_ID: Number(settings.ML_USER_ID) || 0
-      };
-      
-      const res = await saveSettings(payload);
-      showToast(res.message || 'Configuración guardada correctamente.', 'success');
-      
-      const statusRes = await getIntegrationStatus();
-      setStatus(statusRes);
-      
-      const settingsRes = await getSettings();
-      setSettings(prev => ({ ...prev, ...settingsRes }));
-    } catch (error) {
-      console.error('Error al guardar configuración', error);
-      showToast('Error al conectar con el servidor para guardar.', 'error');
-    } finally {
-      setSaving(false);
+    const payload = {
+      ...settings,
+      ML_USER_ID: Number(settings.ML_USER_ID) || 0
+    };
+
+    const MAX_RETRIES = 3;
+    let lastError: unknown = null;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        if (attempt > 1) {
+          showToast(`Servidor despertando... intento ${attempt}/${MAX_RETRIES}`, 'info');
+          await new Promise(r => setTimeout(r, 3000 * attempt));
+        }
+        const res = await saveSettings(payload);
+        showToast(res.message || 'Configuración guardada correctamente.', 'success');
+
+        const statusRes = await getIntegrationStatus();
+        setStatus(statusRes);
+        const settingsRes = await getSettings();
+        setSettings(prev => ({ ...prev, ...settingsRes }));
+
+        setSaving(false);
+        return; // éxito, salir
+      } catch (error) {
+        lastError = error;
+        console.warn(`Intento ${attempt} fallido:`, error);
+      }
     }
+
+    // Todos los intentos fallaron
+    console.error('Error al guardar configuración después de reintentos:', lastError);
+    showToast('No se pudo conectar con el servidor. Espera 30 seg y vuelve a intentar (el servidor puede estar iniciando).', 'error');
+    setSaving(false);
   };
 
   if (loading) {

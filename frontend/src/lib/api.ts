@@ -593,12 +593,22 @@ export const getSettings = async (): Promise<SystemSettings> => {
 };
 
 export const saveSettings = async (settings: Partial<SystemSettings>): Promise<{ message: string }> => {
-  const response = await fetchApi(`${BASE_URL}/settings`, {
-    method: 'POST',
-    body: JSON.stringify(settings),
-  });
-  if (!response.ok) throw new Error('Error al guardar configuraciones');
-  return await response.json();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 55000); // 55s — aguanta el cold start de Render
+  try {
+    const response = await fetchApi(`${BASE_URL}/settings`, {
+      method: 'POST',
+      body: JSON.stringify(settings),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '');
+      throw new Error(`HTTP ${response.status}: ${errText.slice(0, 100)}`);
+    }
+    return await response.json();
+  } finally {
+    clearTimeout(timeoutId);
+  }
 };
 
 export interface CatalogProduct {
