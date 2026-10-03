@@ -16,7 +16,8 @@ import {
   LifeBuoy,
   ShieldCheck,
   Terminal,
-  Cpu
+  Cpu,
+  Zap
 } from 'lucide-react';
 import { clearSession } from '@/lib/api';
 
@@ -44,6 +45,7 @@ export const Sidebar: React.FC = () => {
 
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { name: '⚡ Demo en Vivo', path: '/demo', icon: Zap, highlight: true },
     { name: 'Inventario', path: '/inventory', icon: Package },
     { name: 'Ventas', path: '/sales', icon: ShoppingCart },
     { name: 'Sincronización', path: '/synchronization', icon: RefreshCw },
@@ -96,12 +98,15 @@ export const Sidebar: React.FC = () => {
           {menuItems.map((item) => {
             const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
             const Icon = item.icon;
+            const isHighlight = (item as { highlight?: boolean }).highlight;
             return (
               <Link
                 key={item.path}
                 href={item.path}
                 className={`flex items-center gap-3 px-3 py-2.5 transition-all ${
-                  isActive
+                  isHighlight && !isActive
+                    ? 'text-indigo-400 dark:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border-l-2 border-indigo-500 font-semibold'
+                    : isActive
                     ? 'bg-slate-100 dark:bg-[#181b22] text-[#008f39] dark:text-[#00ff66] border-l-2 border-[#008f39] dark:border-[#00ff66] font-bold'
                     : 'text-slate-600 dark:text-[#8e95a5] hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#14171e]'
                 }`}
