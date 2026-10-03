@@ -850,6 +850,99 @@ def get_inventory(db: Session = Depends(get_db), current_user: dict = Depends(ge
     return []  # FIX: Aislamiento de Tenant. No se exponen productos globales.
 
 
+@app.post("/inventory/sync-from-shopify")
+async def sync_inventory_from_shopify(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Consulta en tiempo real el inventario de la tienda Shopify conectada
+    y actualiza la base de datos (TenantProduct) con las existencias reales.
+    """
+    user_id = current_user.get("id") or current_user.get("user_id") or 1
+    t_settings = db.query(TenantSettings).filter(TenantSettings.user_id == user_id).first()
+
+    domain = (t_settings.shop_domain if t_settings else None) or settings.SHOP_DOMAIN
+    token = (t_settings.shopify_access_token if t_settings else None) or settings.SHOPIFY_ACCESS_TOKEN
+
+    if not domain or not token or "••" in token:
+        raise HTTPException(status_code=400, detail="Shopify no está configurado o el token es inválido.")
+
+    domain = domain.replace("https://", "").replace("http://", "").strip("/")
+    url = f"https://{domain}/admin/api/2024-01/graphql.json"
+    headers = {"X-Shopify-Access-Token": token.strip(), "Content-Type": "application/json"}
+
+    query = """{
+      products(first: 50) {
+        edges {
+          node {
+            title
+            variants(first: 20) {
+              edges {
+                node {
+                  sku
+                  inventoryQuantity
+                }
+              }
+            }
+          }
+        }
+      }
+    }"""
+
+    import httpx
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        resp = await client.post(url, headers=headers, json={"query": query})
+        if resp.status_code != 200:
+            raise HTTPException(status_code=resp.status_code, detail="Error consultando inventario en Shopify")
+        data = resp.json()
+
+    shopify_items = {}
+    edges = data.get("data", {}).get("products", {}).get("edges", [])
+    for edge in edges:
+        p_node = edge.get("node", {})
+        title = p_node.get("title", "")
+        for v_edge in p_node.get("variants", {}).get("edges", []):
+            v_node = v_edge.get("node", {})
+            sku = v_node.get("sku")
+            qty = v_node.get("inventoryQuantity", 0)
+            if sku:
+                shopify_items[sku.strip().upper()] = {"qty": qty, "name": title}
+
+    user_prods = db.query(TenantProduct).filter(TenantProduct.user_id == user_id).all()
+    updated = 0
+    created = 0
+    existing_skus = set()
+
+    for p in user_prods:
+        sku_key = (p.sku or "").strip().upper()
+        existing_skus.add(sku_key)
+        if sku_key in shopify_items:
+            p.stock = shopify_items[sku_key]["qty"]
+            p.nombre = shopify_items[sku_key]["name"]
+            updated += 1
+
+    for sku_key, item in shopify_items.items():
+        if sku_key not in existing_skus:
+            new_prod = TenantProduct(
+                user_id=user_id,
+                sku=sku_key,
+                nombre=item["name"],
+                stock=item["qty"]
+            )
+            db.add(new_prod)
+            created += 1
+
+    db.commit()
+
+    return {
+        "success": True,
+        "message": f"Sincronizado con Shopify: {updated} productos actualizados.",
+        "updated": updated,
+        "created": created
+    }
+
+
 @app.get("/inventory/template")
 def download_inventory_template():
     """

@@ -429,6 +429,17 @@ export const getInventory = async (): Promise<Product[]> => {
   return Array.isArray(data) ? data : [];
 };
 
+export const syncInventoryFromShopify = async (): Promise<{ success: boolean; message: string; updated: number; created: number }> => {
+  const response = await fetchApi(`${BASE_URL}/inventory/sync-from-shopify`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    const err = await response.text().catch(() => '');
+    throw new Error(`Error sincronizando desde Shopify: ${err.slice(0, 100)}`);
+  }
+  return await response.json();
+};
+
 export const getInventoryItem = async (sku: string): Promise<Product> => {
   const response = await fetchApi(`${BASE_URL}/inventory/${sku}`);
   if (!response.ok) throw new Error(`Producto ${sku} no encontrado`);
