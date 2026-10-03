@@ -380,8 +380,4 @@ async def generic_exception_handler(request: Request, exc: Exception):
 # Import main at the end to register all endpoint routes on the app object
 import main
 
-# Demo routes (simulación de ventas físicas → Shopify)
-from demo_routes import router as demo_router
-app.include_router(demo_router)
-
 

@@ -2012,3 +2012,132 @@ def get_system_status(db: Session = Depends(get_db)):
             "system_uptime": "99.98%"
         }
     }
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Endpoints: Sincronizar inventario desde Excel o desde la BD
+# ──────────────────────────────────────────────────────────────────────────────
+
+@app.post("/sync/from-excel")
+async def sync_inventory_from_excel(
+    request: Request,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    auth_ok: bool = Depends(verify_admin_auth),
+):
+    """
+    Lee un archivo Excel con columnas [SKU, Stock] y actualiza el inventario en Shopify.
+    Columnas aceptadas:
+      - Columna A o 'sku' / 'SKU'
+      - Columna B o 'stock' / 'cantidad' / 'qty' / 'inventory'
+    """
+    if not file.filename or not file.filename.lower().endswith((".xlsx", ".xls")):
+        raise HTTPException(status_code=400, detail="Sube un archivo Excel (.xlsx o .xls).")
+
+    content = await file.read()
+    try:
+        wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
+        ws = wb.active
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"No se pudo leer el Excel: {e}")
+
+    # Detectar si primera fila es encabezado
+    first_row = [str(c.value or "").strip().lower() for c in list(ws.iter_rows(min_row=1, max_row=1, values_only=False))[0]]
+    has_header = any(kw in first_row for kw in ("sku", "stock", "cantidad", "qty", "inventory", "producto"))
+    start_row = 2 if has_header else 1
+
+    results = []
+    errors = []
+
+    for row in ws.iter_rows(min_row=start_row, values_only=True):
+        if not row or not row[0]:
+            continue
+        sku = str(row[0]).strip()
+        try:
+            qty = int(float(str(row[1] or 0)))
+        except (ValueError, TypeError):
+            errors.append(f"SKU '{sku}': cantidad inválida '{row[1]}'")
+            continue
+
+        if not sku or qty < 0:
+            continue
+
+        # Actualizar en Shopify vía ShopifyClient
+        try:
+            result = await shopify_client.set_inventory(sku=sku, quantity=qty)
+            results.append({"sku": sku, "qty": qty, "status": "ok", "detail": result})
+            logger.info(f"[SYNC-EXCEL] {sku} → {qty} unidades actualizadas en Shopify")
+        except Exception as e:
+            errors.append(f"SKU '{sku}': {str(e)}")
+            results.append({"sku": sku, "qty": qty, "status": "error", "detail": str(e)})
+
+    return {
+        "success": len(errors) == 0,
+        "processed": len(results),
+        "errors": errors,
+        "results": results,
+        "message": (
+            f"✅ {len([r for r in results if r['status']=='ok'])} SKUs actualizados en Shopify."
+            if not errors
+            else f"Procesados {len(results)}, {len(errors)} errores."
+        ),
+    }
+
+
+@app.post("/sync/from-db")
+async def sync_inventory_from_db(
+    request: Request,
+    db: Session = Depends(get_db),
+    auth_ok: bool = Depends(verify_admin_auth),
+):
+    """
+    Escanea la tabla tenant_products en la BD y sincroniza el stock de cada producto
+    con Shopify usando el SKU almacenado.
+    """
+    user = extract_user_from_request(request)
+    user_id = user.get("id") or 1
+
+    products = db.query(TenantProduct).filter(TenantProduct.user_id == user_id).all()
+
+    if not products:
+        return {
+            "success": False,
+            "message": "No hay productos en la base de datos para sincronizar.",
+            "results": [],
+        }
+
+    results = []
+    errors = []
+
+    for product in products:
+        sku = getattr(product, "sku", None) or getattr(product, "external_id", None)
+        qty = getattr(product, "stock", None) or getattr(product, "cantidad", None) or 0
+
+        if not sku:
+            errors.append(f"Producto id={product.id} sin SKU, omitido.")
+            continue
+
+        try:
+            result = await shopify_client.set_inventory(sku=sku, quantity=int(qty))
+            results.append({
+                "sku": sku,
+                "qty": int(qty),
+                "status": "ok",
+                "detail": result,
+            })
+            logger.info(f"[SYNC-DB] {sku} → {qty} unidades actualizadas en Shopify")
+        except Exception as e:
+            errors.append(f"SKU '{sku}': {str(e)}")
+            results.append({"sku": sku, "qty": int(qty), "status": "error", "detail": str(e)})
+
+    return {
+        "success": len(errors) == 0,
+        "processed": len(results),
+        "errors": errors,
+        "results": results,
+        "message": (
+            f"✅ {len([r for r in results if r['status']=='ok'])} productos sincronizados desde la BD."
+            if not errors
+            else f"Procesados {len(results)}, {len(errors)} errores."
+        ),
+    }

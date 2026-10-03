@@ -1,14 +1,18 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { 
   RefreshCw, 
   Layers, 
   ArrowRight, 
   CheckCircle, 
-  Loader2 
+  Loader2,
+  FileSpreadsheet,
+  Database,
+  Upload,
+  XCircle
 } from 'lucide-react';
-import { getQueue, getInventory, Product, Venta } from '@/lib/api';
+import { getQueue, getInventory, Product, Venta, getHeaders, API_BASE_URL } from '@/lib/api';
 import ActivityTimeline from '@/components/ActivityTimeline';
 import Toast, { ToastProps } from '@/components/Toast';
 
@@ -18,6 +22,54 @@ export default function SynchronizationPage() {
   const [selectedVenta, setSelectedVenta] = useState<Venta | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [toasts, setToasts] = useState<ToastProps[]>([]);
+
+  // ── Panel: Sincronizar desde Excel / BD ──
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [syncingExcel, setSyncingExcel] = useState(false);
+  const [syncingDb, setSyncingDb] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ ok: boolean; msg: string; rows?: { sku: string; qty: number; status: string }[] } | null>(null);
+
+  const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSyncingExcel(true);
+    setSyncResult(null);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      // Remove Content-Type so browser sets multipart boundary automatically
+      const headers = getHeaders();
+      delete (headers as Record<string, string>)['Content-Type'];
+      const r = await fetch(`${API_BASE_URL}/sync/from-excel`, { method: 'POST', headers, body: form });
+      const data = await r.json();
+      setSyncResult({ ok: data.success, msg: data.message, rows: data.results });
+      addToast(data.message, data.success ? 'success' : 'error');
+    } catch (err: any) {
+      const msg = `Error al procesar Excel: ${err?.message || err}`;
+      setSyncResult({ ok: false, msg });
+      addToast(msg, 'error');
+    } finally {
+      setSyncingExcel(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  const handleSyncFromDb = async () => {
+    setSyncingDb(true);
+    setSyncResult(null);
+    try {
+      const r = await fetch(`${API_BASE_URL}/sync/from-db`, { method: 'POST', headers: getHeaders() });
+      const data = await r.json();
+      setSyncResult({ ok: data.success, msg: data.message, rows: data.results });
+      addToast(data.message, data.success ? 'success' : 'error');
+    } catch (err: any) {
+      const msg = `Error al sincronizar desde BD: ${err?.message || err}`;
+      setSyncResult({ ok: false, msg });
+      addToast(msg, 'error');
+    } finally {
+      setSyncingDb(false);
+    }
+  };
 
   const addToast = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
     const id = Date.now().toString();
@@ -66,6 +118,80 @@ export default function SynchronizationPage() {
         {toasts.map((t) => (
           <Toast key={t.id} {...t} />
         ))}
+      </div>
+
+      {/* ── Panel: Sincronizar desde Excel / BD ── */}
+      <div className="bg-white dark:bg-[#0d0e12] border border-slate-200 dark:border-[#20242c] shadow-hard p-5 transition-colors">
+        <h3 className="font-bold font-mono-code text-xs uppercase tracking-wider text-slate-800 dark:text-white mb-4">
+          Actualizar Inventario en Shopify
+        </h3>
+        <div className="flex flex-wrap gap-3">
+          {/* Botón Excel */}
+          <label className={`flex items-center gap-2 px-4 py-2.5 border font-mono-code text-xs font-bold cursor-pointer transition-colors ${
+            syncingExcel
+              ? 'border-[#00ff66]/40 text-[#00ff66] bg-[#00ff66]/5 cursor-wait'
+              : 'border-slate-300 dark:border-[#20242c] text-slate-700 dark:text-slate-200 hover:border-[#00ff66]/50 hover:text-[#00ff66] hover:bg-[#00ff66]/5'
+          }`}>
+            {syncingExcel
+              ? <><RefreshCw size={13} className="animate-spin" /> PROCESANDO...</>
+              : <><FileSpreadsheet size={13} /> IMPORTAR DESDE EXCEL</>
+            }
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={handleExcelUpload}
+              disabled={syncingExcel || syncingDb}
+            />
+          </label>
+
+          {/* Botón BD */}
+          <button
+            onClick={handleSyncFromDb}
+            disabled={syncingExcel || syncingDb}
+            className={`flex items-center gap-2 px-4 py-2.5 border font-mono-code text-xs font-bold transition-colors ${
+              syncingDb
+                ? 'border-blue-400/40 text-blue-400 bg-blue-500/5 cursor-wait'
+                : 'border-slate-300 dark:border-[#20242c] text-slate-700 dark:text-slate-200 hover:border-blue-400/50 hover:text-blue-400 hover:bg-blue-500/5 cursor-pointer'
+            }`}
+          >
+            {syncingDb
+              ? <><RefreshCw size={13} className="animate-spin" /> ESCANEANDO BD...</>
+              : <><Database size={13} /> SINCRONIZAR DESDE BD</>
+            }
+          </button>
+        </div>
+
+        {/* Resultado */}
+        {syncResult && (
+          <div className={`mt-4 border p-3 font-mono-code ${
+            syncResult.ok
+              ? 'border-[#00ff66]/30 bg-[#00ff66]/5 text-[#00ff66]'
+              : 'border-red-500/30 bg-red-500/5 text-red-400'
+          }`}>
+            <div className="flex items-center gap-2 text-xs font-bold mb-2">
+              {syncResult.ok ? <CheckCircle size={13} /> : <XCircle size={13} />}
+              {syncResult.msg}
+            </div>
+            {syncResult.rows && syncResult.rows.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {syncResult.rows.map((row, i) => (
+                  <div key={i} className={`flex items-center gap-3 text-[10px] px-2 py-1 border ${
+                    row.status === 'ok'
+                      ? 'border-[#00ff66]/20 text-slate-400 dark:text-[#8e95a5]'
+                      : 'border-red-500/20 text-red-400'
+                  }`}>
+                    <span className="font-bold text-slate-700 dark:text-slate-200">{row.sku}</span>
+                    <span>→</span>
+                    <span>{row.qty} uds</span>
+                    <span className="ml-auto">{row.status === 'ok' ? '✓ Shopify' : '✗ Error'}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

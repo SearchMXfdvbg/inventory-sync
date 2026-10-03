@@ -86,6 +86,15 @@ class ShopifyClient:
         return f"https://{self.shop_domain}/admin/api/{self.api_version}/graphql.json"
 
     @property
+    def location_id(self) -> str:
+        """Devuelve el Location ID numérico (sin el prefijo GID) de la configuración."""
+        loc = getattr(settings, "SHOPIFY_LOCATION_ID", "") or ""
+        # Normalizar: si tiene el GID completo, extraer solo el número
+        if "gid://shopify/Location/" in str(loc):
+            loc = str(loc).split("/")[-1]
+        return str(loc).strip()
+
+    @property
     def headers(self) -> Dict[str, str]:
         return {
             "X-Shopify-Access-Token": self.access_token,
@@ -623,3 +632,128 @@ class ShopifyClient:
 
 
 
+    async def set_inventory(self, sku: str, quantity: int) -> Dict[str, Any]:
+        """
+        Fija la cantidad ABSOLUTA de inventario para un SKU en Shopify.
+        1. Busca el InventoryItem ID y Location ID usando el SKU del variant.
+        2. Usa inventorySetQuantities (API 2024-01+) para fijar la cantidad exacta.
+        Si la API no soporta inventorySetQuantities, calcula el delta y usa adjust.
+        """
+        if not self.shop_domain or not self.access_token:
+            raise ShopifyHTTPError("ShopifyClient no está configurado (domain/token vacíos).", status_code=400)
+
+        # ── Paso 1: buscar inventoryItemId + locationId por SKU ──────────────
+        search_query = """
+        query findVariantBySku($sku: String!) {
+          productVariants(first: 5, query: $sku) {
+            edges {
+              node {
+                sku
+                inventoryItem {
+                  id
+                  inventoryLevel(locationId: "%s") {
+                    id
+                    quantities(names: ["available"]) {
+                      name
+                      quantity
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """ % (f"gid://shopify/Location/{self.location_id}" if self.location_id and not str(self.location_id).startswith("gid://") else self.location_id)
+
+        location_gid = self.location_id
+        if location_gid and not str(location_gid).startswith("gid://"):
+            location_gid = f"gid://shopify/Location/{location_gid}"
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            r = await client.post(
+                self.url, headers=self.headers,
+                json={"query": search_query, "variables": {"sku": f"sku:{sku}"}}
+            )
+            if r.status_code != 200:
+                raise ShopifyHTTPError(f"Error buscando SKU '{sku}' en Shopify: HTTP {r.status_code}", status_code=r.status_code)
+            data = r.json()
+
+        edges = data.get("data", {}).get("productVariants", {}).get("edges", [])
+        # Encontrar el que tenga el SKU exacto
+        inventory_item_id = None
+        current_qty = 0
+        for edge in edges:
+            node = edge.get("node", {})
+            if str(node.get("sku", "")).strip() == str(sku).strip():
+                item = node.get("inventoryItem", {})
+                inventory_item_id = item.get("id")
+                level = item.get("inventoryLevel") or {}
+                quantities = level.get("quantities", [])
+                current_qty = quantities[0].get("quantity", 0) if quantities else 0
+                break
+
+        if not inventory_item_id:
+            raise ShopifyHTTPError(f"No se encontró el SKU '{sku}' en Shopify.", status_code=404)
+
+        # ── Paso 2: fijar cantidad absoluta con inventorySetQuantities ────────
+        set_mutation = """
+        mutation setInventory($input: InventorySetQuantitiesInput!) {
+          inventorySetQuantities(input: $input) {
+            inventoryAdjustmentGroup {
+              createdAt
+              reason
+              changes {
+                name
+                delta
+                quantityAfterChange
+              }
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+        """
+        variables = {
+            "input": {
+                "reason": "correction",
+                "name": "available",
+                "quantities": [
+                    {
+                        "inventoryItemId": inventory_item_id,
+                        "locationId": location_gid,
+                        "quantity": quantity
+                    }
+                ]
+            }
+        }
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            r2 = await client.post(self.url, headers=self.headers, json={"query": set_mutation, "variables": variables})
+            if r2.status_code != 200:
+                raise ShopifyHTTPError(f"Error fijando inventario en Shopify: HTTP {r2.status_code}", status_code=r2.status_code)
+            res = r2.json()
+
+        # Verificar userErrors
+        mutation_data = res.get("data", {}).get("inventorySetQuantities", {})
+        user_errors = mutation_data.get("userErrors", [])
+        if user_errors:
+            # Fallback: calcular delta y usar adjust_inventory
+            logger.warning(f"inventorySetQuantities userError para {sku}, usando delta fallback: {user_errors}")
+            delta = quantity - current_qty
+            if delta != 0:
+                import uuid
+                await self.adjust_inventory(
+                    inventory_item_id=inventory_item_id,
+                    location_id=location_gid,
+                    delta=delta,
+                    idempotency_key=str(uuid.uuid4()),
+                    reference_uri=f"app://inventory-sync/excel-sync/{sku}"
+                )
+            return {"sku": sku, "quantity_set": quantity, "delta_used": delta, "method": "adjust_fallback"}
+
+        changes = mutation_data.get("inventoryAdjustmentGroup", {}).get("changes", [])
+        qty_after = changes[0].get("quantityAfterChange", quantity) if changes else quantity
+        logger.info(f"[SET-INVENTORY] SKU={sku} fijado en {qty_after} unidades en Shopify")
+        return {"sku": sku, "quantity_set": qty_after, "method": "set"}

@@ -45,7 +45,6 @@ export const Sidebar: React.FC = () => {
 
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: '⚡ Demo en Vivo', path: '/demo', icon: Zap, highlight: true },
     { name: 'Inventario', path: '/inventory', icon: Package },
     { name: 'Ventas', path: '/sales', icon: ShoppingCart },
     { name: 'Sincronización', path: '/synchronization', icon: RefreshCw },
