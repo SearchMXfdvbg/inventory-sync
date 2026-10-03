@@ -292,7 +292,7 @@ export default function IntegrationsSettingsPage() {
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         if (attempt > 1) {
-          showToast(`Servidor despertando... intento ${attempt}/${MAX_RETRIES}`, 'info');
+          showToast(`Servidor despertando... intento ${attempt}/${MAX_RETRIES}`, 'success');
           await new Promise(r => setTimeout(r, 3000 * attempt));
         }
         const res = await saveSettings(payload);
