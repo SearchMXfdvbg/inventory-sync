@@ -41,11 +41,13 @@ class ShopifyClient:
         self,
         shop_domain: Optional[str] = None,
         access_token: Optional[str] = None,
+        location_id: Optional[str] = None,
         api_version: Optional[str] = None,
         timeout: float = 10.0
     ):
         self._shop_domain = shop_domain
         self._access_token = access_token
+        self._location_id = location_id
         self._api_version = api_version
         self.timeout = timeout
 
@@ -88,11 +90,15 @@ class ShopifyClient:
     @property
     def location_id(self) -> str:
         """Devuelve el Location ID numérico (sin el prefijo GID) de la configuración."""
-        loc = getattr(settings, "SHOPIFY_LOCATION_ID", "") or ""
+        loc = getattr(self, "_location_id", None) or getattr(settings, "SHOPIFY_LOCATION_ID", "") or ""
         # Normalizar: si tiene el GID completo, extraer solo el número
         if "gid://shopify/Location/" in str(loc):
             loc = str(loc).split("/")[-1]
         return str(loc).strip()
+
+    @location_id.setter
+    def location_id(self, value: str):
+        self._location_id = value
 
     @property
     def headers(self) -> Dict[str, str]:
@@ -696,9 +702,10 @@ class ShopifyClient:
             raise ShopifyHTTPError(f"No se encontró el SKU '{sku}' en Shopify.", status_code=404)
 
         # ── Paso 2: fijar cantidad absoluta con inventorySetQuantities ────────
+        import uuid
         set_mutation = """
-        mutation setInventory($input: InventorySetQuantitiesInput!) {
-          inventorySetQuantities(input: $input) {
+        mutation setInventory($input: InventorySetQuantitiesInput!, $key: String!) {
+          inventorySetQuantities(input: $input) @idempotent(key: $key) {
             inventoryAdjustmentGroup {
               createdAt
               reason
@@ -716,6 +723,7 @@ class ShopifyClient:
         }
         """
         variables = {
+            "key": str(uuid.uuid4()),
             "input": {
                 "reason": "correction",
                 "name": "available",
@@ -723,7 +731,8 @@ class ShopifyClient:
                     {
                         "inventoryItemId": inventory_item_id,
                         "locationId": location_gid,
-                        "quantity": quantity
+                        "quantity": quantity,
+                        "changeFromQuantity": current_qty
                     }
                 ]
             }
@@ -735,15 +744,15 @@ class ShopifyClient:
                 raise ShopifyHTTPError(f"Error fijando inventario en Shopify: HTTP {r2.status_code}", status_code=r2.status_code)
             res = r2.json()
 
-        # Verificar userErrors
-        mutation_data = res.get("data", {}).get("inventorySetQuantities", {})
-        user_errors = mutation_data.get("userErrors", [])
-        if user_errors:
-            # Fallback: calcular delta y usar adjust_inventory
-            logger.warning(f"inventorySetQuantities userError para {sku}, usando delta fallback: {user_errors}")
+        # Verificar respuesta y userErrors
+        data = res.get("data") or {}
+        mutation_data = data.get("inventorySetQuantities") or {}
+        user_errors = mutation_data.get("userErrors", []) if isinstance(mutation_data, dict) else []
+
+        if res.get("errors") or user_errors or not mutation_data:
+            logger.warning(f"inventorySetQuantities error para {sku}, intentando fallback: {res.get('errors') or user_errors}")
             delta = quantity - current_qty
             if delta != 0:
-                import uuid
                 await self.adjust_inventory(
                     inventory_item_id=inventory_item_id,
                     location_id=location_gid,

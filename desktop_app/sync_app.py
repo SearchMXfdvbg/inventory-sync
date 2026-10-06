@@ -172,9 +172,12 @@ class InventorySyncDesktop(ctk.CTk):
             
             if response.status_code == 200:
                 data = response.json()
-                self.log(f"ÉXITO: {data.get('message', 'Inventario actualizado')}")
+                if data.get("success"):
+                    self.log(f"ÉXITO: {data.get('message', 'Inventario sincronizado')}")
+                else:
+                    self.log(f"AVISO: {data.get('message', 'No se actualizaron todos los items')}")
             else:
-                self.log(f"ERROR: {response.status_code}")
+                self.log(f"ERROR {response.status_code}: {response.text[:60]}")
         except Exception as e:
             self.log(f"FALLO DE RED: {str(e)[:50]}...")
 

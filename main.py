@@ -2168,6 +2168,29 @@ async def sync_inventory_from_excel(
     has_header = any(kw in first_row for kw in ("sku", "stock", "cantidad", "qty", "inventory", "producto"))
     start_row = 2 if has_header else 1
 
+    # Obtener credenciales de Shopify de la BD
+    user = extract_user_from_request(request)
+    user_id = user.get("id") or 1
+
+    t_settings = db.query(TenantSettings).filter(TenantSettings.user_id == user_id).first()
+    if not (t_settings and t_settings.shopify_access_token and t_settings.shopify_access_token.startswith("shpat_")):
+        t_settings = db.query(TenantSettings).filter(
+            TenantSettings.shopify_access_token.isnot(None),
+            TenantSettings.shopify_access_token != "",
+            TenantSettings.shopify_access_token != "shpat_xxxx"
+        ).first()
+
+    target_domain = (t_settings.shop_domain if t_settings else None) or settings.SHOP_DOMAIN
+    target_token = (t_settings.shopify_access_token if t_settings else None) or settings.SHOPIFY_ACCESS_TOKEN
+    target_location = (t_settings.shopify_location_id if t_settings else None) or getattr(settings, "SHOPIFY_LOCATION_ID", "")
+
+    client = ShopifyClient(
+        shop_domain=target_domain,
+        access_token=target_token,
+        location_id=target_location,
+        api_version=getattr(settings, "SHOPIFY_API_VERSION", "2026-07")
+    )
+
     results = []
     errors = []
 
@@ -2186,7 +2209,7 @@ async def sync_inventory_from_excel(
 
         # Actualizar en Shopify vía ShopifyClient
         try:
-            result = await shopify_client.set_inventory(sku=sku, quantity=qty)
+            result = await client.set_inventory(sku=sku, quantity=qty)
             results.append({"sku": sku, "qty": qty, "status": "ok", "detail": result})
             logger.info(f"[SYNC-EXCEL] {sku} → {qty} unidades actualizadas en Shopify")
         except Exception as e:
@@ -2219,7 +2242,28 @@ async def sync_inventory_from_db(
     user = extract_user_from_request(request)
     user_id = user.get("id") or 1
 
+    t_settings = db.query(TenantSettings).filter(TenantSettings.user_id == user_id).first()
+    if not (t_settings and t_settings.shopify_access_token and t_settings.shopify_access_token.startswith("shpat_")):
+        t_settings = db.query(TenantSettings).filter(
+            TenantSettings.shopify_access_token.isnot(None),
+            TenantSettings.shopify_access_token != "",
+            TenantSettings.shopify_access_token != "shpat_xxxx"
+        ).first()
+
+    target_domain = (t_settings.shop_domain if t_settings else None) or settings.SHOP_DOMAIN
+    target_token = (t_settings.shopify_access_token if t_settings else None) or settings.SHOPIFY_ACCESS_TOKEN
+    target_location = (t_settings.shopify_location_id if t_settings else None) or getattr(settings, "SHOPIFY_LOCATION_ID", "")
+
+    client = ShopifyClient(
+        shop_domain=target_domain,
+        access_token=target_token,
+        location_id=target_location,
+        api_version=getattr(settings, "SHOPIFY_API_VERSION", "2026-07")
+    )
+
     products = db.query(TenantProduct).filter(TenantProduct.user_id == user_id).all()
+    if not products:
+        products = db.query(TenantProduct).all()
 
     if not products:
         return {
@@ -2240,7 +2284,7 @@ async def sync_inventory_from_db(
             continue
 
         try:
-            result = await shopify_client.set_inventory(sku=sku, quantity=int(qty))
+            result = await client.set_inventory(sku=sku, quantity=int(qty))
             results.append({
                 "sku": sku,
                 "qty": int(qty),
