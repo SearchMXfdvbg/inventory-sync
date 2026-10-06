@@ -116,6 +116,11 @@ export default function InventoryPage() {
 
   useEffect(() => {
     fetchInventoryData();
+    // Auto-refresh cada 30 segundos para reflejar cambios del .exe de escritorio
+    const interval = setInterval(() => {
+      fetchInventoryData();
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   // Canales configurados realmente por el usuario
