@@ -26,7 +26,8 @@ import {
   Cpu,
   Radio,
   Monitor,
-  Download
+  Download,
+  Copy
 } from 'lucide-react';
 import { 
   getIntegrationStatus, 
@@ -1234,15 +1235,39 @@ export default function IntegrationsSettingsPage() {
                 <p className="text-[11px] text-slate-600 dark:text-[#8e95a5]">
                   Descarga el agente local para Windows. Este programa "Vigilante" se queda corriendo de fondo en tu computadora leyendo el Excel de tu Punto de Venta Local o BD, y empujando las ventas automáticamente a la nube cada 60 segundos.
                 </p>
-                <div className="pt-2">
+                <div className="pt-2 flex flex-col gap-3">
                   <a
                     href="/InventorySync_Desktop.exe"
                     download
-                    className="inline-flex items-center gap-2 bg-[#20242c] text-white px-4 py-2 font-bold text-[11px] uppercase hover:bg-slate-700 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 bg-[#00ff66] text-black px-4 py-3 font-bold text-[12px] uppercase hover:bg-[#00d957] transition-colors shadow-hard"
                   >
                     <Download size={14} />
-                    <span>Descargar InventorySync_Desktop.exe</span>
+                    <span>Descargar Agente Local (.exe)</span>
                   </a>
+                  
+                  <div className="mt-2 p-3 bg-slate-900 border border-slate-700 rounded-sm">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">CÓDIGO DE VINCULACIÓN SEGURA (Cópialo en la app)</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="text" 
+                        readOnly 
+                        value={typeof window !== 'undefined' ? btoa(`${process.env.NEXT_PUBLIC_API_URL || 'https://inventory-sync-5y8u.onrender.com'}|060718`) : ''} 
+                        className="w-full bg-black text-[#00ff66] text-xs font-mono px-3 py-2 border border-slate-700 outline-none"
+                      />
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                          navigator.clipboard.writeText(input.value);
+                          showToast('Código copiado al portapapeles', 'success');
+                        }}
+                        className="bg-slate-800 text-white p-2 hover:bg-slate-700 transition-colors border border-slate-700"
+                        title="Copiar Código"
+                      >
+                        <Copy size={16} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
