@@ -35,8 +35,7 @@ import {
   exportProductsToExcel,
   isChannelConfigured,
   ImportInventoryResponse,
-  syncAllProductsToChannels,
-  syncInventoryFromShopify
+  syncAllProductsToChannels
 } from '@/lib/api';
 import FilterBar, { FilterBarCounts } from '@/components/FilterBar';
 import StatusBadge from '@/components/StatusBadge';
@@ -90,20 +89,6 @@ export default function InventoryPage() {
       console.error(err);
     } finally {
       setIsBulkSyncing(false);
-    }
-  };
-
-  const [isSyncingFromShopify, setIsSyncingFromShopify] = useState(false);
-
-  const handleSyncFromShopify = async () => {
-    setIsSyncingFromShopify(true);
-    try {
-      await syncInventoryFromShopify();
-      await fetchInventoryData();
-    } catch (err: any) {
-      console.error('Error sincronizando desde Shopify', err);
-    } finally {
-      setIsSyncingFromShopify(false);
     }
   };
 
@@ -468,16 +453,6 @@ export default function InventoryPage() {
           >
             <Zap size={13} />
             <span>SYNC_ALL</span>
-          </button>
-
-          <button
-            onClick={handleSyncFromShopify}
-            disabled={isSyncingFromShopify}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold font-mono uppercase text-slate-800 dark:text-white bg-white dark:bg-[#181b22] border border-slate-300 dark:border-[#20242c] hover:border-[#00ff66]/50 hover:text-[#00ff66] transition-colors shadow-hard cursor-pointer disabled:opacity-50"
-            title="Consultar y actualizar existencias en vivo directamente desde Shopify"
-          >
-            <RefreshCw size={13} className={isSyncingFromShopify ? "animate-spin text-[#00ff66]" : ""} />
-            <span>{isSyncingFromShopify ? "JALANDO..." : "JALAR DE SHOPIFY"}</span>
           </button>
         </div>
       </div>

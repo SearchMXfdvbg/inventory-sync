@@ -24,7 +24,9 @@ import {
   HelpCircle,
   Terminal,
   Cpu,
-  Radio
+  Radio,
+  Monitor,
+  Download
 } from 'lucide-react';
 import { 
   getIntegrationStatus, 
@@ -1215,6 +1217,36 @@ export default function IntegrationsSettingsPage() {
               </div>
             </div>
           )}
+
+          {/* 8. Desktop App Download */}
+          <div className="border border-slate-200 dark:border-[#20242c] bg-white dark:bg-[#0d0e12] p-5 shadow-hard flex flex-col justify-between space-y-4">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#20242c] mb-3">
+                <div className="flex items-center gap-2">
+                  <Monitor size={16} className="text-[#00ff66]" />
+                  <h3 className="font-bold text-slate-900 dark:text-white uppercase">App de Escritorio (Punto de Venta)</h3>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 border border-[#00ff66]/40 text-[#00ff66] bg-[#00ff66]/10 font-bold uppercase">
+                  DESCARGABLE
+                </span>
+              </div>
+              <div className="space-y-3">
+                <p className="text-[11px] text-slate-600 dark:text-[#8e95a5]">
+                  Descarga el agente local para Windows. Este programa "Vigilante" se queda corriendo de fondo en tu computadora leyendo el Excel de tu Punto de Venta Local o BD, y empujando las ventas automáticamente a la nube cada 60 segundos.
+                </p>
+                <div className="pt-2">
+                  <a
+                    href="/InventorySync_Desktop.exe"
+                    download
+                    className="inline-flex items-center gap-2 bg-[#20242c] text-white px-4 py-2 font-bold text-[11px] uppercase hover:bg-slate-700 transition-colors"
+                  >
+                    <Download size={14} />
+                    <span>Descargar InventorySync_Desktop.exe</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
 
         </div>
 
