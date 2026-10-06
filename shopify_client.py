@@ -657,11 +657,17 @@ class ShopifyClient:
                 sku
                 inventoryItem {
                   id
-                  inventoryLevel(locationId: "%s") {
-                    id
-                    quantities(names: ["available"]) {
-                      name
-                      quantity
+                  inventoryLevels(first: 5) {
+                    edges {
+                      node {
+                        location {
+                          id
+                        }
+                        quantities(names: ["available"]) {
+                          name
+                          quantity
+                        }
+                      }
                     }
                   }
                 }
@@ -669,11 +675,7 @@ class ShopifyClient:
             }
           }
         }
-        """ % (f"gid://shopify/Location/{self.location_id}" if self.location_id and not str(self.location_id).startswith("gid://") else self.location_id)
-
-        location_gid = self.location_id
-        if location_gid and not str(location_gid).startswith("gid://"):
-            location_gid = f"gid://shopify/Location/{location_gid}"
+        """
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             r = await client.post(
@@ -684,22 +686,47 @@ class ShopifyClient:
                 raise ShopifyHTTPError(f"Error buscando SKU '{sku}' en Shopify: HTTP {r.status_code}", status_code=r.status_code)
             data = r.json()
 
+        if not data or not data.get("data"):
+            err_msg = data.get("errors") if data else "Respuesta vacía"
+            raise ShopifyHTTPError(f"Error buscando SKU '{sku}' en Shopify: {err_msg}", status_code=400)
+
         edges = data.get("data", {}).get("productVariants", {}).get("edges", [])
-        # Encontrar el que tenga el SKU exacto
         inventory_item_id = None
+        location_gid = None
         current_qty = 0
+
+        target_loc = self.location_id
+        if target_loc and not str(target_loc).startswith("gid://"):
+            target_loc = f"gid://shopify/Location/{target_loc}"
+
         for edge in edges:
             node = edge.get("node", {})
-            if str(node.get("sku", "")).strip() == str(sku).strip():
+            if str(node.get("sku", "")).strip().lower() == str(sku).strip().lower():
                 item = node.get("inventoryItem", {})
                 inventory_item_id = item.get("id")
-                level = item.get("inventoryLevel") or {}
-                quantities = level.get("quantities", [])
-                current_qty = quantities[0].get("quantity", 0) if quantities else 0
+                levels_edges = item.get("inventoryLevels", {}).get("edges", [])
+                for lvl_edge in levels_edges:
+                    lvl_node = lvl_edge.get("node", {})
+                    lvl_loc_id = lvl_node.get("location", {}).get("id")
+                    quantities = lvl_node.get("quantities", [])
+                    lvl_qty = quantities[0].get("quantity", 0) if quantities else 0
+                    
+                    if target_loc and lvl_loc_id == target_loc:
+                        location_gid = lvl_loc_id
+                        current_qty = lvl_qty
+                        break
+                    elif not location_gid:
+                        location_gid = lvl_loc_id
+                        current_qty = lvl_qty
                 break
 
         if not inventory_item_id:
             raise ShopifyHTTPError(f"No se encontró el SKU '{sku}' en Shopify.", status_code=404)
+
+        # Si la cantidad ya coincide exactamente, no es necesario llamar a la API
+        if current_qty == quantity:
+            logger.info(f"[SET-INVENTORY] SKU={sku} ya tiene la cantidad requerida ({quantity}) en Shopify.")
+            return {"sku": sku, "quantity_set": quantity, "method": "unchanged"}
 
         # ── Paso 2: fijar cantidad absoluta con inventorySetQuantities ────────
         import uuid
@@ -762,7 +789,11 @@ class ShopifyClient:
                 )
             return {"sku": sku, "quantity_set": quantity, "delta_used": delta, "method": "adjust_fallback"}
 
-        changes = mutation_data.get("inventoryAdjustmentGroup", {}).get("changes", [])
-        qty_after = changes[0].get("quantityAfterChange", quantity) if changes else quantity
+        group = mutation_data.get("inventoryAdjustmentGroup") or {}
+        changes = group.get("changes", []) if isinstance(group, dict) else []
+        qty_after = quantity
+        if changes and isinstance(changes[0], dict) and changes[0].get("quantityAfterChange") is not None:
+            qty_after = changes[0]["quantityAfterChange"]
+
         logger.info(f"[SET-INVENTORY] SKU={sku} fijado en {qty_after} unidades en Shopify")
         return {"sku": sku, "quantity_set": qty_after, "method": "set"}
