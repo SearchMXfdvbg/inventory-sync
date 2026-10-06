@@ -2207,7 +2207,32 @@ async def sync_inventory_from_excel(
         if not sku or qty < 0:
             continue
 
-        # Actualizar en Shopify vía ShopifyClient
+        # 1. Actualizar el inventario central en la plataforma Inventory Sync (Neon BD)
+        try:
+            prod = db.query(TenantProduct).filter(
+                TenantProduct.user_id == user_id,
+                TenantProduct.sku == sku
+            ).first()
+            if not prod:
+                prod = db.query(TenantProduct).filter(TenantProduct.sku == sku).first()
+
+            if prod:
+                prod.stock = qty
+            else:
+                prod = TenantProduct(
+                    user_id=user_id,
+                    sku=sku,
+                    nombre=f"Producto {sku}",
+                    stock=qty
+                )
+                db.add(prod)
+            db.commit()
+            logger.info(f"[SYNC-EXCEL] Stock de {sku} actualizado en BD de Inventory Sync a {qty}")
+        except Exception as e:
+            db.rollback()
+            logger.warning(f"[SYNC-EXCEL] Error guardando en BD para {sku}: {e}")
+
+        # 2. Replicar la actualización hacia Shopify (canal maestro)
         try:
             result = await client.set_inventory(sku=sku, quantity=qty)
             results.append({"sku": sku, "qty": qty, "status": "ok", "detail": result})
