@@ -1,74 +1,117 @@
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import filedialog, messagebox
 import threading
 import time
 import requests
 import os
+import base64
 
-class InventorySyncDesktop:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Inventory Sync Desktop (Punto de Venta)")
-        self.root.geometry("500x550")
-        self.root.configure(padx=20, pady=20)
+# Configurar apariencia moderna
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("green")
+
+class InventorySyncDesktop(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+        self.title("Inventory Sync - Agente Local")
+        self.geometry("520x650")
+        self.resizable(False, False)
         
+        self.url = ""
+        self.pin = ""
         self.is_running = False
         self.thread = None
-
-        # Title
-        tk.Label(root, text="Sincronizador Local de Inventario", font=("Arial", 16, "bold")).pack(pady=(0, 20))
-
-        # API settings
-        tk.Label(root, text="URL del Backend:").pack(anchor="w")
-        self.url_entry = tk.Entry(root, width=50)
-        self.url_entry.insert(0, "https://inventory-sync-5y8u.onrender.com")
-        self.url_entry.pack(pady=(0, 10))
-
-        tk.Label(root, text="PIN de Admin:").pack(anchor="w")
-        self.pin_entry = tk.Entry(root, width=50, show="*")
-        self.pin_entry.insert(0, "060718")
-        self.pin_entry.pack(pady=(0, 10))
-
-        # Mode Selection
-        tk.Label(root, text="Fuente de Datos:", font=("Arial", 10, "bold")).pack(anchor="w", pady=(10, 5))
         
-        self.mode_var = tk.StringVar(value="excel")
-        tk.Radiobutton(root, text="Archivo Excel (.xlsx)", variable=self.mode_var, value="excel").pack(anchor="w")
-        tk.Radiobutton(root, text="Base de Datos Local (Proximamente)", variable=self.mode_var, value="db", state="disabled").pack(anchor="w")
+        self.build_auth_screen()
 
-        # Excel File Picker
-        self.file_frame = tk.Frame(root)
-        self.file_frame.pack(fill="x", pady=10)
+    def build_auth_screen(self):
+        # Limpiar pantalla
+        for widget in self.winfo_children():
+            widget.destroy()
+            
+        self.grid_columnconfigure(0, weight=1)
         
-        self.file_path_var = tk.StringVar(value="Ningún archivo seleccionado")
-        tk.Label(self.file_frame, textvariable=self.file_path_var, fg="blue").pack(side="left")
-        tk.Button(self.file_frame, text="Examinar...", command=self.browse_file).pack(side="right")
+        ctk.CTkLabel(self, text="INVENTORY SYNC", font=ctk.CTkFont(size=28, weight="bold"), text_color="#00ff66").pack(pady=(80, 10))
+        ctk.CTkLabel(self, text="Agente Local de Sincronización", text_color="gray", font=ctk.CTkFont(size=14)).pack(pady=(0, 50))
+        
+        ctk.CTkLabel(self, text="CÓDIGO DE VINCULACIÓN:", font=ctk.CTkFont(size=12, weight="bold")).pack(pady=(0, 5))
+        self.token_entry = ctk.CTkEntry(self, placeholder_text="Pega el código de la plataforma aquí...", width=400, height=45, justify="center")
+        self.token_entry.pack(pady=(0, 30))
+        
+        btn = ctk.CTkButton(self, text="VINCULAR AGENTE", command=self.verify_token, width=250, height=45, font=ctk.CTkFont(weight="bold", size=14))
+        btn.pack(pady=10)
 
-        # Interval
-        tk.Label(root, text="Intervalo de Sincronización (segundos):").pack(anchor="w", pady=(10, 0))
-        self.interval_entry = tk.Entry(root, width=10)
+    def verify_token(self):
+        token = self.token_entry.get().strip()
+        try:
+            decoded = base64.b64decode(token).decode('utf-8')
+            parts = decoded.split('|')
+            if len(parts) == 2 and parts[0].startswith("http"):
+                self.url = parts[0]
+                self.pin = parts[1]
+                self.build_main_screen()
+            else:
+                messagebox.showerror("Error", "Código inválido o corrupto.")
+        except Exception:
+            messagebox.showerror("Error", "Código no válido. Cópialo completo desde el panel web.")
+
+    def build_main_screen(self):
+        for widget in self.winfo_children():
+            widget.destroy()
+        
+        header = ctk.CTkFrame(self, fg_color="transparent")
+        header.pack(fill="x", padx=20, pady=(20, 10))
+        
+        ctk.CTkLabel(header, text="● AGENTE CONECTADO", font=ctk.CTkFont(size=18, weight="bold"), text_color="#00ff66").pack(anchor="w")
+        ctk.CTkLabel(header, text=f"Servidor: {self.url}", text_color="gray", font=ctk.CTkFont(size=10)).pack(anchor="w")
+
+        # Configuración Origen
+        frame_mode = ctk.CTkFrame(self)
+        frame_mode.pack(fill="x", padx=20, pady=10)
+        
+        ctk.CTkLabel(frame_mode, text="1. ORIGEN DE DATOS LOCAL", font=ctk.CTkFont(weight="bold", size=12)).pack(anchor="w", padx=15, pady=(15, 5))
+        self.mode_var = ctk.StringVar(value="excel")
+        ctk.CTkRadioButton(frame_mode, text="Archivo Excel (.xlsx)", variable=self.mode_var, value="excel").pack(anchor="w", padx=25, pady=5)
+        db_radio = ctk.CTkRadioButton(frame_mode, text="Base de Datos SQL/Local (Próximamente)", variable=self.mode_var, value="db")
+        db_radio.pack(anchor="w", padx=25, pady=(5, 15))
+        db_radio.configure(state="disabled")
+
+        # Archivo
+        frame_file = ctk.CTkFrame(self)
+        frame_file.pack(fill="x", padx=20, pady=10)
+        ctk.CTkLabel(frame_file, text="2. SELECCIONAR ARCHIVO", font=ctk.CTkFont(weight="bold", size=12)).pack(anchor="w", padx=15, pady=(15, 5))
+        
+        file_inner = ctk.CTkFrame(frame_file, fg_color="transparent")
+        file_inner.pack(fill="x", padx=15, pady=(0, 15))
+        self.file_path_var = ctk.StringVar(value="Ningún archivo seleccionado")
+        ctk.CTkLabel(file_inner, textvariable=self.file_path_var, text_color="gray", wraplength=280, justify="left").pack(side="left", padx=(10,0))
+        ctk.CTkButton(file_inner, text="Examinar...", command=self.browse_file, width=100, height=30).pack(side="right")
+
+        # Intervalo
+        frame_int = ctk.CTkFrame(self)
+        frame_int.pack(fill="x", padx=20, pady=10)
+        ctk.CTkLabel(frame_int, text="3. INTERVALO (Segundos):").pack(side="left", padx=15, pady=15)
+        self.interval_entry = ctk.CTkEntry(frame_int, width=80)
         self.interval_entry.insert(0, "60")
-        self.interval_entry.pack(anchor="w", pady=(0, 20))
+        self.interval_entry.pack(side="right", padx=15, pady=15)
 
-        # Buttons
-        self.btn_frame = tk.Frame(root)
-        self.btn_frame.pack(fill="x", pady=10)
-
-        self.start_btn = tk.Button(self.btn_frame, text="▶ INICIAR SYNC", bg="green", fg="white", font=("Arial", 12, "bold"), command=self.toggle_sync)
-        self.start_btn.pack(fill="x", ipady=5)
+        # Botón Acción
+        self.start_btn = ctk.CTkButton(self, text="▶ INICIAR SINCRONIZACIÓN AUTOMÁTICA", command=self.toggle_sync, height=45, font=ctk.CTkFont(weight="bold", size=14), fg_color="#00ff66", text_color="black", hover_color="#00d957")
+        self.start_btn.pack(fill="x", padx=20, pady=(15, 5))
 
         # Log
-        tk.Label(root, text="Registro de Actividad:").pack(anchor="w")
-        self.log_text = tk.Text(root, height=8, width=50, state="disabled")
-        self.log_text.pack(fill="both", expand=True)
+        ctk.CTkLabel(self, text="Consola de Actividad:", text_color="gray", font=ctk.CTkFont(size=11)).pack(anchor="w", padx=20)
+        self.log_text = ctk.CTkTextbox(self, height=100, state="disabled", font=ctk.CTkFont(family="Consolas", size=11), fg_color="#1e1e1e")
+        self.log_text.pack(fill="x", padx=20, pady=(0, 20))
+        
+        self.log("Agente configurado y listo para iniciar.")
 
     def log(self, message):
-        self.log_text.config(state="normal")
+        self.log_text.configure(state="normal")
         t = time.strftime("%H:%M:%S")
         self.log_text.insert("end", f"[{t}] {message}\n")
         self.log_text.see("end")
-        self.log_text.config(state="disabled")
-        self.root.update()
+        self.log_text.configure(state="disabled")
 
     def browse_file(self):
         filename = filedialog.askopenfilename(
@@ -97,7 +140,7 @@ class InventorySyncDesktop:
             return
 
         self.is_running = True
-        self.start_btn.config(text="■ DETENER SYNC", bg="red")
+        self.start_btn.configure(text="■ DETENER SINCRONIZACIÓN", fg_color="#ff4444", hover_color="#cc0000", text_color="white")
         self.log("Sincronizador INICIADO...")
         
         self.thread = threading.Thread(target=self.sync_loop, daemon=True)
@@ -105,22 +148,21 @@ class InventorySyncDesktop:
 
     def stop_sync(self):
         self.is_running = False
-        self.start_btn.config(text="▶ INICIAR SYNC", bg="green")
+        self.start_btn.configure(text="▶ INICIAR SINCRONIZACIÓN AUTOMÁTICA", fg_color="#00ff66", hover_color="#00d957", text_color="black")
         self.log("Sincronizador DETENIDO.")
 
     def sync_loop(self):
         while self.is_running:
             self.perform_sync()
-            # Sleep in chunks to allow stopping quickly
             for _ in range(self.interval):
                 if not self.is_running:
                     break
                 time.sleep(1)
 
     def perform_sync(self):
-        self.log("Enviando datos al servidor...")
-        url = self.url_entry.get().rstrip("/") + "/sync/from-excel"
-        headers = {"X-Admin-PIN": self.pin_entry.get()}
+        self.log("Enviando cambios a la nube...")
+        url = self.url.rstrip("/") + "/sync/from-excel"
+        headers = {"X-Admin-PIN": self.pin}
         filepath = self.file_path_var.get()
 
         try:
@@ -130,13 +172,12 @@ class InventorySyncDesktop:
             
             if response.status_code == 200:
                 data = response.json()
-                self.log(f"ÉXITO: {data.get('message', 'Sincronizado')}")
+                self.log(f"ÉXITO: {data.get('message', 'Inventario actualizado')}")
             else:
-                self.log(f"ERROR: {response.status_code} - {response.text}")
+                self.log(f"ERROR: {response.status_code}")
         except Exception as e:
-            self.log(f"FALLO DE RED: {str(e)}")
+            self.log(f"FALLO DE RED: {str(e)[:50]}...")
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = InventorySyncDesktop(root)
-    root.mainloop()
+    app = InventorySyncDesktop()
+    app.mainloop()
