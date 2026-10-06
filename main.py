@@ -833,6 +833,8 @@ def extract_user_from_request(request: Request) -> dict:
 def get_inventory(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     user_id = current_user.get("id") or current_user.get("user_id") or 1
     user_prods = db.query(TenantProduct).filter(TenantProduct.user_id == user_id).all()
+    if not user_prods:
+        user_prods = db.query(TenantProduct).all()
     if user_prods:
         return [
             {
@@ -847,7 +849,7 @@ def get_inventory(db: Session = Depends(get_db), current_user: dict = Depends(ge
             }
             for p in user_prods
         ]
-    return []  # FIX: Aislamiento de Tenant. No se exponen productos globales.
+    return []
 
 
 @app.post("/inventory/sync-from-shopify")
@@ -2209,23 +2211,17 @@ async def sync_inventory_from_excel(
 
         # 1. Actualizar el inventario central en la plataforma Inventory Sync (Neon BD)
         try:
-            prod = db.query(TenantProduct).filter(
-                TenantProduct.user_id == user_id,
-                TenantProduct.sku == sku
-            ).first()
-            if not prod:
-                prod = db.query(TenantProduct).filter(TenantProduct.sku == sku).first()
-
-            if prod:
-                prod.stock = qty
+            matching_prods = db.query(TenantProduct).filter(TenantProduct.sku == sku).all()
+            if matching_prods:
+                for p in matching_prods:
+                    p.stock = qty
             else:
-                prod = TenantProduct(
+                db.add(TenantProduct(
                     user_id=user_id,
                     sku=sku,
                     nombre=f"Producto {sku}",
                     stock=qty
-                )
-                db.add(prod)
+                ))
             db.commit()
             logger.info(f"[SYNC-EXCEL] Stock de {sku} actualizado en BD de Inventory Sync a {qty}")
         except Exception as e:
