@@ -833,23 +833,19 @@ def extract_user_from_request(request: Request) -> dict:
 def get_inventory(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     user_id = current_user.get("id") or current_user.get("user_id") or 1
     user_prods = db.query(TenantProduct).filter(TenantProduct.user_id == user_id).all()
-    if not user_prods:
-        user_prods = db.query(TenantProduct).all()
-    if user_prods:
-        return [
-            {
-                "sku": p.sku,
-                "nombre": p.nombre,
-                "stock": p.stock,
-                "shopify_inventory_item_id": p.shopify_inventory_item_id or "",
-                "shopify_location_id": p.shopify_location_id or "",
-                "ml_item_id": p.ml_item_id or "",
-                "tiktok_product_id": p.tiktok_product_id or "",
-                "amazon_asin": p.amazon_asin or ""
-            }
-            for p in user_prods
-        ]
-    return []
+    return [
+        {
+            "sku": p.sku,
+            "nombre": p.nombre,
+            "stock": p.stock,
+            "shopify_inventory_item_id": p.shopify_inventory_item_id or "",
+            "shopify_location_id": p.shopify_location_id or "",
+            "ml_item_id": p.ml_item_id or "",
+            "tiktok_product_id": p.tiktok_product_id or "",
+            "amazon_asin": p.amazon_asin or ""
+        }
+        for p in user_prods
+    ]
 
 
 @app.post("/inventory/sync-from-shopify")
