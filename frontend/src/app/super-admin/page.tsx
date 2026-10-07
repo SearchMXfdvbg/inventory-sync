@@ -816,7 +816,7 @@ export default function SuperAdminPage() {
                   </label>
                   <input
                     type="text"
-                    defaultValue="postgresql://master:â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢@aws-eu-central-1.rds.amazonaws.com:5432/inventory_sync"
+                    defaultValue="postgresql://master:••••••••@aws-eu-central-1.rds.amazonaws.com:5432/inventory_sync"
                     readOnly
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-400 font-mono"
                   />
@@ -1087,6 +1087,12 @@ export default function SuperAdminPage() {
                 </label>
                 <input
                   type="password"
+                  name="superadmin_pin"
+                  id="superadmin_pin"
+                  autoComplete="one-time-code"
+                  data-lpignore="true"
+                  data-1p-ignore="true"
+                  data-form-type="other"
                   autoFocus
                   maxLength={10}
                   value={securityPin}
@@ -1094,7 +1100,7 @@ export default function SuperAdminPage() {
                     setSecurityPin(e.target.value);
                     setSecurityError(null);
                   }}
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="PIN de 6 dígitos"
                   className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl px-4 py-3 text-center text-xl tracking-[0.4em] font-mono text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                 />
               </div>
@@ -1190,7 +1196,7 @@ export default function SuperAdminPage() {
                         <span>Contraseña de Acceso del Cliente</span>
                       </p>
                       <p className="text-amber-300 font-mono font-bold text-sm tracking-wider mt-1">
-                        {showViewPassword ? (viewedTenant.password || 'ClienteSeguro2026#') : 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'}
+                        {showViewPassword ? (viewedTenant.password || 'ClienteSeguro2026#') : '••••••••••••'}
                       </p>
                     </div>
                     <button
