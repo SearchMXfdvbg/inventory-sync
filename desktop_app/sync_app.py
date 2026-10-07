@@ -82,10 +82,21 @@ class InventorySyncDesktop(ctk.CTk):
         ctk.CTkLabel(frame_file, text="2. SELECCIONAR ARCHIVO", font=ctk.CTkFont(weight="bold", size=12)).pack(anchor="w", padx=15, pady=(15, 5))
         
         file_inner = ctk.CTkFrame(frame_file, fg_color="transparent")
-        file_inner.pack(fill="x", padx=15, pady=(0, 15))
+        file_inner.pack(fill="x", padx=15, pady=(0, 10))
         self.file_path_var = ctk.StringVar(value="Ningún archivo seleccionado")
         ctk.CTkLabel(file_inner, textvariable=self.file_path_var, text_color="gray", wraplength=280, justify="left").pack(side="left", padx=(10,0))
         ctk.CTkButton(file_inner, text="Examinar...", command=self.browse_file, width=100, height=30).pack(side="right")
+
+        # Botón para bajar cambios de la nube al Excel
+        ctk.CTkButton(
+            frame_file, 
+            text="⬇ DESCARGAR / ACTUALIZAR EXCEL CON LA NUBE", 
+            command=self.download_from_cloud, 
+            fg_color="#1f538d", 
+            hover_color="#14375e",
+            height=32,
+            font=ctk.CTkFont(weight="bold", size=11)
+        ).pack(fill="x", padx=15, pady=(0, 15))
 
         # Intervalo
         frame_int = ctk.CTkFrame(self)
@@ -120,6 +131,26 @@ class InventorySyncDesktop(ctk.CTk):
         )
         if filename:
             self.file_path_var.set(filename)
+
+    def download_from_cloud(self):
+        try:
+            url = self.url.rstrip("/") + "/sync/template"
+            headers = {"X-Admin-PIN": self.pin}
+            self.log("Descargando inventario actualizado de la nube...")
+            r = requests.get(url, headers=headers, timeout=20)
+            if r.status_code == 200:
+                current_path = self.file_path_var.get()
+                if not current_path or current_path == "Ningún archivo seleccionado":
+                    current_path = os.path.join(os.path.expanduser("~"), "Desktop", "inventario_demo.xlsx")
+                    self.file_path_var.set(current_path)
+                with open(current_path, "wb") as f:
+                    f.write(r.content)
+                self.log(f"ÉXITO: Excel local actualizado ({os.path.basename(current_path)}).")
+                messagebox.showinfo("Éxito", f"Tu archivo Excel ha sido actualizado con los datos de la nube:\n\n{current_path}")
+            else:
+                self.log(f"ERROR: No se pudo descargar el Excel ({r.status_code})")
+        except Exception as e:
+            self.log(f"FALLO DE RED: {e}")
 
     def toggle_sync(self):
         if self.is_running:

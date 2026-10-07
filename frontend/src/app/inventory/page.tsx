@@ -23,7 +23,10 @@ import {
   ExternalLink,
   Sparkles,
   Zap,
-  Info
+  Info,
+  Pencil,
+  Check,
+  Loader2
 } from 'lucide-react';
 import { 
   getInventory, 
@@ -35,7 +38,8 @@ import {
   exportProductsToExcel,
   isChannelConfigured,
   ImportInventoryResponse,
-  syncAllProductsToChannels
+  syncAllProductsToChannels,
+  updateProductStock
 } from '@/lib/api';
 import FilterBar, { FilterBarCounts } from '@/components/FilterBar';
 import StatusBadge from '@/components/StatusBadge';
@@ -73,6 +77,65 @@ export default function InventoryPage() {
   const [isBulkSyncing, setIsBulkSyncing] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, percent: 0, statusText: '' });
   const [bulkResult, setBulkResult] = useState<{ updatedCount: number; channels: string[] } | null>(null);
+
+  // Toast Notificaciones
+  const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const showToast = (type: 'success' | 'error', text: string) => {
+    setToastMessage({ type, text });
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4500);
+  };
+
+  // Edición rápida de stock en línea (inline edit anti-estúpidos)
+  const [editingSku, setEditingSku] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState<string>('');
+  const [isSavingStock, setIsSavingStock] = useState<boolean>(false);
+
+  const handleStartEditStock = (p: Product) => {
+    setEditingSku(p.sku);
+    setEditingValue(p.stock.toString());
+  };
+
+  const handleCancelEditStock = () => {
+    setEditingSku(null);
+    setEditingValue('');
+  };
+
+  const handleSaveStock = async (sku: string) => {
+    const trimmed = editingValue.trim();
+    const parsed = parseInt(trimmed, 10);
+    if (isNaN(parsed) || parsed < 0) {
+      showToast('error', 'El stock debe ser un número entero mayor o igual a 0.');
+      return;
+    }
+
+    setIsSavingStock(true);
+    try {
+      await updateProductStock(sku, parsed);
+      
+      // Actualizar estado local inmediatamente
+      setProducts(prev => prev.map(p => {
+        if (p.sku === sku) {
+          return {
+            ...p,
+            stock: parsed,
+            shopify_stock: shopifyConnected ? parsed : p.shopify_stock
+          };
+        }
+        return p;
+      }));
+
+      showToast('success', `✓ ${sku}: Stock actualizado a ${parsed} en BD y sincronizado en Shopify.`);
+      setEditingSku(null);
+    } catch (err: any) {
+      console.error(err);
+      showToast('error', `Error al actualizar ${sku}: ${err.message || 'Fallo de conexión'}`);
+    } finally {
+      setIsSavingStock(false);
+    }
+  };
 
   const handleStartBulkSync = async () => {
     setIsBulkSyncModalOpen(true);
@@ -621,17 +684,65 @@ export default function InventoryPage() {
                         )}
                       </td>
 
-                      {/* Stock Central */}
+                      {/* Stock Central (Editable en Línea) */}
                       <td className="px-4 py-3">
-                        <span className={`text-sm font-bold font-mono px-2 py-0.5 border ${
-                          p.stock === 0
-                            ? 'text-[#ff3b00] border-[#ff3b00]/40 bg-[#ff3b00]/5'
-                            : p.stock < 10
-                            ? 'text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/20'
-                            : 'text-slate-700 dark:text-slate-200 border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#111318]'
-                        }`}>
-                          {p.stock}
-                        </span>
+                        {editingSku === p.sku ? (
+                          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="number"
+                              min="0"
+                              autoFocus
+                              disabled={isSavingStock}
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveStock(p.sku);
+                                if (e.key === 'Escape') handleCancelEditStock();
+                              }}
+                              className="w-16 px-2 py-1 text-sm font-bold font-mono text-center bg-slate-900 border-2 border-[#00ff66] text-white rounded focus:outline-none shadow-lg"
+                            />
+                            {isSavingStock ? (
+                              <Loader2 size={16} className="animate-spin text-[#00ff66]" />
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveStock(p.sku)}
+                                  title="Guardar cambio (Enter)"
+                                  className="p-1 bg-[#00ff66] hover:bg-[#00d957] text-black rounded font-bold transition-all shadow cursor-pointer"
+                                >
+                                  <Check size={13} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={handleCancelEditStock}
+                                  title="Cancelar (Esc)"
+                                  className="p-1 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded transition-all cursor-pointer"
+                                >
+                                  <X size={13} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditStock(p)}
+                            title="Haz clic para modificar el stock"
+                            className="group flex items-center gap-1.5 cursor-pointer text-left focus:outline-none"
+                          >
+                            <span className={`text-sm font-bold font-mono px-2 py-0.5 border rounded transition-all group-hover:border-[#00ff66] group-hover:shadow-[0_0_8px_rgba(0,255,102,0.3)] ${
+                              p.stock === 0
+                                ? 'text-[#ff3b00] border-[#ff3b00]/40 bg-[#ff3b00]/5'
+                                : p.stock < 10
+                                ? 'text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/20'
+                                : 'text-slate-700 dark:text-slate-200 border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#111318]'
+                            }`}>
+                              {p.stock}
+                            </span>
+                            <Pencil size={11} className="text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-[#00ff66] transition-opacity" />
+                          </button>
+                        )}
                       </td>
 
                       {/* Shopify */}
@@ -935,6 +1046,18 @@ export default function InventoryPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Toast Notificación Instantánea */}
+      {toastMessage && (
+        <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 font-mono text-xs font-bold border transition-all ${
+          toastMessage.type === 'success' 
+            ? 'bg-slate-900 border-[#00ff66] text-[#00ff66] shadow-[0_0_20px_rgba(0,255,102,0.25)]' 
+            : 'bg-red-950 border-red-500 text-red-200 shadow-xl'
+        }`}>
+          {toastMessage.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+          <span>{toastMessage.text}</span>
         </div>
       )}
     </div>

@@ -1131,6 +1131,86 @@ def get_inventory_item(sku: str, db: Session = Depends(get_db), current_user: di
             detail=str(e)
         )
 
+
+@app.put("/inventory/{sku}")
+@app.patch("/inventory/{sku}")
+async def update_inventory_item(
+    sku: str,
+    payload: dict,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth_ok: bool = Depends(verify_admin_auth)
+):
+    """
+    Actualiza el stock (y opcionalmente nombre) de un producto en la base de datos (TenantProduct)
+    y sincroniza en tiempo real hacia Shopify.
+    """
+    user = extract_user_from_request(request)
+    user_id = user.get("id") or 1
+
+    new_stock = payload.get("stock")
+    if new_stock is None:
+        raise HTTPException(status_code=400, detail="Debe especificar el campo 'stock'")
+
+    try:
+        new_stock = int(new_stock)
+        if new_stock < 0:
+            raise ValueError()
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="El stock debe ser un número entero no negativo (>= 0)")
+
+    # 1. Actualizar en la base de datos central de Inventory Sync (Neon)
+    prods = db.query(TenantProduct).filter(TenantProduct.sku == sku).all()
+    if prods:
+        for p in prods:
+            p.stock = new_stock
+            if payload.get("nombre"):
+                p.nombre = payload["nombre"]
+    else:
+        p = TenantProduct(
+            user_id=user_id,
+            sku=sku,
+            nombre=payload.get("nombre") or f"Producto {sku}",
+            stock=new_stock
+        )
+        db.add(p)
+    db.commit()
+
+    # 2. Replicar la actualización en tiempo real hacia Shopify
+    t_settings = db.query(TenantSettings).filter(TenantSettings.user_id == user_id).first()
+    if not (t_settings and t_settings.shopify_access_token and t_settings.shopify_access_token.startswith("shpat_")):
+        t_settings = db.query(TenantSettings).filter(
+            TenantSettings.shopify_access_token.isnot(None),
+            TenantSettings.shopify_access_token != "",
+            TenantSettings.shopify_access_token != "shpat_xxxx"
+        ).first()
+
+    shopify_synced = False
+    shopify_msg = "Shopify no configurado"
+    if t_settings and t_settings.shopify_access_token:
+        try:
+            client = ShopifyClient(
+                shop_domain=t_settings.shop_domain,
+                access_token=t_settings.shopify_access_token,
+                location_id=t_settings.shopify_location_id,
+                api_version=getattr(settings, "SHOPIFY_API_VERSION", "2026-07")
+            )
+            res = await client.set_inventory(sku=sku, quantity=new_stock)
+            shopify_synced = True
+            shopify_msg = "Sincronizado exitosamente con Shopify"
+            logger.info(f"[DIRECT-EDIT] SKU {sku} actualizado a {new_stock} en Shopify: {res}")
+        except Exception as e:
+            logger.error(f"[DIRECT-EDIT] Error sincronizando con Shopify para SKU {sku}: {e}")
+            shopify_msg = f"Error en Shopify: {e}"
+
+    return {
+        "success": True,
+        "sku": sku,
+        "stock": new_stock,
+        "shopify_synced": shopify_synced,
+        "message": f"Stock de {sku} actualizado a {new_stock}. {shopify_msg}"
+    }
+
 @app.get("/sales", response_model=List[VentaResponse])
 def get_sales(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     user_id = current_user.get("id") or current_user.get("user_id") or 1
@@ -2114,16 +2194,27 @@ def get_system_status(db: Session = Depends(get_db)):
 # ──────────────────────────────────────────────────────────────────────────────
 
 @app.get("/sync/template")
-def download_sync_template():
-    """Genera y descarga una plantilla Excel lista para sincronización con Shopify."""
+def download_sync_template(request: Request, db: Session = Depends(get_db)):
+    """Genera y descarga un archivo Excel con el inventario real y actualizado de la base de datos."""
+    user = extract_user_from_request(request)
+    user_id = user.get("id") or 1
+
+    prods = db.query(TenantProduct).filter(TenantProduct.user_id == user_id).all()
+    if not prods:
+        prods = db.query(TenantProduct).all()
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Inventario"
 
     ws.append(["SKU", "Stock"])
-    ws.append(["DEMO-001", 200])
-    ws.append(["DEMO-002", 229])
-    ws.append(["DEMO-003", 300])
+    if prods:
+        for p in prods:
+            ws.append([p.sku, p.stock])
+    else:
+        ws.append(["DEMO-001", 200])
+        ws.append(["DEMO-002", 229])
+        ws.append(["DEMO-003", 300])
 
     ws.column_dimensions["A"].width = 18
     ws.column_dimensions["B"].width = 14

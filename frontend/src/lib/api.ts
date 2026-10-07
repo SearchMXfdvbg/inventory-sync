@@ -429,6 +429,24 @@ export const getInventory = async (): Promise<Product[]> => {
   return Array.isArray(data) ? data : [];
 };
 
+export const updateProductStock = async (
+  sku: string, 
+  newStock: number
+): Promise<{ success: boolean; message: string; stock: number; shopify_synced?: boolean }> => {
+  const response = await fetchApi(`${BASE_URL}/inventory/${encodeURIComponent(sku)}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ stock: newStock })
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.detail || err?.message || 'Error al actualizar el stock');
+  }
+  return await response.json();
+};
+
 export const syncInventoryFromShopify = async (): Promise<{ success: boolean; message: string; updated: number; created: number }> => {
   const response = await fetchApi(`${BASE_URL}/inventory/sync-from-shopify`, {
     method: 'POST',
