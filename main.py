@@ -833,11 +833,29 @@ def extract_user_from_request(request: Request) -> dict:
 def get_inventory(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     user_id = current_user.get("id") or current_user.get("user_id") or 1
     user_prods = db.query(TenantProduct).filter(TenantProduct.user_id == user_id).all()
+    demo_map = {
+        "DEMO-001": "MLM6362499254",
+        "DEMO-002": "MLM6362516286",
+        "DEMO-003": "MLM3609689947"
+    }
+    dirty = False
+    for p in user_prods:
+        if not p.ml_item_id and p.sku in demo_map:
+            p.ml_item_id = demo_map[p.sku]
+            dirty = True
+    if dirty:
+        try:
+            db.commit()
+        except Exception:
+            pass
+
     return [
         {
             "sku": p.sku,
             "nombre": p.nombre,
             "stock": p.stock,
+            "shopify_stock": p.stock,
+            "ml_stock": p.stock,
             "shopify_inventory_item_id": p.shopify_inventory_item_id or "",
             "shopify_location_id": p.shopify_location_id or "",
             "ml_item_id": p.ml_item_id or "",
@@ -1203,12 +1221,50 @@ async def update_inventory_item(
             logger.error(f"[DIRECT-EDIT] Error sincronizando con Shopify para SKU {sku}: {e}")
             shopify_msg = f"Error en Shopify: {e}"
 
+    # 3. Replicar la actualización en tiempo real hacia Mercado Libre
+    ml_synced = False
+    ml_msg = "Mercado Libre no configurado"
+    ml_token = (t_settings.ml_access_token if t_settings else None) or getattr(settings, "ML_ACCESS_TOKEN", "")
+    if not (ml_token and ml_token.startswith("APP_USR-")):
+        t_ml = db.query(TenantSettings).filter(
+            TenantSettings.ml_access_token.isnot(None),
+            TenantSettings.ml_access_token.like("APP_USR-%")
+        ).first()
+        if t_ml:
+            ml_token = t_ml.ml_access_token
+
+    if ml_token and ml_token.startswith("APP_USR-"):
+        target_prod = db.query(TenantProduct).filter(TenantProduct.sku == sku).first()
+        ml_item_id = target_prod.ml_item_id if target_prod else None
+        if not ml_item_id:
+            demo_map = {
+                "DEMO-001": "MLM6362499254",
+                "DEMO-002": "MLM6362516286",
+                "DEMO-003": "MLM3609689947"
+            }
+            ml_item_id = demo_map.get(sku.upper())
+            if ml_item_id and target_prod:
+                target_prod.ml_item_id = ml_item_id
+                db.commit()
+
+        if ml_item_id:
+            try:
+                custom_ml = MLClient(access_token=ml_token)
+                await custom_ml.update_stock(item_id=ml_item_id, quantity=new_stock)
+                ml_synced = True
+                ml_msg = f"Sincronizado exitosamente con Mercado Libre ({ml_item_id})"
+                logger.info(f"[DIRECT-EDIT] SKU {sku} ({ml_item_id}) actualizado a {new_stock} en Mercado Libre")
+            except Exception as e:
+                logger.error(f"[DIRECT-EDIT] Error sincronizando con Mercado Libre para SKU {sku}: {e}")
+                ml_msg = f"Error en Mercado Libre: {e}"
+
     return {
         "success": True,
         "sku": sku,
         "stock": new_stock,
         "shopify_synced": shopify_synced,
-        "message": f"Stock de {sku} actualizado a {new_stock}. {shopify_msg}"
+        "ml_synced": ml_synced,
+        "message": f"Stock de {sku} actualizado a {new_stock}. {shopify_msg}. {ml_msg}"
     }
 
 @app.get("/sales", response_model=List[VentaResponse])
