@@ -12,3 +12,4 @@ frontend/.env.local
 .pytest_cache/
 
 .vercel
+ml_credentials.json

@@ -121,7 +121,8 @@ export default function InventoryPage() {
           return {
             ...p,
             stock: parsed,
-            shopify_stock: shopifyConnected ? parsed : p.shopify_stock
+            shopify_stock: shopifyConnected ? parsed : p.shopify_stock,
+            ml_stock: mlConnected ? parsed : p.ml_stock
           };
         }
         return p;
@@ -192,10 +193,21 @@ export default function InventoryPage() {
   const ebayConnected = useMemo(() => isChannelConfigured('ebay', settings), [settings]);
   const kauflandConnected = useMemo(() => isChannelConfigured('kaufland', settings), [settings]);
   const mlConnected = useMemo(() => isChannelConfigured('mercadolibre', settings), [settings]);
+  const tiktokConnected = useMemo(() => isChannelConfigured('tiktok', settings), [settings]);
+  const saeConnected = useMemo(() => isChannelConfigured('sae', settings), [settings]);
+
+  // Canales activos / habilitados en la empresa (solo mostrar en la tabla si están seleccionados o conectados)
+  const showShopify = useMemo(() => settings ? Boolean(settings.ENABLE_SHOPIFY || shopifyConnected) : true, [settings, shopifyConnected]);
+  const showML = useMemo(() => settings ? Boolean(settings.ENABLE_MERCADOLIBRE || mlConnected) : true, [settings, mlConnected]);
+  const showAmazon = useMemo(() => settings ? Boolean(settings.ENABLE_AMAZON || amazonConnected) : false, [settings, amazonConnected]);
+  const showEbay = useMemo(() => settings ? Boolean(settings.ENABLE_EBAY || ebayConnected) : false, [settings, ebayConnected]);
+  const showKaufland = useMemo(() => settings ? Boolean(settings.ENABLE_KAUFLAND || kauflandConnected) : false, [settings, kauflandConnected]);
+  const showTiktok = useMemo(() => settings ? Boolean(settings.ENABLE_TIKTOK || tiktokConnected) : false, [settings, tiktokConnected]);
+  const showSae = useMemo(() => settings ? Boolean(settings.ENABLE_SAE || saeConnected) : false, [settings, saeConnected]);
 
   const activeChannelsCount = useMemo(() => {
-    return [shopifyConnected, amazonConnected, ebayConnected, kauflandConnected, mlConnected].filter(Boolean).length;
-  }, [shopifyConnected, amazonConnected, ebayConnected, kauflandConnected, mlConnected]);
+    return [showShopify && shopifyConnected, showAmazon && amazonConnected, showEbay && ebayConnected, showKaufland && kauflandConnected, showML && mlConnected, showTiktok && tiktokConnected, showSae && saeConnected].filter(Boolean).length;
+  }, [showShopify, shopifyConnected, showAmazon, amazonConnected, showEbay, ebayConnected, showKaufland, kauflandConnected, showML, mlConnected, showTiktok, tiktokConnected, showSae, saeConnected]);
 
   // Extraer categorías y marcas únicas del catálogo para los filtros
   const categories = useMemo(() => {
@@ -576,30 +588,70 @@ export default function InventoryPage() {
                 <th className="px-5 py-3">Producto / Descripción</th>
                 <th className="px-4 py-3">SKU / Marca</th>
                 <th className="px-4 py-3">Stock Central</th>
-                <th className="px-4 py-3">
-                  <div className="flex items-center gap-1.5">
-                    <span>Shopify</span>
-                    <span className={`w-1.5 h-1.5 ${shopifyConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={shopifyConnected ? 'Conectado' : 'Sin configurar'} />
-                  </div>
-                </th>
-                <th className="px-4 py-3">
-                  <div className="flex items-center gap-1.5">
-                    <span>Amazon</span>
-                    <span className={`w-1.5 h-1.5 ${amazonConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={amazonConnected ? 'Conectado' : 'Sin configurar'} />
-                  </div>
-                </th>
-                <th className="px-4 py-3">
-                  <div className="flex items-center gap-1.5">
-                    <span>eBay</span>
-                    <span className={`w-1.5 h-1.5 ${ebayConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={ebayConnected ? 'Conectado' : 'Sin configurar'} />
-                  </div>
-                </th>
-                <th className="px-4 py-3">
-                  <div className="flex items-center gap-1.5">
-                    <span>Kaufland</span>
-                    <span className={`w-1.5 h-1.5 ${kauflandConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={kauflandConnected ? 'Conectado' : 'Sin configurar'} />
-                  </div>
-                </th>
+
+                {showSae && (
+                  <th className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <span>CONTPAQi SAE</span>
+                      <span className={`w-1.5 h-1.5 ${saeConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={saeConnected ? 'Conectado' : 'Sin configurar'} />
+                    </div>
+                  </th>
+                )}
+
+                {showShopify && (
+                  <th className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <span>Shopify</span>
+                      <span className={`w-1.5 h-1.5 ${shopifyConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={shopifyConnected ? 'Conectado' : 'Sin configurar'} />
+                    </div>
+                  </th>
+                )}
+
+                {showML && (
+                  <th className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <span>Mercado Libre</span>
+                      <span className={`w-1.5 h-1.5 ${mlConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={mlConnected ? 'Conectado' : 'Sin configurar'} />
+                    </div>
+                  </th>
+                )}
+
+                {showAmazon && (
+                  <th className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <span>Amazon</span>
+                      <span className={`w-1.5 h-1.5 ${amazonConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={amazonConnected ? 'Conectado' : 'Sin configurar'} />
+                    </div>
+                  </th>
+                )}
+
+                {showEbay && (
+                  <th className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <span>eBay</span>
+                      <span className={`w-1.5 h-1.5 ${ebayConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={ebayConnected ? 'Conectado' : 'Sin configurar'} />
+                    </div>
+                  </th>
+                )}
+
+                {showKaufland && (
+                  <th className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <span>Kaufland</span>
+                      <span className={`w-1.5 h-1.5 ${kauflandConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={kauflandConnected ? 'Conectado' : 'Sin configurar'} />
+                    </div>
+                  </th>
+                )}
+
+                {showTiktok && (
+                  <th className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <span>TikTok Shop</span>
+                      <span className={`w-1.5 h-1.5 ${tiktokConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={tiktokConnected ? 'Conectado' : 'Sin configurar'} />
+                    </div>
+                  </th>
+                )}
+
                 <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3 text-right">—</th>
               </tr>
@@ -745,41 +797,82 @@ export default function InventoryPage() {
                         )}
                       </td>
 
+                      {/* CONTPAQi SAE */}
+                      {showSae && (
+                        <td className="px-4 py-3 text-xs font-mono">
+                          {saeConnected ? (
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{p.stock}</span>
+                          ) : (
+                            <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
+                          )}
+                        </td>
+                      )}
+
                       {/* Shopify */}
-                      <td className="px-4 py-3 text-xs font-mono">
-                        {shopifyConnected ? (
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{p.shopify_stock ?? p.stock}</span>
-                        ) : (
-                          <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
-                        )}
-                      </td>
+                      {showShopify && (
+                        <td className="px-4 py-3 text-xs font-mono">
+                          {shopifyConnected ? (
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{p.shopify_stock ?? p.stock}</span>
+                          ) : (
+                            <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
+                          )}
+                        </td>
+                      )}
+
+                      {/* Mercado Libre */}
+                      {showML && (
+                        <td className="px-4 py-3 text-xs font-mono">
+                          {mlConnected ? (
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{p.ml_stock ?? p.stock}</span>
+                          ) : (
+                            <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
+                          )}
+                        </td>
+                      )}
 
                       {/* Amazon */}
-                      <td className="px-4 py-3 text-xs font-mono">
-                        {amazonConnected ? (
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{p.amazon_stock ?? p.stock}</span>
-                        ) : (
-                          <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
-                        )}
-                      </td>
+                      {showAmazon && (
+                        <td className="px-4 py-3 text-xs font-mono">
+                          {amazonConnected ? (
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{p.amazon_stock ?? p.stock}</span>
+                          ) : (
+                            <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
+                          )}
+                        </td>
+                      )}
 
                       {/* eBay */}
-                      <td className="px-4 py-3 text-xs font-mono">
-                        {ebayConnected ? (
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{p.ebay_stock ?? p.stock}</span>
-                        ) : (
-                          <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
-                        )}
-                      </td>
+                      {showEbay && (
+                        <td className="px-4 py-3 text-xs font-mono">
+                          {ebayConnected ? (
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{p.ebay_stock ?? p.stock}</span>
+                          ) : (
+                            <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
+                          )}
+                        </td>
+                      )}
 
                       {/* Kaufland */}
-                      <td className="px-4 py-3 text-xs font-mono">
-                        {kauflandConnected ? (
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{p.kaufland_stock ?? p.stock}</span>
-                        ) : (
-                          <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
-                        )}
-                      </td>
+                      {showKaufland && (
+                        <td className="px-4 py-3 text-xs font-mono">
+                          {kauflandConnected ? (
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{p.kaufland_stock ?? p.stock}</span>
+                          ) : (
+                            <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
+                          )}
+                        </td>
+                      )}
+
+                      {/* TikTok Shop */}
+                      {showTiktok && (
+                        <td className="px-4 py-3 text-xs font-mono">
+                          {tiktokConnected ? (
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{p.stock}</span>
+                          ) : (
+                            <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
+                          )}
+                        </td>
+                      )}
 
                       {/* Estado */}
                       <td className="px-4 py-3">
@@ -1011,19 +1104,43 @@ export default function InventoryPage() {
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 Canales Impactados en esta Sincronización:
               </span>
-              <div className="grid grid-cols-3 gap-2 text-xs font-semibold">
-                <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${shopifyConnected ? 'border-emerald-200 bg-emerald-50/40 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300' : 'border-slate-200 bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
-                  <ShoppingBag size={14} />
-                  <span>Shopify</span>
-                </div>
-                <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${amazonConnected ? 'border-amber-200 bg-amber-50/40 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300' : 'border-slate-200 bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
-                  <Globe2 size={14} />
-                  <span>Amazon</span>
-                </div>
-                <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${mlConnected ? 'border-yellow-200 bg-yellow-50/40 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-300' : 'border-slate-200 bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
-                  <Store size={14} />
-                  <span>Mercado Libre</span>
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-semibold">
+                {showShopify && (
+                  <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${shopifyConnected ? 'border-emerald-200 bg-emerald-50/40 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300' : 'border-slate-200 bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
+                    <ShoppingBag size={14} />
+                    <span>Shopify</span>
+                  </div>
+                )}
+                {showML && (
+                  <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${mlConnected ? 'border-yellow-200 bg-yellow-50/40 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-300' : 'border-slate-200 bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
+                    <Store size={14} />
+                    <span>Mercado Libre</span>
+                  </div>
+                )}
+                {showAmazon && (
+                  <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${amazonConnected ? 'border-amber-200 bg-amber-50/40 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300' : 'border-slate-200 bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
+                    <Globe2 size={14} />
+                    <span>Amazon</span>
+                  </div>
+                )}
+                {showEbay && (
+                  <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${ebayConnected ? 'border-blue-200 bg-blue-50/40 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300' : 'border-slate-200 bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
+                    <Store size={14} />
+                    <span>eBay</span>
+                  </div>
+                )}
+                {showKaufland && (
+                  <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${kauflandConnected ? 'border-red-200 bg-red-50/40 text-red-700 dark:bg-red-950/30 dark:text-red-300' : 'border-slate-200 bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
+                    <Store size={14} />
+                    <span>Kaufland</span>
+                  </div>
+                )}
+                {showTiktok && (
+                  <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${tiktokConnected ? 'border-pink-200 bg-pink-50/40 text-pink-700 dark:bg-pink-950/30 dark:text-pink-300' : 'border-slate-200 bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
+                    <Video size={14} />
+                    <span>TikTok Shop</span>
+                  </div>
+                )}
               </div>
             </div>
 
