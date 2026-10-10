@@ -687,7 +687,7 @@ export default function IntegrationsSettingsPage() {
                     <div className="flex items-center justify-between text-xs text-yellow-600 dark:text-yellow-400">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-yellow-500" />
-                        <span className="font-bold">Vinculación Oficial 1-Clic</span>
+                        <span className="font-bold">Vinculación Oficial</span>
                       </div>
                       <span className="text-[10px] px-1.5 py-0.5 border border-yellow-500/30 font-bold uppercase">RECOMENDADO</span>
                     </div>
@@ -705,7 +705,7 @@ export default function IntegrationsSettingsPage() {
                       ) : (
                         <>
                           <Link2 size={13} className="text-black" />
-                          <span>CONECTAR MERCADO LIBRE EN 1 CLIC</span>
+                          <span>CONECTAR</span>
                         </>
                       )}
                     </button>
