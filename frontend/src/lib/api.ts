@@ -458,6 +458,37 @@ export const syncInventoryFromShopify = async (): Promise<{ success: boolean; me
   return await response.json();
 };
 
+export const syncInventoryFromMercadoLibre = async (): Promise<{ success: boolean; message: string; updated: number; created: number; total_items?: number }> => {
+  const response = await fetchApi(`${BASE_URL}/inventory/sync-from-mercadolibre`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    const err = await response.text().catch(() => '');
+    throw new Error(`Error sincronizando desde Mercado Libre: ${err.slice(0, 100)}`);
+  }
+  return await response.json();
+};
+
+export const getMercadoLibreOAuthUrl = async (): Promise<{ url: string; client_id: string; redirect_uri: string }> => {
+  const response = await fetchApi(`${BASE_URL}/auth/mercadolibre/url`);
+  if (!response.ok) {
+    throw new Error('Error al obtener la URL de autorización de Mercado Libre');
+  }
+  return await response.json();
+};
+
+export const exchangeMercadoLibreCode = async (code: string, redirect_uri?: string): Promise<{ success: boolean; message: string; nickname?: string; user_id?: number }> => {
+  const response = await fetchApi(`${BASE_URL}/auth/mercadolibre/exchange`, {
+    method: 'POST',
+    body: JSON.stringify({ code, redirect_uri }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || 'Error al conectar con Mercado Libre');
+  }
+  return await response.json();
+};
+
 export const getInventoryItem = async (sku: string): Promise<Product> => {
   const response = await fetchApi(`${BASE_URL}/inventory/${sku}`);
   if (!response.ok) throw new Error(`Producto ${sku} no encontrado`);
@@ -549,6 +580,9 @@ export interface SystemSettings {
   ML_USER_ID: number;
   ML_SITE_ID: string;
   ML_WEBHOOK_SECRET?: string;
+  ML_CLIENT_ID?: string;
+  ML_CLIENT_SECRET?: string;
+  ML_REFRESH_TOKEN?: string;
 
   INVENTARIO_PRINCIPAL?: string;
   ENABLE_SAE?: boolean;

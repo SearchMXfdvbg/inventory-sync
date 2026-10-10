@@ -81,6 +81,10 @@ class TenantSettings(Base):
     ml_user_id = Column(Integer, nullable=False, default=0)
     ml_site_id = Column(String(50), nullable=False, default="MLM")
     ml_webhook_secret = Column(String(255), nullable=False, default="")
+    ml_client_id = Column(String(255), nullable=False, default="")
+    ml_client_secret = Column(String(255), nullable=False, default="")
+    ml_refresh_token = Column(String(255), nullable=False, default="")
+    ml_token_expires_at = Column(DateTime, nullable=True)
 
     tiktok_app_key = Column(String(255), nullable=False, default="")
     tiktok_app_secret = Column(String(255), nullable=False, default="")

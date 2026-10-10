@@ -13,3 +13,6 @@ frontend/.env.local
 
 .vercel
 ml_credentials.json
+*.db-shm
+*.db-wal
+scratch/

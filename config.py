@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     ML_USER_ID: int = 0
     ML_SITE_ID: str = "MLM"
     ML_WEBHOOK_SECRET: str = ""
+    ML_CLIENT_ID: str = "4092000500491249"
+    ML_CLIENT_SECRET: str = "Jzt4lYh50r13kifuXxvi08u2FQiEk2dI"
+    ML_REFRESH_TOKEN: str = ""
 
     # Servicio de correos de verificación (Opción 2 - Resend)
     RESEND_API_KEY: str = ""

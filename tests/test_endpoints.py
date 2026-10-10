@@ -13,7 +13,7 @@ from main import app
 from database import get_db, Base
 from models import Venta
 from config import settings
-from sae_mock import ProductNotFoundError
+from sae_db import ProductNotFoundError
 
 # Setup SQLite database for endpoint tests
 test_engine = create_engine("sqlite:///./data/test_endpoints.db", connect_args={"check_same_thread": False})

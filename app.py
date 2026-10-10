@@ -138,7 +138,33 @@ def setup_logging():
 setup_logging()
 logger = logging.getLogger("inventory_sync.app")
 
-# --- LIFESPAN DE LA APLICACIÓN ---
+# --- LIFESPAN DE LA APLICACIÓN Y WORKER EN SEGUNDO PLANO ---
+
+async def background_worker_loop():
+    """
+    Worker en segundo plano embebido dentro del proceso web.
+    Procesa la cola de ventas pendientes y reintentos (saga) periódicamente cada 15s.
+    """
+    logger.info("Iniciando background worker loop para sincronización en segundo plano...")
+    import asyncio
+    from database import SessionLocal
+    while True:
+        try:
+            db = SessionLocal()
+            try:
+                from worker import run_iteration
+                await run_iteration(db)
+            finally:
+                db.close()
+        except asyncio.CancelledError:
+            logger.info("Background worker loop finalizado.")
+            break
+        except Exception as e:
+            logger.error(f"Error en ciclo del background worker: {e}", exc_info=True)
+        try:
+            await asyncio.sleep(15)
+        except asyncio.CancelledError:
+            break
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -147,8 +173,20 @@ async def lifespan(app: FastAPI):
     from database import init_db_and_migrate
     init_db_and_migrate()
     logger.info("Base de datos inicializada y migrada correctamente.")
+
+    # Lanzar worker en segundo plano
+    import asyncio
+    worker_task = asyncio.create_task(background_worker_loop())
+
     yield
-    logger.info("Apagando la aplicación...")
+
+    logger.info("Apagando la aplicación y deteniendo background worker...")
+    worker_task.cancel()
+    try:
+        await worker_task
+    except asyncio.CancelledError:
+        pass
+    logger.info("Aplicación apagada.")
 
 # --- CREACIÓN DE LA APP FASTAPI ---
 

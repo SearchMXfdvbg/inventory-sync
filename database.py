@@ -95,6 +95,10 @@ def init_db_and_migrate():
                         "kaufland_client_key": "VARCHAR(255) DEFAULT '' NOT NULL",
                         "kaufland_secret_key": "VARCHAR(255) DEFAULT '' NOT NULL",
                         "kaufland_storefront": "VARCHAR(50) DEFAULT 'de' NOT NULL",
+                        "ml_client_id": "VARCHAR(255) DEFAULT '' NOT NULL",
+                        "ml_client_secret": "VARCHAR(255) DEFAULT '' NOT NULL",
+                        "ml_refresh_token": "VARCHAR(255) DEFAULT '' NOT NULL",
+                        "ml_token_expires_at": "TIMESTAMP NULL",
                     }
                     for col_name, col_def in new_ts_cols.items():
                         if col_name not in ts_cols:
@@ -113,6 +117,18 @@ def init_db_and_migrate():
                 conn.close()
             except Exception as e:
                 pass
+
+    elif "postgres" in settings.DATABASE_URL or "postgresql" in settings.DATABASE_URL:
+        try:
+            from sqlalchemy import text
+            with engine.connect() as pg_conn:
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS ml_client_id VARCHAR(255) DEFAULT '';"))
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS ml_client_secret VARCHAR(255) DEFAULT '';"))
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS ml_refresh_token VARCHAR(255) DEFAULT '';"))
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS ml_token_expires_at TIMESTAMP NULL;"))
+                pg_conn.commit()
+        except Exception:
+            pass
 
         try:
             from models import User, TenantSettings, TenantProduct

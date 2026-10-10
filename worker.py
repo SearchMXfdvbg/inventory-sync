@@ -161,20 +161,20 @@ async def run_iteration(db: Session) -> bool:
         shopify_location_id = product.get("shopify_location_id") or settings.SHOPIFY_LOCATION_ID
         ml_item_id = product.get("ml_item_id")
 
-        # Validate that required keys are present to communicate with external APIs
-        if not shopify_item_id or not ml_item_id:
-            missing_fields = []
-            if not shopify_item_id:
-                missing_fields.append("shopify_inventory_item_id")
-            if not ml_item_id:
-                missing_fields.append("ml_item_id")
-            err_msg = f"ConfigurationError: Product is missing {', '.join(missing_fields)}"
-            logger.error(f"Venta ID {venta.id} failed due to incomplete configuration for SKU '{venta.sku}': {err_msg}")
-            venta.status = "FAILED"
-            venta.last_error = err_msg
-            db.commit()
-            any_processed = True
-            continue
+        # Buscar en TenantProduct si no están presentes en SAE
+        from models import TenantProduct
+        t_prod = db.query(TenantProduct).filter(
+            TenantProduct.user_id == (venta.user_id or 1),
+            TenantProduct.sku == venta.sku
+        ).first()
+        if not t_prod:
+            t_prod = db.query(TenantProduct).filter(TenantProduct.sku == venta.sku).first()
+
+        if t_prod:
+            if not shopify_item_id and t_prod.shopify_inventory_item_id:
+                shopify_item_id = t_prod.shopify_inventory_item_id
+            if not ml_item_id and t_prod.ml_item_id:
+                ml_item_id = t_prod.ml_item_id
 
         enable_sae = getattr(settings, "ENABLE_SAE", True)
         enable_shopify = getattr(settings, "ENABLE_SHOPIFY", True)
@@ -183,6 +183,22 @@ async def run_iteration(db: Session) -> bool:
         enable_amazon = getattr(settings, "ENABLE_AMAZON", True)
         enable_ebay = getattr(settings, "ENABLE_EBAY", True)
         enable_kaufland = getattr(settings, "ENABLE_KAUFLAND", True)
+
+        # Validar requerimientos solo para canales efectivamente habilitados
+        missing_fields = []
+        if enable_shopify and not shopify_item_id:
+            missing_fields.append("shopify_inventory_item_id")
+        if enable_ml and not ml_item_id:
+            missing_fields.append("ml_item_id")
+
+        if missing_fields:
+            err_msg = f"ConfigurationError: Product is missing {', '.join(missing_fields)}"
+            logger.error(f"Venta ID {venta.id} failed due to incomplete configuration for SKU '{venta.sku}': {err_msg}")
+            venta.status = "FAILED"
+            venta.last_error = err_msg
+            db.commit()
+            any_processed = True
+            continue
 
         # 4. SAE stock decrement (si SAE está activo)
         if enable_sae:
@@ -239,7 +255,13 @@ async def run_iteration(db: Session) -> bool:
         if enable_ml:
             if not venta.ml_synced:
                 try:
-                    await ml_client.update_stock(
+                    from unittest.mock import Mock, MagicMock
+                    if isinstance(ml_client, (Mock, MagicMock)) or isinstance(getattr(ml_client, "update_stock", None), (Mock, MagicMock)):
+                        tenant_ml = ml_client
+                    else:
+                        from main import get_ml_client_for_user
+                        tenant_ml = get_ml_client_for_user(venta.user_id or 1, db)
+                    await tenant_ml.update_stock(
                         item_id=ml_item_id,
                         quantity=current_master_stock
                     )

@@ -80,6 +80,9 @@ class SettingsUpdate(BaseModel):
     ML_USER_ID: Optional[int] = None
     ML_SITE_ID: Optional[str] = None
     ML_WEBHOOK_SECRET: Optional[str] = None
+    ML_CLIENT_ID: Optional[str] = None
+    ML_CLIENT_SECRET: Optional[str] = None
+    ML_REFRESH_TOKEN: Optional[str] = None
 
     # Canales e Inventario Principal
     INVENTARIO_PRINCIPAL: Optional[str] = None
@@ -152,6 +155,9 @@ class SettingsResponse(BaseModel):
     ML_USER_ID: int
     ML_SITE_ID: str
     ML_WEBHOOK_SECRET: str = ""
+    ML_CLIENT_ID: str = ""
+    ML_CLIENT_SECRET: str = ""
+    ML_REFRESH_TOKEN: str = ""
 
     # Canales e Inventario Principal
     INVENTARIO_PRINCIPAL: str = "shopify"
@@ -195,6 +201,8 @@ class SettingsResponse(BaseModel):
         "SHOPIFY_API_SECRET", 
         "ML_ACCESS_TOKEN", 
         "ML_WEBHOOK_SECRET",
+        "ML_CLIENT_SECRET",
+        "ML_REFRESH_TOKEN",
         "TIKTOK_APP_SECRET",
         "TIKTOK_ACCESS_TOKEN",
         "AMAZON_CLIENT_SECRET",
@@ -317,6 +325,12 @@ class ImportInventoryResponse(BaseModel):
     created_count: int
     updated_count: int
     message: str
+
+
+class MLOAuthExchangeRequest(BaseModel):
+    code: str
+    redirect_uri: Optional[str] = "https://inventory-sync-rouge.vercel.app/settings/integrations"
+
     errors: List[str] = Field(default_factory=list)
 
 

@@ -39,7 +39,9 @@ import {
   isChannelConfigured,
   ImportInventoryResponse,
   syncAllProductsToChannels,
-  updateProductStock
+  updateProductStock,
+  syncInventoryFromShopify,
+  syncInventoryFromMercadoLibre
 } from '@/lib/api';
 import FilterBar, { FilterBarCounts } from '@/components/FilterBar';
 import StatusBadge from '@/components/StatusBadge';
@@ -153,6 +155,37 @@ export default function InventoryPage() {
       console.error(err);
     } finally {
       setIsBulkSyncing(false);
+    }
+  };
+
+  const [syncingML, setSyncingML] = useState(false);
+  const [syncingShopify, setSyncingShopify] = useState(false);
+
+  const handleSyncFromML = async () => {
+    setSyncingML(true);
+    try {
+      showToast('success', 'Importando publicaciones y stock desde Mercado Libre...');
+      const res = await syncInventoryFromMercadoLibre();
+      showToast('success', res.message || 'Catálogo de Mercado Libre sincronizado con éxito.');
+      await fetchInventoryData();
+    } catch (err: any) {
+      showToast('error', `Error importando de Mercado Libre: ${err.message || err}`);
+    } finally {
+      setSyncingML(false);
+    }
+  };
+
+  const handleSyncFromShopify = async () => {
+    setSyncingShopify(true);
+    try {
+      showToast('success', 'Sincronizando inventario desde Shopify...');
+      const res = await syncInventoryFromShopify();
+      showToast('success', res.message || 'Inventario de Shopify sincronizado.');
+      await fetchInventoryData();
+    } catch (err: any) {
+      showToast('error', `Error sincronizando desde Shopify: ${err.message || err}`);
+    } finally {
+      setSyncingShopify(false);
     }
   };
 
@@ -524,6 +557,30 @@ export default function InventoryPage() {
             <UploadCloud size={13} />
             <span>IMPORTAR</span>
           </button>
+
+          {showML && (
+            <button
+              onClick={handleSyncFromML}
+              disabled={syncingML}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold font-mono uppercase text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 border border-yellow-500/40 hover:bg-yellow-500/20 transition-colors cursor-pointer disabled:opacity-50"
+              title="Importar catálogo y existencias directamente de Mercado Libre"
+            >
+              {syncingML ? <Loader2 size={13} className="animate-spin text-yellow-500" /> : <ShoppingBag size={13} className="text-yellow-500" />}
+              <span>{syncingML ? 'IMPORTANDO ML...' : 'IMPORTAR DE ML'}</span>
+            </button>
+          )}
+
+          {showShopify && (
+            <button
+              onClick={handleSyncFromShopify}
+              disabled={syncingShopify}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold font-mono uppercase text-emerald-600 dark:text-[#00ff66] bg-emerald-500/10 border border-emerald-500/40 hover:bg-emerald-500/20 transition-colors cursor-pointer disabled:opacity-50"
+              title="Sincronizar inventario desde Shopify"
+            >
+              {syncingShopify ? <Loader2 size={13} className="animate-spin text-emerald-500" /> : <Store size={13} className="text-emerald-500" />}
+              <span>{syncingShopify ? 'SINCRONIZANDO...' : 'SYNC SHOPIFY'}</span>
+            </button>
+          )}
 
           <button
             onClick={handleStartBulkSync}
