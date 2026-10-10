@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     SHOPIFY_API_VERSION: str = "2026-07"
     SHOPIFY_LOCATION_ID: str = ""
     SHOPIFY_API_SECRET: str = ""
+    SHOPIFY_CLIENT_ID: str = "468c1b955ab37f780266252af14d49cf"
+    SHOPIFY_CLIENT_SECRET: str = ""
+    SHOPIFY_SCOPES: str = "read_products,write_products,read_inventory,write_inventory,read_orders,read_locations"
     ML_ACCESS_TOKEN: str = ""
     ML_USER_ID: int = 0
     ML_SITE_ID: str = "MLM"

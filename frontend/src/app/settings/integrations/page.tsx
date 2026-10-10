@@ -37,6 +37,8 @@ import {
   disconnectChannel,
   getMercadoLibreOAuthUrl,
   exchangeMercadoLibreCode,
+  getShopifyOAuthUrl,
+  exchangeShopifyCode,
   TestConnectionResponse,
   IntegrationStatus, 
   SystemSettings 
@@ -48,6 +50,8 @@ export default function IntegrationsSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<IntegrationStatus | null>(null);
   const [connectingOAuth, setConnectingOAuth] = useState(false);
+  const [connectingShopifyOAuth, setConnectingShopifyOAuth] = useState(false);
+  const [shopifyStoreInput, setShopifyStoreInput] = useState('');
   const [settings, setSettings] = useState<SystemSettings>({
     DATABASE_URL: '',
     SAE_DATA_PATH: '',
@@ -275,13 +279,31 @@ export default function IntegrationsSettingsPage() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
-      if (code) {
+      const shop = urlParams.get('shop');
+
+      if (code && shop) {
+        setConnectingShopifyOAuth(true);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        showToast('Procesando autorización oficial de Shopify...', 'success');
+        exchangeShopifyCode({ shop, code })
+          .then(async (res) => {
+            showToast(res.message || '¡Shopify conectado exitosamente!', 'success');
+            await fetchData();
+          })
+          .catch((err) => {
+            console.error('Error intercambiando código OAuth Shopify:', err);
+            showToast(err.message || 'Error al completar la vinculación con Shopify', 'error');
+          })
+          .finally(() => {
+            setConnectingShopifyOAuth(false);
+          });
+      } else if (code) {
         setConnectingOAuth(true);
         window.history.replaceState({}, document.title, window.location.pathname);
         showToast('Procesando autorización oficial de Mercado Libre...', 'success');
         exchangeMercadoLibreCode(code)
           .then(async (res) => {
-            showToast(res.message || '¡Mercado Libre conectado exitosamente en 1 Clic!', 'success');
+            showToast(res.message || '¡Mercado Libre conectado exitosamente!', 'success');
             await fetchData();
           })
           .catch((err) => {
@@ -294,6 +316,26 @@ export default function IntegrationsSettingsPage() {
       }
     }
   }, []);
+
+  const handleConnectShopifyOAuth = async () => {
+    const domain = (shopifyStoreInput || settings.SHOP_DOMAIN || '').trim();
+    if (!domain) {
+      showToast('Ingresa el dominio de tu tienda (ej: mitienda.myshopify.com)', 'error');
+      return;
+    }
+    setConnectingShopifyOAuth(true);
+    try {
+      const res = await getShopifyOAuthUrl(domain);
+      if (res?.url) {
+        window.location.href = res.url;
+      } else {
+        throw new Error('No se pudo generar la URL de autorización');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error al iniciar vinculación con Shopify', 'error');
+      setConnectingShopifyOAuth(false);
+    }
+  };
 
   const handleConnectMercadoLibreOAuth = async () => {
     setConnectingOAuth(true);
@@ -548,12 +590,44 @@ export default function IntegrationsSettingsPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="mb-4 p-2.5 border border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#14171e] text-slate-500 dark:text-[#8e95a5] text-xs flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-slate-400" />
-                      <span>Sin tienda Shopify vinculada</span>
+                  <div className="mb-4 p-3 border border-[#00ff66]/40 bg-[#00ff66]/5 flex flex-col gap-2">
+                    <div className="flex items-center justify-between text-xs text-[#008f39] dark:text-[#00ff66]">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#00ff66]" />
+                        <span className="font-bold">Vinculación Oficial</span>
+                      </div>
+                      <span className="text-[10px] px-1.5 py-0.5 border border-[#00ff66]/30 font-bold uppercase">RECOMENDADO</span>
                     </div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase">DESCONECTADO</span>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={shopifyStoreInput}
+                        onChange={(e) => setShopifyStoreInput(e.target.value)}
+                        placeholder="tu-tienda.myshopify.com"
+                        className="flex-1 border border-slate-300 dark:border-[#20242c] px-3 py-2 bg-slate-50 dark:bg-[#090a0c] text-slate-900 dark:text-white text-xs focus:border-[#00ff66] focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleConnectShopifyOAuth}
+                        disabled={connectingShopifyOAuth}
+                        className="py-2.5 px-4 bg-[#00ff66] hover:bg-[#00cc52] text-black font-extrabold text-xs flex items-center justify-center gap-2 uppercase tracking-wider transition-colors disabled:opacity-50 cursor-pointer shadow-sm shrink-0"
+                      >
+                        {connectingShopifyOAuth ? (
+                          <>
+                            <RefreshCw size={13} className="animate-spin text-black" />
+                            <span>CONECTANDO...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Link2 size={13} className="text-black" />
+                            <span>CONECTAR</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      Escribe el nombre de tu tienda y autorízala directamente en Shopify. No requiere crear apps de desarrollador ni copiar tokens manuales.
+                    </p>
                   </div>
                 )}
 

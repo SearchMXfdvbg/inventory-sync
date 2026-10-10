@@ -36,7 +36,8 @@ from schemas import (
     VerifyCodeResponse,
     ResendCodeRequest,
     ImportInventoryResponse,
-    MLOAuthExchangeRequest
+    MLOAuthExchangeRequest,
+    ShopifyOAuthExchangeRequest
 )
 from auth import (
     get_current_user,
@@ -346,12 +347,124 @@ async def exchange_ml_oauth_code(
 
     return {
         "success": True,
-        "message": f"¡Cuenta de Mercado Libre conectada exitosamente en 1 Clic! Vendedor: {test_res.get('nickname', ml_uid)}",
+        "message": f"¡Cuenta de Mercado Libre conectada exitosamente! Vendedor: {test_res.get('nickname', ml_uid)}",
         "nickname": test_res.get("nickname"),
         "user_id": ml_uid,
         "site_id": t_settings.ml_site_id
     }
 
+
+@app.get("/auth/shopify/url")
+def get_shopify_oauth_url(
+    shop: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Retorna la URL oficial de autorización OAuth de Shopify para que el comerciante
+    pueda conectar su tienda en un solo paso.
+    """
+    if not shop:
+        raise HTTPException(status_code=400, detail="Debe especificar el parámetro 'shop' (ej: mitienda.myshopify.com)")
+    
+    clean_shop = ShopifyClient.normalize_shop_domain(shop)
+    user = extract_user_from_request(request)
+    user_id = user.get("id") or 1
+    redirect_uri = "https://inventory-sync-rouge.vercel.app/settings/integrations"
+    auth_url = ShopifyClient.get_auth_url(
+        shop=clean_shop,
+        redirect_uri=redirect_uri,
+        state=f"user_{user_id}",
+        client_id=getattr(settings, "SHOPIFY_CLIENT_ID", "468c1b955ab37f780266252af14d49cf")
+    )
+    return {
+        "url": auth_url,
+        "shop": clean_shop,
+        "redirect_uri": redirect_uri
+    }
+
+
+@app.post("/auth/shopify/exchange")
+async def exchange_shopify_oauth_code(
+    payload: ShopifyOAuthExchangeRequest,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Canjea el código de autorización otorgado por Shopify en el flujo OAuth
+    por el Access Token permanente de la tienda, detecta automáticamente la ubicación
+    principal del inventario y guarda la configuración en la base de datos del comercio.
+    """
+    user = extract_user_from_request(request)
+    user_id = user.get("id") or 1
+    t_settings = db.query(TenantSettings).filter(TenantSettings.user_id == user_id).first()
+    if not t_settings:
+        t_settings = TenantSettings(user_id=user_id, tenant_id=user.get("tenant_id", "empresa-a"))
+        db.add(t_settings)
+        db.commit()
+        db.refresh(t_settings)
+
+    clean_shop = ShopifyClient.normalize_shop_domain(payload.shop)
+    if not clean_shop:
+        raise HTTPException(status_code=400, detail="Dominio de tienda inválido")
+
+    client_id = getattr(settings, "SHOPIFY_CLIENT_ID", "468c1b955ab37f780266252af14d49cf")
+    client_secret = getattr(settings, "SHOPIFY_CLIENT_SECRET", "")
+    if not client_secret and os.path.exists("shopify_credentials.json"):
+        try:
+            with open("shopify_credentials.json", "r") as f:
+                c_data = json.load(f)
+                client_secret = c_data.get("client_secret", "")
+        except Exception:
+            pass
+
+    try:
+        tokens = await ShopifyClient.exchange_auth_code(
+            shop=clean_shop,
+            code=payload.code,
+            client_id=client_id,
+            client_secret=client_secret
+        )
+    except Exception as e:
+        logger.error(f"Error canjeando código OAuth de Shopify para {clean_shop}: {e}")
+        raise HTTPException(status_code=400, detail=f"Error autorizando con Shopify: {str(e)}")
+
+    access_token = tokens.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=400, detail="Shopify no retornó un access_token válido.")
+
+    t_settings.shop_domain = clean_shop
+    t_settings.shopify_access_token = access_token
+    t_settings.enable_shopify = True
+
+    # Detectar automáticamente la ubicación principal de inventario en Shopify
+    temp_client = ShopifyClient(
+        shop_domain=clean_shop,
+        access_token=access_token,
+        api_version=getattr(settings, "SHOPIFY_API_VERSION", "2026-07")
+    )
+    loc_info = await temp_client.fetch_primary_location()
+    location_id = ""
+    location_name = ""
+    if loc_info:
+        location_id = loc_info.get("id", "")
+        location_name = loc_info.get("name", "")
+        t_settings.shopify_location_id = location_id
+
+    # Test de conexión para verificar y obtener datos de la tienda
+    test_res = await temp_client.test_connection()
+    shop_name = test_res.get("shop_name", clean_shop)
+
+    db.commit()
+
+    return {
+        "success": True,
+        "message": f"¡Tienda de Shopify '{shop_name}' conectada exitosamente!",
+        "shop": clean_shop,
+        "shop_name": shop_name,
+        "location_id": location_id,
+        "location_name": location_name
+    }
 
 
 def verify_shopify_hmac(raw_body: bytes, hmac_header: str, secret: str) -> bool:

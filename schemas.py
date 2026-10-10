@@ -331,7 +331,12 @@ class MLOAuthExchangeRequest(BaseModel):
     code: str
     redirect_uri: Optional[str] = "https://inventory-sync-rouge.vercel.app/settings/integrations"
 
-    errors: List[str] = Field(default_factory=list)
+
+class ShopifyOAuthExchangeRequest(BaseModel):
+    shop: str
+    code: str
+    state: Optional[str] = None
+    redirect_uri: Optional[str] = "https://inventory-sync-rouge.vercel.app/settings/integrations"
 
 
 

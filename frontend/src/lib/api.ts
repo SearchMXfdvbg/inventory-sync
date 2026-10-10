@@ -489,6 +489,28 @@ export const exchangeMercadoLibreCode = async (code: string, redirect_uri?: stri
   return await response.json();
 };
 
+export const getShopifyOAuthUrl = async (shop: string): Promise<{ url: string; shop: string; redirect_uri: string }> => {
+  const response = await fetchApi(`${BASE_URL}/auth/shopify/url?shop=${encodeURIComponent(shop)}`);
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || 'Error al obtener la URL de autorización de Shopify');
+  }
+  return await response.json();
+};
+
+export const exchangeShopifyCode = async (data: { shop: string; code: string; state?: string; redirect_uri?: string }): Promise<{ success: boolean; message: string; shop: string; shop_name?: string; location_id?: string }> => {
+  const response = await fetchApi(`${BASE_URL}/auth/shopify/exchange`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || 'Error al conectar con Shopify');
+  }
+  return await response.json();
+};
+
+
 export const getInventoryItem = async (sku: string): Promise<Product> => {
   const response = await fetchApi(`${BASE_URL}/inventory/${sku}`);
   if (!response.ok) throw new Error(`Producto ${sku} no encontrado`);

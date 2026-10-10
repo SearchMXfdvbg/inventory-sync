@@ -1,3 +1,5 @@
+import os
+import json
 import logging
 import httpx
 from typing import Optional, Dict, Any, List
@@ -797,3 +799,99 @@ class ShopifyClient:
 
         logger.info(f"[SET-INVENTORY] SKU={sku} fijado en {qty_after} unidades en Shopify")
         return {"sku": sku, "quantity_set": qty_after, "method": "set"}
+
+    @staticmethod
+    def normalize_shop_domain(shop: str) -> str:
+        """
+        Normaliza cualquier entrada del usuario (ej: 'mitienda', 'mitienda.myshopify.com', 'https://...')
+        al formato canónico de Shopify: 'mitienda.myshopify.com'.
+        """
+        if not shop:
+            return ""
+        s = shop.strip().lower()
+        s = s.replace("https://", "").replace("http://", "").strip("/")
+        if not s.endswith(".myshopify.com") and "." not in s:
+            s = f"{s}.myshopify.com"
+        return s
+
+    @staticmethod
+    def get_auth_url(
+        shop: str,
+        redirect_uri: str,
+        state: str = "shopify_state",
+        client_id: Optional[str] = None,
+        scopes: Optional[str] = None
+    ) -> str:
+        clean_shop = ShopifyClient.normalize_shop_domain(shop)
+        c_id = client_id or getattr(settings, "SHOPIFY_CLIENT_ID", "468c1b955ab37f780266252af14d49cf")
+        sc = scopes or getattr(settings, "SHOPIFY_SCOPES", "read_products,write_products,read_inventory,write_inventory,read_orders,read_locations")
+        return f"https://{clean_shop}/admin/oauth/authorize?client_id={c_id}&scope={sc}&redirect_uri={redirect_uri}&state={state}"
+
+    @staticmethod
+    async def exchange_auth_code(
+        shop: str,
+        code: str,
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None
+    ) -> Dict[str, Any]:
+        clean_shop = ShopifyClient.normalize_shop_domain(shop)
+        c_id = client_id or getattr(settings, "SHOPIFY_CLIENT_ID", "")
+        sec = client_secret or getattr(settings, "SHOPIFY_CLIENT_SECRET", "")
+        if (not sec or not c_id) and os.path.exists("shopify_credentials.json"):
+            try:
+                import json
+                with open("shopify_credentials.json", "r") as f:
+                    data = json.load(f)
+                    if not sec:
+                        sec = data.get("client_secret", "")
+                    if not c_id:
+                        c_id = data.get("client_id", "")
+            except Exception:
+                pass
+        url = f"https://{clean_shop}/admin/oauth/access_token"
+        payload = {
+            "client_id": c_id,
+            "client_secret": sec,
+            "code": code
+        }
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(url, json=payload)
+            if resp.status_code != 200:
+                logger.error(f"[Shopify OAuth] Error exchanging code for {clean_shop}: {resp.status_code} - {resp.text}")
+                raise ShopifyHTTPError(f"Error canjeando código Shopify: {resp.text}", resp.status_code, resp.text)
+            return resp.json()
+
+    async def fetch_primary_location(self) -> Optional[Dict[str, str]]:
+        """
+        Consulta las ubicaciones configuradas en la tienda y retorna la primera activa.
+        """
+        query = """
+        query {
+          locations(first: 10) {
+            nodes {
+              id
+              name
+              isActive
+            }
+          }
+        }
+        """
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                resp = await client.post(self.url, headers=self.headers, json={"query": query})
+                if resp.status_code == 200:
+                    data = resp.json()
+                    nodes = data.get("data", {}).get("locations", {}).get("nodes", [])
+                    for node in nodes:
+                        if node.get("isActive", True):
+                            raw_id = node.get("id", "")
+                            clean_id = raw_id.split("/")[-1] if "/" in raw_id else raw_id
+                            return {
+                                "id": clean_id,
+                                "gid": raw_id,
+                                "name": node.get("name", "")
+                            }
+        except Exception as e:
+            logger.warning(f"No se pudo consultar ubicaciones de Shopify: {e}")
+        return None
+
