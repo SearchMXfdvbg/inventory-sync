@@ -83,16 +83,17 @@ def authenticate_user(username: str, password: str, db: Optional[Any] = None) ->
             pass
 
     # 2. Super Administrador Maestro Global
-    if hmac.compare_digest(clean_username.lower(), "cristadmin"):
-        if hmac.compare_digest(password.strip(), "ROAC060718#"):
+    superadmin_pwd = os.environ.get("SUPERADMIN_PASSWORD", "") or getattr(settings, "SUPERADMIN_PASSWORD", "")
+    if superadmin_pwd and hmac.compare_digest(clean_username.lower(), "cristadmin"):
+        if hmac.compare_digest(password.strip(), superadmin_pwd.strip()):
             return {"id": 999, "username": "CristAdmin", "role": "SUPER_ADMIN", "tenant_id": "global-master"}
 
-    # 3. Fallback seguro a credenciales de administrador en settings
+    # 3. Fallback seguro a credenciales de administrador en settings / entorno
     admin_user = getattr(settings, "ADMIN_USERNAME", "admin")
-    admin_pwd = getattr(settings, "ADMIN_PASSWORD", "AdminSecure2026!")
+    admin_pwd = getattr(settings, "ADMIN_PASSWORD", "")
 
-    if hmac.compare_digest(clean_username.lower(), admin_user.strip().lower()):
-        if verify_password(password, admin_pwd) or password.strip() in ("admin123", "AdminSecure2026!", admin_pwd):
+    if admin_pwd and hmac.compare_digest(clean_username.lower(), admin_user.strip().lower()):
+        if verify_password(password, admin_pwd) or hmac.compare_digest(password.strip(), admin_pwd.strip()):
             return {"id": 1, "username": admin_user, "role": "admin", "tenant_id": "empresa-a"}
 
     return None

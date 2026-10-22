@@ -2,6 +2,7 @@ import logging
 import os
 import re
 import time
+import uuid
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from logging.handlers import RotatingFileHandler
@@ -372,7 +373,7 @@ app.add_middleware(
     allow_origins=['http://localhost:3000', 'http://127.0.0.1:3000'],
     allow_origin_regex=r'https://.*\.vercel\.app',
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=[
         "Content-Type",
         "Authorization",
@@ -408,11 +409,16 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
-    # No se expone el stack trace en producción
-    logger.exception(f"Excepción no controlada en {request.method} {request.url.path}: {exc}")
+    correlation_id = str(uuid.uuid4())
+    logger.exception(
+        f"[CORRELATION_ID:{correlation_id}] Excepción no controlada en {request.method} {request.url.path}: {exc}"
+    )
     return JSONResponse(
         status_code=500,
-        content={"detail": "Ocurrió un error interno en el servidor."}
+        content={
+            "detail": "Error interno procesando la solicitud",
+            "correlation_id": correlation_id
+        }
     )
 
 # Import main at the end to register all endpoint routes on the app object

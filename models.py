@@ -183,6 +183,9 @@ class InventoryAuditLog(Base):
     actor_role = Column(String(50), nullable=False, default="system")
     source_channel = Column(String(50), nullable=False, default="direct")  # direct, shopify_sync, ml_sync, excel_sync, webhook, rollback
     idempotency_key = Column(String(255), nullable=True)
+    reason = Column(String(255), nullable=True)
+    ip_address = Column(String(64), nullable=True)
+    user_agent = Column(String(512), nullable=True)
     previous_hash = Column(String(64), nullable=False, default="0"*64)
     integrity_hash = Column(String(64), nullable=False)  # SHA-256(prev_hash:user:sku:delta:prev:new:ts)
     created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())

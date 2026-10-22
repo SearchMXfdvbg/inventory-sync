@@ -3,6 +3,8 @@ __pycache__/
 venv/
 .env
 data/database.db
+data/*.db
+*.db
 data/settings.json
 logs/
 frontend/.next/

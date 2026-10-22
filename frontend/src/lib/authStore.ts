@@ -55,74 +55,7 @@ function createSalt(): string {
   }
 }
 
-const cristSalt = createSalt();
-const defaultSuperAdmin: UserRecord = {
-  id: 999,
-  username: 'CristAdmin',
-  email: 'cristadmin@inventorysync.io',
-  salt: cristSalt,
-  passwordHash: hashPassword('ROAC060718#', cristSalt),
-  role: 'SUPER_ADMIN',
-  tenant_id: 'global-master',
-  created_at: '2026-09-01T00:00:00Z',
-  is_active: true
-};
-
-const fernandaSalt = 'salt_fernanda_2026';
-const techStoreSalt = 'salt_techstore_2026';
-const modaSalt = 'salt_moda_2026';
-
-const defaultSeedUsers: Record<string, UserRecord> = {
-  cristadmin: defaultSuperAdmin,
-  fernanda: {
-    id: 101,
-    username: 'Fernanda',
-    email: 'fernanda@empresa.com',
-    salt: fernandaSalt,
-    passwordHash: hashPassword('123456', fernandaSalt),
-    role: 'CLIENT_ADMIN',
-    tenant_id: 'empresa-a',
-    created_at: '2026-09-02T10:00:00Z',
-    is_active: false,
-    plan: 'Enterprise (39,000 SKUs)',
-    maxSkus: 39000,
-    commission_rate: '25%',
-    channels: ['Shopify', 'Mercado Libre'],
-    suspension_reason: 'Falta de pago de mensualidad'
-  },
-  techstorede: {
-    id: 102,
-    username: 'TechStore Germany GmbH',
-    email: 'h.weber@techstore-de.com',
-    salt: techStoreSalt,
-    passwordHash: hashPassword('ClienteSeguro2026#', techStoreSalt),
-    role: 'CLIENT_ADMIN',
-    tenant_id: 'empresa-b',
-    created_at: '2026-09-01T12:00:00Z',
-    is_active: true,
-    plan: 'Enterprise (39,000 SKUs)',
-    maxSkus: 39000,
-    commission_rate: '25%',
-    channels: ['Shopify', 'Amazon DE', 'eBay DE', 'Kaufland DE'],
-    suspension_reason: ''
-  },
-  modaexpress: {
-    id: 103,
-    username: 'ModaExpress Online',
-    email: 'contacto@modaexpress.com',
-    salt: modaSalt,
-    passwordHash: hashPassword('ClienteSeguro2026#', modaSalt),
-    role: 'CLIENT_ADMIN',
-    tenant_id: 'empresa-c',
-    created_at: '2026-09-03T15:30:00Z',
-    is_active: true,
-    plan: 'Plan Básico (<200 SKUs)',
-    maxSkus: 200,
-    commission_rate: '25%',
-    channels: ['Shopify', 'Mercado Libre'],
-    suspension_reason: ''
-  }
-};
+const defaultSeedUsers: Record<string, UserRecord> = {};
 
 const STORAGE_FILE = path.join(os.tmpdir(), 'inventory_sync_users_registry.json');
 const LOCAL_DATA_FILE = path.join(process.cwd(), 'data', 'users.json');
@@ -185,8 +118,8 @@ function readPersistedUsers(): Map<string, UserRecord> {
           }
         });
       }
-    } catch (err) {
-      console.warn('[authStore] Error al leer archivo persistido:', f, err);
+    } catch {
+      // Ignorar de forma segura si el archivo de almacenamiento local no existe
     }
   }
 
@@ -212,8 +145,8 @@ function savePersistedUsers(map: Map<string, UserRecord>) {
     try {
       fs.writeFileSync(STORAGE_FILE, serialized, 'utf-8');
     } catch {}
-  } catch (err) {
-    console.warn('[authStore] Error al guardar archivo persistido:', err);
+  } catch {
+    // Ignorar fallas silenciosas en escritura de almacenamiento persistido
   }
 }
 

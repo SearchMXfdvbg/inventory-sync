@@ -141,7 +141,7 @@ class InventorySyncDesktop(ctk.CTk):
             if r.status_code == 200:
                 current_path = self.file_path_var.get()
                 if not current_path or current_path == "Ningún archivo seleccionado":
-                    current_path = os.path.join(os.path.expanduser("~"), "Desktop", "inventario_demo.xlsx")
+                    current_path = os.path.join(os.path.expanduser("~"), "Desktop", "inventario_plantilla.xlsx")
                     self.file_path_var.set(current_path)
                 with open(current_path, "wb") as f:
                     f.write(r.content)

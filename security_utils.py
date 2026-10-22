@@ -79,13 +79,17 @@ def record_audit_log(
     sku: str,
     previous_stock: int,
     new_stock: int,
-    actor: Optional[Dict[str, Any]] = None,
+    actor: Optional[Any] = None,
     source_channel: str = "direct",
-    idempotency_key: Optional[str] = None
+    idempotency_key: Optional[str] = None,
+    reason: Optional[str] = None,
+    ip_address: Optional[str] = None,
+    user_agent: Optional[str] = None
 ) -> InventoryAuditLog:
     """
     Registra un cambio de stock en la tabla de auditoría con encadenamiento criptográfico.
     Calcula: integrity_hash = SHA256(prev_hash:user_id:sku:delta:previous_stock:new_stock:timestamp)
+    Garantiza rollback atómico en caso de error para preservar la integridad de la transacción.
     """
     delta = new_stock - previous_stock
     now_utc = datetime.now(timezone.utc)
@@ -116,24 +120,32 @@ def record_audit_log(
     payload_str = f"{prev_hash}:{user_id}:{sku}:{delta}:{previous_stock}:{new_stock}:{ts_str}"
     integrity_hash = hashlib.sha256(payload_str.encode("utf-8")).hexdigest()
 
-    log_entry = InventoryAuditLog(
-        user_id=user_id,
-        sku=sku,
-        previous_stock=previous_stock,
-        new_stock=new_stock,
-        delta=delta,
-        actor_id=actor_id,
-        actor_username=actor_username,
-        actor_role=actor_role,
-        source_channel=source_channel,
-        idempotency_key=idempotency_key,
-        previous_hash=prev_hash,
-        integrity_hash=integrity_hash,
-        created_at=now_utc
-    )
-    db.add(log_entry)
-    db.flush()
-    return log_entry
+    try:
+        log_entry = InventoryAuditLog(
+            user_id=user_id,
+            sku=sku,
+            previous_stock=previous_stock,
+            new_stock=new_stock,
+            delta=delta,
+            actor_id=actor_id,
+            actor_username=actor_username,
+            actor_role=actor_role,
+            source_channel=source_channel,
+            idempotency_key=idempotency_key,
+            reason=reason,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            previous_hash=prev_hash,
+            integrity_hash=integrity_hash,
+            created_at=now_utc
+        )
+        db.add(log_entry)
+        db.flush()
+        return log_entry
+    except Exception as err:
+        logger.error(f"Falla crítica registrando bitácora de auditoría inmutable para {sku}: {err}")
+        db.rollback()
+        raise
 
 
 def verify_audit_log_chain(db: Session, user_id: int, sku: Optional[str] = None) -> Dict[str, Any]:
@@ -490,3 +502,18 @@ def format_currency(amount: Any) -> str:
         return str(dec.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
     except Exception:
         return "0.00"
+
+
+def quantize_decimal(amount: Any) -> Decimal:
+    """
+    Convierte cualquier valor numérico a Decimal con 2 decimales exactos usando ROUND_HALF_UP.
+    Garantiza precisión monetaria y previene inconsistencias de punto flotante.
+    """
+    if amount is None or amount == "":
+        return Decimal("0.00")
+    try:
+        dec = Decimal(str(amount))
+        return dec.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    except Exception:
+        return Decimal("0.00")
+

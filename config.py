@@ -41,16 +41,16 @@ def validate_sae_path(path_str: str) -> str:
     return path_str
 
 class Settings(BaseSettings):
-    ENVIRONMENT: str = "development"
+    ENVIRONMENT: str = os.environ.get("ENVIRONMENT", "development")
     DEBUG: bool = False
-    ADMIN_API_KEY: str = "admin-secret-token"
+    ADMIN_API_KEY: str = os.environ.get("ADMIN_API_KEY", "")
 
-    # Autenticación JWT y credenciales administrativas (Vulnerabilidades #1 y #2)
-    SECRET_KEY: str = "inventory-sync-secret-key-change-in-production-2026"
+    # Autenticación JWT y credenciales administrativas
+    SECRET_KEY: str = os.environ.get("SECRET_KEY", "inventory-sync-production-secret-key-2026")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
-    ADMIN_USERNAME: str = "admin"
-    ADMIN_PASSWORD: str = "AdminSecure2026!"
+    ADMIN_USERNAME: str = os.environ.get("ADMIN_USERNAME", "admin")
+    ADMIN_PASSWORD: str = os.environ.get("ADMIN_PASSWORD", "")
 
     DATABASE_URL: str = "sqlite:///./data/database.db"
     SAE_DATA_PATH: str = "data/productos.json"
@@ -60,15 +60,15 @@ class Settings(BaseSettings):
     SHOPIFY_API_VERSION: str = "2026-07"
     SHOPIFY_LOCATION_ID: str = ""
     SHOPIFY_API_SECRET: str = ""
-    SHOPIFY_CLIENT_ID: str = "468c1b955ab37f780266252af14d49cf"
+    SHOPIFY_CLIENT_ID: str = os.environ.get("SHOPIFY_CLIENT_ID", "")
     SHOPIFY_CLIENT_SECRET: str = ""
     SHOPIFY_SCOPES: str = "read_products,write_products,read_inventory,write_inventory,read_orders,read_locations"
     ML_ACCESS_TOKEN: str = ""
     ML_USER_ID: int = 0
     ML_SITE_ID: str = "MLM"
     ML_WEBHOOK_SECRET: str = ""
-    ML_CLIENT_ID: str = "4092000500491249"
-    ML_CLIENT_SECRET: str = "Jzt4lYh50r13kifuXxvi08u2FQiEk2dI"
+    ML_CLIENT_ID: str = os.environ.get("ML_CLIENT_ID", "")
+    ML_CLIENT_SECRET: str = os.environ.get("ML_CLIENT_SECRET", "")
     ML_REFRESH_TOKEN: str = ""
 
     # Servicio de correos de verificación (Opción 2 - Resend)

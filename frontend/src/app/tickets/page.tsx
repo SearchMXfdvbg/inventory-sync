@@ -66,60 +66,7 @@ const STATUS_MAP: Record<SupportTicket['status'], { label: string; color: string
   RESOLVED: { label: 'Resuelto', color: 'bg-slate-500/15 text-slate-400 border-slate-600/30', icon: CheckCircle2 },
 };
 
-const INITIAL_SEED_TICKETS: SupportTicket[] = [
-  {
-    id: 'TK-1082',
-    user: 'ggbro',
-    title: 'Solicitud de Activación y Asignación de Plan de Sincronización',
-    category: 'ACTIVATION',
-    priority: 'HIGH',
-    status: 'IN_REVIEW',
-    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    updatedAt: new Date(Date.now() - 1800000).toISOString(),
-    messages: [
-      {
-        id: 'msg-1',
-        sender: 'ggbro',
-        role: 'USER',
-        text: 'Hola CristAdmin, registré mi cuenta para conectar Shopify y Mercado Libre. Quedo a la espera de que activen mi plan para comenzar a sincronizar mis productos.',
-        timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
-      },
-      {
-        id: 'msg-2',
-        sender: 'CristAdmin (Soporte Oficial)',
-        role: 'ADMIN',
-        text: '¡Hola ggbro! Hemos recibido tu solicitud de activación. Estamos preparando los canales de sincronización para tu cuenta. Si requieres conectar Aspel SAE o Amazon, avísanos por este medio.',
-        timestamp: new Date(Date.now() - 1800000).toISOString(),
-      }
-    ]
-  },
-  {
-    id: 'TK-1045',
-    user: 'SearchMX',
-    title: 'Verificación de credenciales de API Mercado Libre',
-    category: 'MARKETPLACE',
-    priority: 'NORMAL',
-    status: 'RESOLVED',
-    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    messages: [
-      {
-        id: 'msg-101',
-        sender: 'SearchMX',
-        role: 'USER',
-        text: 'Confirmar si los tokens de refresco para Mercado Libre México están renovándose automáticamente.',
-        timestamp: new Date(Date.now() - 86400000 * 3).toISOString(),
-      },
-      {
-        id: 'msg-102',
-        sender: 'CristAdmin (Soporte Oficial)',
-        role: 'ADMIN',
-        text: 'Revisado y verificado. El worker en segundo plano ejecuta la renovación cada 5 horas con éxito.',
-        timestamp: new Date(Date.now() - 86400000 * 2).toISOString(),
-      }
-    ]
-  }
-];
+const INITIAL_SEED_TICKETS: SupportTicket[] = [];
 
 export default function TicketsPage() {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);

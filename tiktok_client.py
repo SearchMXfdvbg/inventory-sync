@@ -19,13 +19,7 @@ class TikTokClient:
     BASE_URL = "https://open-api.tiktokglobalshop.com"
 
     def __init__(self):
-        # Almacén en memoria para simulación en modo mock / desarrollo
-        self._mock_stocks: Dict[str, int] = {
-            "SKU001": 10,
-            "SKU002": 15,
-            "SKU003": 8,
-            "SKU004": 20
-        }
+        pass
 
     @property
     def is_configured(self) -> bool:
@@ -126,10 +120,10 @@ class TikTokClient:
                         if s.get("id") == sku_id or s.get("seller_sku") == sku_id:
                             inv = s.get("inventory", [{}])[0].get("quantity", 0)
                             return int(inv)
-            return 10
+            return 0
         except Exception as e:
             logger.warning(f"No se pudo consultar stock en TikTok Shop para {sku_id}: {e}")
-            return self._mock_stocks.get(sku_id, 10)
+            return 0
 
     async def get_order(self, order_id: str) -> Dict[str, Any]:
         """

@@ -358,6 +358,9 @@ class InventoryAuditLogResponse(BaseModel):
     actor_role: str
     source_channel: str
     idempotency_key: Optional[str] = None
+    reason: Optional[str] = None
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
     previous_hash: str
     integrity_hash: str
     created_at: datetime

@@ -74,9 +74,9 @@ class SAEDatabaseRepository(SAERepository):
                         "sku": tp.sku,
                         "nombre": tp.nombre,
                         "stock": int(tp.stock),
-                        "shopify_inventory_item_id": tp.shopify_inventory_item_id or f"gid://shopify/InventoryItem/{hash(tp.sku)%10000000}",
-                        "shopify_location_id": tp.shopify_location_id or "gid://shopify/Location/demo",
-                        "ml_item_id": tp.ml_item_id or f"MLM{hash(tp.sku)%10000000}"
+                        "shopify_inventory_item_id": tp.shopify_inventory_item_id or "",
+                        "shopify_location_id": tp.shopify_location_id or "",
+                        "ml_item_id": tp.ml_item_id or ""
                     }
             except Exception:
                 session.rollback()
