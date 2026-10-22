@@ -159,7 +159,7 @@ class SAEDatabaseRepository(SAERepository):
                 session.rollback()
 
             try:
-                tp_query = text("UPDATE tenant_products SET stock = :quantity WHERE UPPER(sku) = UPPER(:sku)")
+                tp_query = text("UPDATE tenant_products SET stock = :quantity, version = version + 1 WHERE UPPER(sku) = UPPER(:sku)")
                 result = session.execute(tp_query, {"quantity": quantity, "sku": sku})
                 if result.rowcount > 0:
                     session.commit()
@@ -183,10 +183,10 @@ class SAEDatabaseRepository(SAERepository):
             except Exception:
                 session.rollback()
 
-            # Fallback atómico en tenant_products
+            # Fallback atómico en tenant_products con Optimistic Locking (versión incrementada)
             try:
                 tp_update = text(
-                    "UPDATE tenant_products SET stock = stock - :quantity "
+                    "UPDATE tenant_products SET stock = stock - :quantity, version = version + 1 "
                     "WHERE UPPER(sku) = UPPER(:sku) AND stock >= :quantity"
                 )
                 result = session.execute(tp_update, {"quantity": quantity, "sku": sku})

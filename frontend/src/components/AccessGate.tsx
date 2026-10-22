@@ -37,14 +37,14 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
     setChecking(true);
     setStatusMessage(null);
     try {
-      // Re-consultar el estado del tenant en el servidor
-      const adminHeaders = {
-        'X-Admin-PIN': '060718',
-        'X-API-Key': 'admin-secret-token'
+      const token = localStorage.getItem('token') || localStorage.getItem('access_token') || '';
+      const authHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       };
-      let res = await fetch('/api/super-admin/tenants', { headers: adminHeaders }).catch(() => null);
+      let res = await fetch('/api/super-admin/tenants', { headers: authHeaders }).catch(() => null);
       if (!res || !res.ok) {
-        res = await fetch('https://inventory-sync-5y8u.onrender.com/super-admin/tenants', { headers: adminHeaders }).catch(() => null);
+        res = await fetch('https://inventory-sync-5y8u.onrender.com/super-admin/tenants', { headers: authHeaders }).catch(() => null);
       }
       if (res && res.ok) {
         const tenants = await res.json();

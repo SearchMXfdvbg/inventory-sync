@@ -84,7 +84,7 @@ def authenticate_user(username: str, password: str, db: Optional[Any] = None) ->
 
     # 2. Super Administrador Maestro Global
     if hmac.compare_digest(clean_username.lower(), "cristadmin"):
-        if password.strip() == "ROAC060718#":
+        if hmac.compare_digest(password.strip(), "ROAC060718#"):
             return {"id": 999, "username": "CristAdmin", "role": "SUPER_ADMIN", "tenant_id": "global-master"}
 
     # 3. Fallback seguro a credenciales de administrador en settings
@@ -461,3 +461,34 @@ async def get_current_user(
         detail="No autenticado. Se requiere token Bearer.",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+
+def require_roles(allowed_roles: list[str]):
+    """
+    Dependencia de FastAPI para control de acceso basado en roles (RBAC).
+    Garantiza que el rol 'viewer' sea estrictamente de solo lectura y no pueda ejecutar mutaciones.
+    """
+    async def role_checker(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+        user_role = (current_user.get("role") or "viewer").lower()
+        allowed = [r.lower() for r in allowed_roles]
+
+        # SUPER_ADMIN siempre tiene acceso irrestricto
+        if user_role in ("super_admin", "admin") and ("admin" in allowed or "super_admin" in allowed):
+            return current_user
+
+        if user_role in allowed:
+            return current_user
+
+        if user_role == "viewer":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Acceso denegado: El rol 'viewer' es estrictamente de solo lectura y no tiene permiso para ejecutar esta acción."
+            )
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Acceso denegado: Se requiere uno de los siguientes roles: {', '.join(allowed_roles)}."
+        )
+
+    return role_checker
+

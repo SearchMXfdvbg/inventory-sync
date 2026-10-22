@@ -73,6 +73,8 @@ def init_db_and_migrate():
                         cur.execute("ALTER TABLE ventas ADD COLUMN kaufland_synced BOOLEAN DEFAULT 0 NOT NULL")
                     if "user_id" not in venta_cols:
                         cur.execute("ALTER TABLE ventas ADD COLUMN user_id INTEGER DEFAULT 1")
+                    if "idempotency_key" not in venta_cols:
+                        cur.execute("ALTER TABLE ventas ADD COLUMN idempotency_key VARCHAR(255) DEFAULT ''")
                     
                 # Migración de tabla users
                 cur.execute("PRAGMA table_info(users)")
@@ -86,6 +88,7 @@ def init_db_and_migrate():
                 ts_cols = [row[1] for row in cur.fetchall()]
                 if ts_cols:
                     new_ts_cols = {
+                        "maintenance_mode": "BOOLEAN DEFAULT 0 NOT NULL",
                         "enable_ebay": "BOOLEAN DEFAULT 0 NOT NULL",
                         "enable_kaufland": "BOOLEAN DEFAULT 0 NOT NULL",
                         "ebay_client_id": "VARCHAR(255) DEFAULT '' NOT NULL",
@@ -108,6 +111,12 @@ def init_db_and_migrate():
                 cur.execute("PRAGMA table_info(tenant_products)")
                 tp_cols = [row[1] for row in cur.fetchall()]
                 if tp_cols:
+                    if "version" not in tp_cols:
+                        cur.execute("ALTER TABLE tenant_products ADD COLUMN version INTEGER DEFAULT 1 NOT NULL")
+                    if "sync_hash" not in tp_cols:
+                        cur.execute("ALTER TABLE tenant_products ADD COLUMN sync_hash VARCHAR(64) DEFAULT ''")
+                    if "last_sync_source" not in tp_cols:
+                        cur.execute("ALTER TABLE tenant_products ADD COLUMN last_sync_source VARCHAR(50) DEFAULT ''")
                     if "ebay_item_id" not in tp_cols:
                         cur.execute("ALTER TABLE tenant_products ADD COLUMN ebay_item_id VARCHAR(255) DEFAULT ''")
                     if "kaufland_unit_id" not in tp_cols:
@@ -122,10 +131,30 @@ def init_db_and_migrate():
         try:
             from sqlalchemy import text
             with engine.connect() as pg_conn:
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS maintenance_mode BOOLEAN DEFAULT FALSE NOT NULL;"))
                 pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS ml_client_id VARCHAR(255) DEFAULT '';"))
                 pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS ml_client_secret VARCHAR(255) DEFAULT '';"))
                 pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS ml_refresh_token VARCHAR(255) DEFAULT '';"))
                 pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS ml_token_expires_at TIMESTAMP NULL;"))
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS enable_ebay BOOLEAN DEFAULT FALSE NOT NULL;"))
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS enable_kaufland BOOLEAN DEFAULT FALSE NOT NULL;"))
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS ebay_client_id VARCHAR(255) DEFAULT '';"))
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS ebay_client_secret VARCHAR(255) DEFAULT '';"))
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS ebay_refresh_token VARCHAR(255) DEFAULT '';"))
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS ebay_marketplace_id VARCHAR(50) DEFAULT 'EBAY_DE';"))
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS kaufland_client_key VARCHAR(255) DEFAULT '';"))
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS kaufland_secret_key VARCHAR(255) DEFAULT '';"))
+                pg_conn.execute(text("ALTER TABLE tenant_settings ADD COLUMN IF NOT EXISTS kaufland_storefront VARCHAR(50) DEFAULT 'de';"))
+
+                pg_conn.execute(text("ALTER TABLE tenant_products ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1 NOT NULL;"))
+                pg_conn.execute(text("ALTER TABLE tenant_products ADD COLUMN IF NOT EXISTS sync_hash VARCHAR(64) DEFAULT '';"))
+                pg_conn.execute(text("ALTER TABLE tenant_products ADD COLUMN IF NOT EXISTS last_sync_source VARCHAR(50) DEFAULT '';"))
+                pg_conn.execute(text("ALTER TABLE tenant_products ADD COLUMN IF NOT EXISTS ebay_item_id VARCHAR(255) DEFAULT '';"))
+                pg_conn.execute(text("ALTER TABLE tenant_products ADD COLUMN IF NOT EXISTS kaufland_unit_id VARCHAR(255) DEFAULT '';"))
+
+                pg_conn.execute(text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS idempotency_key VARCHAR(255) DEFAULT '';"))
+                pg_conn.execute(text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS ebay_synced BOOLEAN DEFAULT FALSE NOT NULL;"))
+                pg_conn.execute(text("ALTER TABLE ventas ADD COLUMN IF NOT EXISTS kaufland_synced BOOLEAN DEFAULT FALSE NOT NULL;"))
                 pg_conn.commit()
         except Exception:
             pass

@@ -49,14 +49,16 @@ RETRY_SCHEDULE = {
 def handle_temp_error(db: Session, venta: Venta, error_msg: str) -> None:
     """
     Handles a temporary error in the saga execution.
-    Updates the last_error of the venta. If the attempts count has reached
-    or exceeded 5, transitions the venta status to 'FAILED'.
+    Updates the last_error of the venta. If attempts reach 5, transitions status to 'FAILED' (Dead Letter Queue DLQ).
+    Otherwise maintains status 'PROCESSING' for exponential backoff retry.
     """
     venta.last_error = error_msg
     if venta.attempts >= 5:
         venta.status = "FAILED"
-        venta.last_error = f"Exceeded max retries (5). Last error: {error_msg}"
-        logger.error(f"Venta ID {venta.id} has exceeded the limit of 5 attempts. Marking as FAILED.")
+        venta.last_error = f"Exceeded max retries (5). Moved to Dead Letter Queue (DLQ). Error: {error_msg}"
+        logger.error(f"Venta ID {venta.id} has exceeded the limit of 5 attempts. Marking as FAILED (DLQ).")
+    else:
+        venta.status = "PROCESSING"
     db.commit()
 
 
@@ -84,23 +86,33 @@ async def run_iteration(db: Session) -> bool:
     any_processed = False
 
     while True:
-        # 1. Fetch sales that have status='PENDING' or status='PROCESSING' and attempts < 5
+        # 1. Fetch sales that have status in ['PENDING', 'PROCESSING', 'FAILED_RETRYABLE'] and attempts < 5
         sales = db.query(Venta).filter(
-            Venta.status.in_(["PENDING", "PROCESSING"]),
+            Venta.status.in_(["PENDING", "PROCESSING", "FAILED_RETRYABLE"]),
             Venta.attempts < 5
         ).order_by(Venta.id.asc()).all()
 
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         ready_sale: Optional[Venta] = None
 
+        from models import TenantSettings
         for sale in sales:
+            # Si el tenant está en modo mantenimiento, pausar el procesamiento sin perder la venta
+            t_set = db.query(TenantSettings).filter(TenantSettings.user_id == (sale.user_id or 1)).first()
+            if t_set and t_set.maintenance_mode:
+                if sale.status != "QUEUED_MAINTENANCE":
+                    sale.status = "QUEUED_MAINTENANCE"
+                    db.commit()
+                continue
+
             if sale.attempts == 0:
                 ready_sale = sale
                 break
             else:
-                # Consultar tiempo de espera según el número de reintento
+                # Consultar tiempo de espera según el número de reintento (backoff exponencial)
                 delay_seconds = RETRY_SCHEDULE.get(sale.attempts, 180)
-                next_attempt = sale.updated_at + timedelta(seconds=delay_seconds)
+                sale_updated = sale.updated_at.replace(tzinfo=None) if sale.updated_at else now
+                next_attempt = sale_updated + timedelta(seconds=delay_seconds)
                 if now >= next_attempt:
                     ready_sale = sale
                     break
@@ -204,10 +216,27 @@ async def run_iteration(db: Session) -> bool:
         if enable_sae:
             if not venta.sae_decremented:
                 try:
-                    sae.decrement_stock(venta.sku, venta.cantidad)
+                    new_master_stock = sae.decrement_stock(venta.sku, venta.cantidad)
                     venta.sae_decremented = True
                     db.commit()
                     logger.info(f"Venta ID {venta.id}: SAE stock decremented successfully.")
+
+                    # Auditoría inmutable de decremento de stock
+                    from security_utils import record_audit_log
+                    try:
+                        record_audit_log(
+                            db=db,
+                            user_id=venta.user_id or 1,
+                            sku=venta.sku,
+                            previous_stock=new_master_stock + venta.cantidad,
+                            new_stock=new_master_stock,
+                            actor={"id": None, "username": f"worker_{venta.origen}", "role": "system"},
+                            source_channel=f"webhook_{venta.origen}",
+                            idempotency_key=venta.external_id
+                        )
+                        db.commit()
+                    except Exception as audit_err:
+                        logger.warning(f"Error registrando audit log para venta {venta.id}: {audit_err}")
                 except InsufficientStockError as e:
                     logger.error(f"Venta ID {venta.id}: Insufficient stock for SKU '{venta.sku}'. Marking as FAILED.")
                     venta.status = "FAILED"
@@ -228,6 +257,8 @@ async def run_iteration(db: Session) -> bool:
         except Exception:
             current_master_stock = 10
 
+        from security_utils import track_outbound_sync
+
         # 5. Shopify inventory adjustment
         if enable_shopify:
             if not venta.shopify_synced:
@@ -241,6 +272,7 @@ async def run_iteration(db: Session) -> bool:
                         idempotency_key=idempotency_key,
                         reference_uri=reference_uri
                     )
+                    track_outbound_sync("shopify", venta.sku, current_master_stock)
                     venta.shopify_synced = True
                     db.commit()
                     logger.info(f"Venta ID {venta.id}: Shopify inventory adjusted successfully.")
@@ -265,6 +297,7 @@ async def run_iteration(db: Session) -> bool:
                         item_id=ml_item_id,
                         quantity=current_master_stock
                     )
+                    track_outbound_sync("mercadolibre", venta.sku, current_master_stock)
                     venta.ml_synced = True
                     db.commit()
                     logger.info(f"Venta ID {venta.id}: Mercado Libre stock updated successfully to {current_master_stock}.")
@@ -284,6 +317,7 @@ async def run_iteration(db: Session) -> bool:
                         sku_id=venta.sku,
                         quantity=current_master_stock
                     )
+                    track_outbound_sync("tiktok", venta.sku, current_master_stock)
                     venta.tiktok_synced = True
                     db.commit()
                     logger.info(f"Venta ID {venta.id}: TikTok Shop stock updated successfully to {current_master_stock}.")
@@ -302,6 +336,7 @@ async def run_iteration(db: Session) -> bool:
                         sku=venta.sku,
                         quantity=current_master_stock
                     )
+                    track_outbound_sync("amazon", venta.sku, current_master_stock)
                     venta.amazon_synced = True
                     db.commit()
                     logger.info(f"Venta ID {venta.id}: Amazon stock updated successfully to {current_master_stock}.")
@@ -320,6 +355,7 @@ async def run_iteration(db: Session) -> bool:
                         sku=venta.sku,
                         quantity=current_master_stock
                     )
+                    track_outbound_sync("ebay", venta.sku, current_master_stock)
                     venta.ebay_synced = True
                     db.commit()
                     logger.info(f"Venta ID {venta.id}: eBay Alemania stock updated successfully to {current_master_stock}.")
@@ -338,6 +374,7 @@ async def run_iteration(db: Session) -> bool:
                         sku=venta.sku,
                         quantity=current_master_stock
                     )
+                    track_outbound_sync("kaufland", venta.sku, current_master_stock)
                     venta.kaufland_synced = True
                     db.commit()
                     logger.info(f"Venta ID {venta.id}: Kaufland stock updated successfully to {current_master_stock}.")

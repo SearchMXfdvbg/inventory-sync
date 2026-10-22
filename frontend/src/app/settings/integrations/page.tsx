@@ -1337,7 +1337,7 @@ export default function IntegrationsSettingsPage() {
                       <input 
                         type="text" 
                         readOnly 
-                        value={typeof window !== 'undefined' ? btoa(`${process.env.NEXT_PUBLIC_API_URL || 'https://inventory-sync-5y8u.onrender.com'}|060718`) : ''} 
+                        value={typeof window !== 'undefined' ? btoa(`${process.env.NEXT_PUBLIC_API_URL || 'https://inventory-sync-5y8u.onrender.com'}|${localStorage.getItem('token') || localStorage.getItem('access_token') || 'token'}`) : ''} 
                         className="w-full bg-black text-[#00ff66] text-xs font-mono px-3 py-2 border border-slate-700 outline-none"
                       />
                       <button 

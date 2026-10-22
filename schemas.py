@@ -119,6 +119,9 @@ class SettingsUpdate(BaseModel):
     KAUFLAND_SECRET_KEY: Optional[str] = None
     KAUFLAND_STOREFRONT: Optional[str] = None
 
+    # Modo Mantenimiento
+    MAINTENANCE_MODE: Optional[bool] = None
+
     @field_validator("DATABASE_URL")
     @classmethod
     def validate_database_url(cls, v: Optional[str]) -> Optional[str]:
@@ -193,6 +196,9 @@ class SettingsResponse(BaseModel):
     KAUFLAND_CLIENT_KEY: str = ""
     KAUFLAND_SECRET_KEY: str = ""
     KAUFLAND_STOREFRONT: str = "de"
+
+    # Modo Mantenimiento
+    MAINTENANCE_MODE: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -337,6 +343,76 @@ class ShopifyOAuthExchangeRequest(BaseModel):
     code: str
     state: Optional[str] = None
     redirect_uri: Optional[str] = "https://inventory-sync-rouge.vercel.app/settings/integrations"
+
+
+# Audit Logs Schema
+class InventoryAuditLogResponse(BaseModel):
+    id: int
+    user_id: int
+    sku: str
+    previous_stock: int
+    new_stock: int
+    delta: int
+    actor_id: Optional[int] = None
+    actor_username: str
+    actor_role: str
+    source_channel: str
+    idempotency_key: Optional[str] = None
+    previous_hash: str
+    integrity_hash: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Snapshots Schema
+class InventorySnapshotResponse(BaseModel):
+    id: int
+    user_id: int
+    snapshot_name: str
+    items_count: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CreateSnapshotRequest(BaseModel):
+    snapshot_name: str = Field(..., min_length=1, max_length=255, description="Nombre descriptivo del snapshot")
+
+
+class SnapshotRollbackResponse(BaseModel):
+    success: bool
+    snapshot_id: int
+    restored_count: int
+    message: str
+
+
+# Maintenance Mode Schema
+class MaintenanceModeUpdate(BaseModel):
+    enabled: Optional[bool] = None
+    maintenance_mode: Optional[bool] = None
+
+    def is_enabled(self) -> bool:
+        if self.maintenance_mode is not None:
+            return self.maintenance_mode
+        if self.enabled is not None:
+            return self.enabled
+        return False
+
+
+class MaintenanceModeResponse(BaseModel):
+    maintenance_mode: bool
+    message: str
+
+
+# DLQ Replay Schema
+class DLQReplayResponse(BaseModel):
+    success: bool
+    replayed_count: int
+    message: str
+    venta_id: Optional[int] = None
+    new_status: Optional[str] = "PENDING"
+
 
 
 
