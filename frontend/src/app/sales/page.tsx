@@ -92,11 +92,11 @@ export default function SalesPage() {
             onChange={(e) => setOriginFilter(e.target.value)}
             className="text-xs text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-[#090a0c] border border-slate-200 dark:border-[#20242c] py-2 px-3 focus:outline-none focus:border-[#00ff66] cursor-pointer font-bold font-mono-code uppercase"
           >
-            <option value="all">TODOS LOS ORÍGENES</option>
+            <option value="all">TODOS LOS CANALES</option>
             <option value="shopify">Shopify</option>
             <option value="mercadolibre">Mercado Libre</option>
             <option value="tiktok">TikTok Shop</option>
-            <option value="amazon">Amazon SP-API</option>
+            <option value="amazon">Amazon</option>
           </select>
 
           <select
@@ -116,7 +116,7 @@ export default function SalesPage() {
           onClick={loadData}
           className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 bg-[#00ff66] hover:bg-[#00e65c] text-black font-bold font-mono-code text-xs shadow-hard border border-[#00ff66] transition-colors cursor-pointer"
         >
-          <RefreshCw size={13} className={loading ? "animate-spin" : ""} /> REFRESCAR VENTAS
+          <RefreshCw size={13} className={loading ? "animate-spin" : ""} /> ACTUALIZAR VENTAS
         </button>
       </div>
 
@@ -127,10 +127,10 @@ export default function SalesPage() {
               <tr className="border-b border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#090a0c] text-[10px] font-bold text-slate-500 dark:text-[#8e95a5] uppercase tracking-widest font-mono-code">
                 <th className="py-3 px-4">Fecha</th>
                 <th className="py-3 px-4">Canal</th>
-                <th className="py-3 px-4">External ID</th>
+                <th className="py-3 px-4">ID de Orden</th>
                 <th className="py-3 px-4">SKU</th>
                 <th className="py-3 px-4 text-center">Cant.</th>
-                <th className="py-3 px-4">Estado Saga</th>
+                <th className="py-3 px-4">Estado</th>
                 <th className="py-3 px-4 text-center">Reintentos</th>
               </tr>
             </thead>
@@ -145,7 +145,7 @@ export default function SalesPage() {
                 <tr>
                   <td colSpan={7} className="text-center py-12 text-slate-400 dark:text-[#8e95a5]">
                     <ShoppingCart size={32} className="mx-auto mb-2 opacity-30" />
-                    <span className="font-mono-code uppercase text-xs">No hay transacciones de venta registradas</span>
+                    <span className="font-mono-code uppercase text-xs">No se encontraron órdenes registradas</span>
                   </td>
                 </tr>
               ) : (

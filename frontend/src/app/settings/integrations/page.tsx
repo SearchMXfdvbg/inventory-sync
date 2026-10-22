@@ -157,7 +157,7 @@ export default function IntegrationsSettingsPage() {
           ]);
           setStatus(statusRes);
           setSettings(prev => ({ ...prev, ...settingsRes }));
-          showToast(`¡Conexión exitosa con ${channel.toUpperCase()}! Guardado permanentemente en Neon.`, 'success');
+          showToast(`¡Conexión exitosa con ${channel.toUpperCase()}! Configuración guardada correctamente.`, 'success');
         } catch (saveErr) {
           console.warn('Auto-save post test connection failed', saveErr);
         }
@@ -423,14 +423,14 @@ export default function IntegrationsSettingsPage() {
       {/* Header */}
       <div className="border border-slate-200 dark:border-[#20242c] bg-white dark:bg-[#0d0e12] p-5 shadow-hard">
         <div className="flex items-center gap-2 text-[#008f39] dark:text-[#00ff66] text-xs font-bold mb-1">
-          <Terminal size={14} />
-          <span>// ORQUESTACIÓN DE CANALES & ERP</span>
+          <Radio size={14} />
+          <span>CANALES DE VENTA & ERP</span>
         </div>
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight font-sans">
           Canales e Integraciones de Stock
         </h1>
         <p className="text-slate-500 dark:text-[#8e95a5] text-xs mt-1">
-          Configura el inventario maestro de referencia y activa la propagación bidireccional hacia los marketplaces conectados.
+          Configura el inventario maestro de referencia y activa la sincronización con tus canales de venta.
         </p>
       </div>
 
@@ -439,9 +439,9 @@ export default function IntegrationsSettingsPage() {
         <div>
           <h2 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase">
             <Radio size={14} className="text-[#008f39] dark:text-[#00ff66]" />
-            CONEXIONES ACTIVAS EN EL HUB
+            CANALES VINCULADOS
           </h2>
-          <p className="text-slate-500 dark:text-[#8e95a5] text-[11px] mt-0.5">Sistemas vinculados y en escucha de eventos de compra.</p>
+          <p className="text-slate-500 dark:text-[#8e95a5] text-[11px] mt-0.5">Sistemas conectados para la sincronización de inventario.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {activeConnections.length > 0 ? (
@@ -474,7 +474,7 @@ export default function IntegrationsSettingsPage() {
             {/* Selector de Inventario Principal */}
             <div className="space-y-2">
               <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase">
-                // INVENTARIO PRINCIPAL (SISTEMA DE REFERENCIA)
+                INVENTARIO PRINCIPAL (ORIGEN DE REFERENCIA)
               </label>
               <select
                 value={settings.INVENTARIO_PRINCIPAL || 'shopify'}
@@ -497,7 +497,7 @@ export default function IntegrationsSettingsPage() {
             {/* Checkboxes de Canales Activos */}
             <div className="space-y-2">
               <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase">
-                // CANALES ACTIVOS EN TU EMPRESA
+                CANALES HABILITADOS EN TU NEGOCIO
               </label>
               <div className="border border-slate-300 dark:border-[#20242c] bg-slate-50 dark:bg-[#090a0c] p-3 space-y-2">
                 {[
@@ -537,7 +537,7 @@ export default function IntegrationsSettingsPage() {
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#20242c] mb-3">
                   <div className="flex items-center gap-2">
                     <Store size={16} className="text-[#008f39] dark:text-[#00ff66]" />
-                    <h3 className="font-bold text-slate-900 dark:text-white uppercase">Shopify Admin GraphQL</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white uppercase">Shopify</h3>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 border border-[#00ff66]/40 text-[#008f39] dark:text-[#00ff66] bg-[#00ff66]/10 font-bold uppercase">
                     {(status?.shopify.status === 'connected' || testResults['shopify']?.success) ? 'CONECTADO' : 'DESCONECTADO'}
@@ -580,7 +580,7 @@ export default function IntegrationsSettingsPage() {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">
-                      // DOMINIO (.myshopify.com)
+                      Dominio (.myshopify.com)
                     </label>
                     <input
                       type="text"
@@ -592,7 +592,7 @@ export default function IntegrationsSettingsPage() {
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">
-                      // ADMIN API ACCESS TOKEN
+                      Admin API Access Token
                     </label>
                     <input
                       type="password"
@@ -605,7 +605,7 @@ export default function IntegrationsSettingsPage() {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">
-                        // LOCATION ID
+                        Location ID (Almacén)
                       </label>
                       <input
                         type="text"
@@ -617,7 +617,7 @@ export default function IntegrationsSettingsPage() {
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">
-                        // API SECRET
+                        API Secret Key (Opcional)
                       </label>
                       <input
                         type="password"
@@ -641,7 +641,7 @@ export default function IntegrationsSettingsPage() {
                   {testingChannel === 'shopify' ? (
                     <>
                       <RefreshCw size={13} className="animate-spin text-[#00ff66]" />
-                      <span>PROBANDO CONEXIÓN GRAPHQL...</span>
+                      <span>PROBANDO CONEXIÓN...</span>
                     </>
                   ) : (
                     <>
@@ -672,7 +672,7 @@ export default function IntegrationsSettingsPage() {
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#20242c] mb-3">
                   <div className="flex items-center gap-2">
                     <ShoppingBag size={16} className="text-yellow-500" />
-                    <h3 className="font-bold text-slate-900 dark:text-white uppercase">Mercado Libre REST API</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white uppercase">Mercado Libre</h3>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 border border-yellow-500/40 text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 font-bold uppercase">
                     {(status?.mercadolibre.status === 'connected' || testResults['mercadolibre']?.success) ? 'CONECTADO' : 'DESCONECTADO'}
@@ -738,7 +738,7 @@ export default function IntegrationsSettingsPage() {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">
-                      // ACCESS TOKEN (BEARER APP_USR-...)
+                      Access Token (Bearer APP_USR-...)
                     </label>
                     <input
                       type="password"
@@ -751,7 +751,7 @@ export default function IntegrationsSettingsPage() {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">
-                        // USER ID (SELLER ID)
+                        User ID (Seller ID)
                       </label>
                       <input
                         type="text"
@@ -763,7 +763,7 @@ export default function IntegrationsSettingsPage() {
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">
-                        // SITE ID
+                        Site ID (País)
                       </label>
                       <input
                         type="text"
@@ -787,7 +787,7 @@ export default function IntegrationsSettingsPage() {
                   {testingChannel === 'mercadolibre' ? (
                     <>
                       <RefreshCw size={13} className="animate-spin text-yellow-500" />
-                      <span>PROBANDO CREDENCIALES ML...</span>
+                      <span>PROBANDO CONEXIÓN...</span>
                     </>
                   ) : (
                     <>
@@ -818,7 +818,7 @@ export default function IntegrationsSettingsPage() {
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#20242c] mb-3">
                   <div className="flex items-center gap-2">
                     <Video size={16} className="text-rose-500" />
-                    <h3 className="font-bold text-slate-900 dark:text-white uppercase">TikTok Shop Open API</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white uppercase">TikTok Shop</h3>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 border border-rose-500/40 text-rose-600 dark:text-rose-400 bg-rose-500/10 font-bold uppercase">
                     {(status?.tiktok?.status === 'connected' || testResults['tiktok']?.success) ? 'CONECTADO' : 'DESCONECTADO'}
@@ -861,7 +861,7 @@ export default function IntegrationsSettingsPage() {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// APP KEY</label>
+                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">App Key</label>
                       <input
                         type="text"
                         value={settings.TIKTOK_APP_KEY || ''}
@@ -871,7 +871,7 @@ export default function IntegrationsSettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// APP SECRET</label>
+                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">App Secret</label>
                       <input
                         type="password"
                         value={settings.TIKTOK_APP_SECRET || ''}
@@ -882,7 +882,7 @@ export default function IntegrationsSettingsPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// ACCESS TOKEN</label>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">Access Token</label>
                     <input
                       type="password"
                       value={settings.TIKTOK_ACCESS_TOKEN || ''}
@@ -904,7 +904,7 @@ export default function IntegrationsSettingsPage() {
                   {testingChannel === 'tiktok' ? (
                     <>
                       <RefreshCw size={13} className="animate-spin text-rose-500" />
-                      <span>PROBANDO CONEXIÓN TIKTOK...</span>
+                      <span>PROBANDO CONEXIÓN...</span>
                     </>
                   ) : (
                     <>
@@ -935,7 +935,7 @@ export default function IntegrationsSettingsPage() {
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#20242c] mb-3">
                   <div className="flex items-center gap-2">
                     <Globe2 size={16} className="text-orange-500" />
-                    <h3 className="font-bold text-slate-900 dark:text-white uppercase">Amazon Selling Partner (SP-API)</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white uppercase">Amazon Seller Central (SP-API)</h3>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 border border-orange-500/40 text-orange-600 dark:text-orange-400 bg-orange-500/10 font-bold uppercase">
                     {(status?.amazon?.status === 'connected' || testResults['amazon']?.success) ? 'CONECTADO' : 'DESCONECTADO'}
@@ -978,7 +978,7 @@ export default function IntegrationsSettingsPage() {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// SELLER ID</label>
+                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">Seller ID (Merchant Token)</label>
                       <input
                         type="text"
                         value={settings.AMAZON_SELLER_ID || ''}
@@ -988,7 +988,7 @@ export default function IntegrationsSettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// MARKETPLACE ID</label>
+                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">Marketplace ID</label>
                       <input
                         type="text"
                         value={settings.AMAZON_MARKETPLACE_ID || 'A1AM78C64UM0Y8'}
@@ -999,7 +999,7 @@ export default function IntegrationsSettingsPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// LWA CLIENT ID</label>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">LWA Client ID</label>
                     <input
                       type="text"
                       value={settings.AMAZON_CLIENT_ID || ''}
@@ -1010,7 +1010,7 @@ export default function IntegrationsSettingsPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// LWA SECRET</label>
+                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">LWA Client Secret</label>
                       <input
                         type="password"
                         value={settings.AMAZON_CLIENT_SECRET || ''}
@@ -1020,7 +1020,7 @@ export default function IntegrationsSettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// REFRESH TOKEN</label>
+                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">LWA Refresh Token</label>
                       <input
                         type="password"
                         value={settings.AMAZON_REFRESH_TOKEN || ''}
@@ -1043,7 +1043,7 @@ export default function IntegrationsSettingsPage() {
                   {testingChannel === 'amazon' ? (
                     <>
                       <RefreshCw size={13} className="animate-spin text-orange-500" />
-                      <span>PROBANDO CONEXIÓN SP-API...</span>
+                      <span>PROBANDO CONEXIÓN...</span>
                     </>
                   ) : (
                     <>
@@ -1074,7 +1074,7 @@ export default function IntegrationsSettingsPage() {
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#20242c] mb-3">
                   <div className="flex items-center gap-2">
                     <ShoppingBag size={16} className="text-blue-500" />
-                    <h3 className="font-bold text-slate-900 dark:text-white uppercase">eBay Sell Inventory API</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white uppercase">eBay</h3>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 border border-blue-500/40 text-blue-600 dark:text-blue-400 bg-blue-500/10 font-bold uppercase">
                     {(status?.ebay?.status === 'connected' || testResults['ebay']?.success) ? 'CONECTADO' : 'DESCONECTADO'}
@@ -1116,7 +1116,7 @@ export default function IntegrationsSettingsPage() {
 
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// MARKETPLACE</label>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">Marketplace / País</label>
                     <select
                       value={settings.EBAY_MARKETPLACE_ID || 'EBAY_DE'}
                       onChange={(e) => handleInputChange('EBAY_MARKETPLACE_ID', e.target.value)}
@@ -1131,7 +1131,7 @@ export default function IntegrationsSettingsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// APP ID (CLIENT ID)</label>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">App ID (Client ID)</label>
                     <input
                       type="text"
                       value={settings.EBAY_CLIENT_ID || ''}
@@ -1153,7 +1153,7 @@ export default function IntegrationsSettingsPage() {
                   {testingChannel === 'ebay' ? (
                     <>
                       <RefreshCw size={13} className="animate-spin text-blue-500" />
-                      <span>PROBANDO CONEXIÓN EBAY...</span>
+                      <span>PROBANDO CONEXIÓN...</span>
                     </>
                   ) : (
                     <>
@@ -1173,7 +1173,7 @@ export default function IntegrationsSettingsPage() {
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#20242c] mb-3">
                   <div className="flex items-center gap-2">
                     <Store size={16} className="text-red-500" />
-                    <h3 className="font-bold text-slate-900 dark:text-white uppercase">Kaufland Global Marketplace</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white uppercase">Kaufland</h3>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 border border-red-500/40 text-red-600 dark:text-red-400 bg-red-500/10 font-bold uppercase">
                     {(status?.kaufland?.status === 'connected' || testResults['kaufland']?.success) ? 'CONECTADO' : 'DESCONECTADO'}
@@ -1215,7 +1215,7 @@ export default function IntegrationsSettingsPage() {
 
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// STOREFRONT</label>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">Storefront / País</label>
                     <select
                       value={settings.KAUFLAND_STOREFRONT || 'de'}
                       onChange={(e) => handleInputChange('KAUFLAND_STOREFRONT', e.target.value)}
@@ -1229,7 +1229,7 @@ export default function IntegrationsSettingsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// CLIENT KEY</label>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">Client Key</label>
                     <input
                       type="text"
                       value={settings.KAUFLAND_CLIENT_KEY || ''}
@@ -1251,7 +1251,7 @@ export default function IntegrationsSettingsPage() {
                   {testingChannel === 'kaufland' ? (
                     <>
                       <RefreshCw size={13} className="animate-spin text-red-500" />
-                      <span>PROBANDO SELLER API...</span>
+                      <span>PROBANDO CONEXIÓN...</span>
                     </>
                   ) : (
                     <>
@@ -1280,7 +1280,7 @@ export default function IntegrationsSettingsPage() {
 
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// RUTA O ORIGEN SAE</label>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">Ruta o Origen de Datos SAE</label>
                     <input
                       type="text"
                       value={settings.SAE_DATA_PATH}
@@ -1290,7 +1290,7 @@ export default function IntegrationsSettingsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">// MODO OPERATIVO</label>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">Modo Operativo</label>
                     <select
                       value={settings.SAE_REPOSITORY_TYPE}
                       onChange={(e) => handleInputChange('SAE_REPOSITORY_TYPE', e.target.value)}
@@ -1319,7 +1319,7 @@ export default function IntegrationsSettingsPage() {
               </div>
               <div className="space-y-3">
                 <p className="text-[11px] text-slate-600 dark:text-[#8e95a5]">
-                  Descarga el agente local para Windows. Este programa "Vigilante" se queda corriendo de fondo en tu computadora leyendo el Excel de tu Punto de Venta Local o BD, y empujando las ventas automáticamente a la nube cada 60 segundos.
+                  Descarga la aplicación para Windows para sincronizar automáticamente tu punto de venta local o archivo Excel con el inventario en la nube cada 60 segundos.
                 </p>
                 <div className="pt-2 flex flex-col gap-3">
                   <a
@@ -1332,7 +1332,7 @@ export default function IntegrationsSettingsPage() {
                   </a>
                   
                   <div className="mt-2 p-3 bg-slate-900 border border-slate-700 rounded-sm">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">CÓDIGO DE VINCULACIÓN SEGURA (Cópialo en la app)</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Token de Vinculación para la App Local</label>
                     <div className="flex items-center gap-2">
                       <input 
                         type="text" 
@@ -1369,7 +1369,7 @@ export default function IntegrationsSettingsPage() {
             className="flex items-center gap-2 bg-[#00ff66] hover:bg-[#00d957] disabled:opacity-50 text-black px-8 py-3.5 font-bold text-xs shadow-hard border border-[#00ff66] transition-transform active:translate-x-0.5 active:translate-y-0.5 cursor-pointer uppercase"
           >
             <Save size={16} />
-            <span>{saving ? 'GUARDANDO CAMBIOS EN EL CLUSTER...' : 'GUARDAR Y APLICAR CONFIGURACIÓN'}</span>
+            <span>{saving ? 'GUARDANDO CAMBIOS...' : 'GUARDAR Y APLICAR CONFIGURACIÓN'}</span>
           </button>
         </div>
 

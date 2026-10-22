@@ -120,8 +120,8 @@ export default function AlertsPage() {
             tempAlerts.push({
               id: `fail-sale-${s.id}`,
               type: 'sync_fail',
-              title: 'Error Crítico en Flujo de Transacción Saga',
-              description: `Venta ${s.external_id} falló al propagarse en canales. Error: ${s.last_error || 'Desconocido'}`,
+              title: 'Error al sincronizar venta',
+              description: `La orden ${s.external_id} no pudo sincronizarse en los canales. Error: ${s.last_error || 'Desconocido'}`,
               severity: 'HIGH',
               sku: s.sku,
               source: s.origen,
@@ -155,9 +155,9 @@ export default function AlertsPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 bg-[#ff3b00] animate-ping" />
-            <h3 className="font-bold font-mono-code text-sm uppercase tracking-wider text-slate-800 dark:text-white">Centro de Alertas Consolidadas</h3>
+            <h3 className="font-bold font-mono-code text-sm uppercase tracking-wider text-slate-800 dark:text-white">Centro de Alertas</h3>
           </div>
-          <p className="text-xs text-slate-500 dark:text-[#8e95a5] mt-1 font-mono-code">Control de fallos, stock bajo y desalineamiento multicanal</p>
+          <p className="text-xs text-slate-500 dark:text-[#8e95a5] mt-1 font-mono-code">Monitoreo de stock bajo, discrepancias y errores de sincronización</p>
         </div>
         <div className="flex items-center gap-2 font-mono-code text-xs">
           <span className="px-3 py-1 bg-slate-100 dark:bg-[#14171e] text-slate-700 dark:text-[#8e95a5] border border-slate-200 dark:border-[#20242c]">
@@ -173,9 +173,9 @@ export default function AlertsPage() {
         {sortedAlerts.length === 0 ? (
           <div className="bg-white dark:bg-[#0d0e12] p-12 border border-slate-200 dark:border-[#20242c] shadow-hard text-center flex flex-col items-center justify-center transition-colors">
             <CheckCircle2 size={36} className="text-[#00ff66] mb-3" />
-            <h4 className="font-bold font-mono-code text-sm uppercase text-slate-800 dark:text-white">Sistema Operando Limpio</h4>
+            <h4 className="font-bold font-mono-code text-sm uppercase text-slate-800 dark:text-white">Sin alertas pendientes</h4>
             <p className="text-xs text-slate-400 dark:text-[#8e95a5] mt-1 max-w-xs mx-auto font-mono-code">
-              No hay alertas activas de stock ni fallos de procesamiento reportados en la red.
+              No hay alertas de stock bajo ni discrepancias en los canales conectados.
             </p>
           </div>
         ) : (
@@ -212,7 +212,7 @@ export default function AlertsPage() {
                     href={alert.type === 'desync' ? `/reconciliation?sku=${alert.sku}` : `/inventory/${alert.sku}`}
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 border border-slate-300 dark:border-[#20242c] bg-white dark:bg-[#14171e] hover:border-[#00ff66]/40 text-slate-800 dark:text-white hover:text-[#00ff66] text-xs font-mono-code font-bold shadow-hard transition-colors"
                   >
-                    RESOLVER INCIDENTE →
+                    Revisar →
                   </Link>
                 </div>
               )}

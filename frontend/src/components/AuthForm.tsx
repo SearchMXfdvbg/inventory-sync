@@ -12,10 +12,7 @@ import {
   CheckCircle2, 
   ArrowRight,
   ShieldCheck,
-  Terminal,
-  Database,
   Lock,
-  Cpu,
   AlertTriangle
 } from 'lucide-react';
 import { setTenantId, login, register } from '@/lib/api';
@@ -53,28 +50,28 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
     setSuccess('');
 
     if (!username.trim() || !password.trim()) {
-      setError('ERROR_AUTH_01: Credenciales incompletas. Ingrese operador y clave.');
+      setError('Por favor, ingresa tu usuario y contraseña.');
       return;
     }
 
     if (mode === 'register') {
       if (!email.trim() || !email.includes('@') || !email.includes('.')) {
-        setError('ERROR_VAL_02: Correo corporativo no válido para emisión de webhook token.');
+        setError('Por favor, ingresa un correo electrónico válido.');
         return;
       }
       if (password.length < 6) {
-        setError('ERROR_VAL_03: La clave debe tener mínimo 6 caracteres.');
+        setError('La contraseña debe tener al menos 6 caracteres.');
         return;
       }
       if (password !== confirmPassword) {
-        setError('ERROR_VAL_04: Discrepancia de confirmación en clave.');
+        setError('Las contraseñas no coinciden.');
         return;
       }
 
       try {
         setLoading(true);
         const regRes = await register(username.trim(), password, email.trim(), 'empresa-a');
-        setSuccess('NODO_AUTORIZADO: Cuenta aprovisionada. Enrutando a consola...');
+        setSuccess('Cuenta creada exitosamente. Redirigiendo...');
         setTenantId('empresa-a');
         localStorage.setItem('logged_in', 'true');
 
@@ -123,7 +120,7 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
           window.location.href = '/dashboard';
         }, 500);
       } catch (err: any) {
-        setError(err.message || 'ERROR_FATAL: Error al aprovisionar nodo.');
+        setError(err.message || 'Error al crear la cuenta. Inténtalo de nuevo.');
       } finally {
         setLoading(false);
       }
@@ -169,7 +166,7 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
         }
       } catch {}
       setTenantId(isSuper ? 'global-master' : 'empresa-a');
-      setSuccess(isSuper ? 'PRIVILEGIO_SUPER_ADMIN_VALIDADO: Abriendo consola global.' : 'SESIÓN_VERIFICADA: Conexión establecida.');
+      setSuccess(isSuper ? 'Sesión de Super Administrador iniciada. Redirigiendo...' : 'Sesión iniciada correctamente. Redirigiendo...');
       setTimeout(() => {
         if (isSuper || data?.user?.role === 'SUPER_ADMIN') {
           window.location.href = '/super-admin';
@@ -178,7 +175,7 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
         }
       }, 400);
     } catch (err: any) {
-      setError(err.message || 'ERROR_AUTH_401: Credenciales inválidas o token expirado.');
+      setError(err.message || 'Credenciales incorrectas. Verifica tu usuario y contraseña.');
     } finally {
       setLoading(false);
     }
@@ -186,15 +183,15 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
 
   return (
     <div className="w-full max-w-md border border-[#20242c] bg-[#0d0e12] shadow-hard text-[#ededed]">
-      {/* Terminal Title Bar */}
+      {/* Top Title Bar */}
       <div className="border-b border-[#20242c] bg-[#14171e] px-4 py-2.5 flex items-center justify-between font-mono-code text-xs">
         <div className="flex items-center gap-2">
-          <Terminal className="w-3.5 h-3.5 text-[#00ff66]" />
-          <span className="text-[#8e95a5]">auth_gateway.sh</span>
+          <Lock className="w-3.5 h-3.5 text-[#00ff66]" />
+          <span className="text-[#8e95a5]">Acceso al Sistema</span>
         </div>
         <div className="flex items-center gap-2 text-[10px] text-[#555d6e]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#00ff66]"></span>
-          <span>TLS 1.3 / CAS VERIFIED</span>
+          <span>Conexión Segura</span>
         </div>
       </div>
 
@@ -202,16 +199,15 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
         {/* Brand Block */}
         <div>
           <div className="flex items-center gap-2 font-mono-code text-xs text-[#00ff66] mb-1">
-            <Cpu className="w-3.5 h-3.5" />
-            <span>ACCESO AL CLUSTER // INVENTORY_SYNC</span>
+            <span>// INVENTORY_SYNC</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white">
-            {mode === 'login' ? 'Consola de Operador' : 'Aprovisionar Nuevo Nodo'}
+            {mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
           </h1>
           <p className="font-mono-code text-xs text-[#8e95a5] mt-1">
             {mode === 'login' 
-              ? 'Ingresa tus credenciales para acceder a la orquestación distribuida.'
-              : 'Conecta tu infraestructura comercial con garantía atómica CAS.'}
+              ? 'Ingresa tus credenciales para acceder a la plataforma.'
+              : 'Registra tu empresa para comenzar a sincronizar tus canales de venta.'}
           </p>
         </div>
 
@@ -230,7 +226,7 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
                 : 'text-[#8e95a5] hover:text-white'
             }`}
           >
-            [ INICIAR SESIÓN ]
+            INICIAR SESIÓN
           </button>
           <button
             type="button"
@@ -245,7 +241,7 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
                 : 'text-[#8e95a5] hover:text-white'
             }`}
           >
-            [ CREAR NODO ]
+            CREAR CUENTA
           </button>
         </div>
 
@@ -268,13 +264,13 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
         <form onSubmit={handleSubmit} className="space-y-4 font-mono-code text-xs">
           <div>
             <label className="block text-[11px] text-[#8e95a5] uppercase mb-1.5">
-              // {mode === 'register' ? 'IDENTIFICADOR DE OPERADOR' : 'USUARIO OPERADOR'}
+              USUARIO
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder={mode === 'register' ? 'ej. operador_central' : 'ej. admin'}
+              placeholder="ej. admin"
               className="w-full bg-[#090a0c] border border-[#20242c] px-3.5 py-2.5 text-[#ededed] placeholder-[#444a57] focus:outline-none focus:border-[#00ff66] text-xs transition-colors"
             />
           </div>
@@ -283,7 +279,7 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
             <div>
               <label className="block text-[11px] text-[#8e95a5] uppercase mb-1.5 flex items-center gap-1.5">
                 <Mail className="w-3 h-3 text-[#00ff66]" />
-                // CORREO CORPORATIVO
+                CORREO ELECTRÓNICO
               </label>
               <input
                 type="email"
@@ -297,7 +293,7 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
 
           <div>
             <label className="block text-[11px] text-[#8e95a5] uppercase mb-1.5">
-              // CLAVE DE ACCESO CRIPTOGRÁFICA
+              CONTRASEÑA
             </label>
             <div className="relative">
               <input
@@ -320,7 +316,7 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
           {mode === 'register' && (
             <div>
               <label className="block text-[11px] text-[#8e95a5] uppercase mb-1.5">
-                // CONFIRMAR CLAVE DE ACCESO
+                CONFIRMAR CONTRASEÑA
               </label>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -340,37 +336,27 @@ export default function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'log
             {loading ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                <span>AUTENTICANDO NODO...</span>
+                <span>INICIANDO SESIÓN...</span>
               </>
             ) : mode === 'register' ? (
               <>
-                <span>DESPLEGAR CUENTA OPERATIVA</span>
+                <span>CREAR CUENTA</span>
                 <ArrowRight size={14} />
               </>
             ) : (
               <>
                 <LogIn size={14} />
-                <span>INGRESAR A LA CONSOLA</span>
+                <span>INICIAR SESIÓN</span>
               </>
             )}
           </button>
         </form>
 
-        {/* Security & Serializer Telemetry Footer */}
-        <div className="pt-4 border-t border-[#20242c] font-mono-code text-[10px] text-[#8e95a5] space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5">
-              <Database className="w-3 h-3 text-[#00ff66]" />
-              DB LOCK SERIALIZER:
-            </span>
-            <span className="text-white font-medium">SQLite WAL / PostgreSQL (Row-level)</span>
-          </div>
-          <div className="flex items-center justify-between text-[#555d6e]">
-            <span>FAIL-SAFE: Atomic CAS Lock (0ms Race Window)</span>
-            <Link href="/" className="text-[#8e95a5] hover:text-white underline">
-              &larr; Volver a la landing
-            </Link>
-          </div>
+        {/* Footer */}
+        <div className="pt-4 border-t border-[#20242c] font-mono-code text-xs text-center">
+          <Link href="/" className="text-[#8e95a5] hover:text-[#00ff66] transition-colors inline-flex items-center gap-1.5">
+            &larr; Volver a la landing
+          </Link>
         </div>
       </div>
     </div>

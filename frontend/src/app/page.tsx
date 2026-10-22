@@ -26,7 +26,7 @@ import {
 interface SimulationLog {
   id: string;
   time: string;
-  channel: 'SHOPIFY' | 'MERCADOLIBRE' | 'SAGA_CORE';
+  channel: 'SHOPIFY' | 'MERCADOLIBRE' | 'SISTEMA';
   type: 'INFO' | 'LOCK' | 'SYNC' | 'REJECT' | 'ALERT';
   text: string;
 }
@@ -39,16 +39,16 @@ export default function LandingPage() {
     {
       id: 'init-1',
       time: '00:00.012',
-      channel: 'SAGA_CORE',
+      channel: 'SISTEMA',
       type: 'INFO',
-      text: 'Redis listo en 18ms. Cuidando stock del SKU: SKU-PRO-4090.'
+      text: 'Conexión activa. Monitoreando existencias del SKU: SKU-PRO-4090.'
     },
     {
       id: 'init-2',
       time: '00:00.015',
-      channel: 'SAGA_CORE',
+      channel: 'SISTEMA',
       type: 'INFO',
-      text: 'Inventario asegurado. Esperando ventas en Shopify y Mercado Libre.'
+      text: 'Catálogo sincronizado. Esperando pedidos en tus canales de venta.'
     }
   ]);
 
@@ -104,9 +104,9 @@ export default function LandingPage() {
       {
         id: `sim-${Date.now()}-0`,
         time: now(),
-        channel: 'SAGA_CORE',
+        channel: 'SISTEMA',
         type: 'ALERT',
-        text: 'ALERTA: Entran dos compras al mismo segundo y solo queda 1 pieza física.'
+        text: 'ALERTA: Entran dos pedidos al mismo instante y solo queda 1 unidad disponible.'
       }
     ]);
 
@@ -118,14 +118,14 @@ export default function LandingPage() {
           time: now(),
           channel: 'SHOPIFY',
           type: 'INFO',
-          text: 'Shopify: Cayó compra Order #9812 por $1,299 MXN (1x SKU-PRO-4090).'
+          text: 'Shopify: Entra pedido #9812 por $1,299 MXN (1x SKU-PRO-4090).'
         },
         {
           id: `sim-${Date.now()}-2`,
           time: now(),
           channel: 'MERCADOLIBRE',
           type: 'INFO',
-          text: 'Mercado Libre: Al mismo instante cayó compra Pack #20000084 por $1,299 MXN.'
+          text: 'Mercado Libre: Al mismo instante entra pedido #20000084 por $1,299 MXN.'
         }
       ]);
     }, 280);
@@ -136,9 +136,9 @@ export default function LandingPage() {
         {
           id: `sim-${Date.now()}-3`,
           time: now(),
-          channel: 'SAGA_CORE',
+          channel: 'SISTEMA',
           type: 'LOCK',
-          text: 'MUTEX EN REDIS: Shopify apartó la última pieza en 18ms. Mercado Libre entra a fila.'
+          text: 'RESERVA INMEDIATA: Shopify confirma la primera compra. Iniciando actualización prioritaria.'
         }
       ]);
     }, 550);
@@ -150,9 +150,9 @@ export default function LandingPage() {
         {
           id: `sim-${Date.now()}-4`,
           time: now(),
-          channel: 'SAGA_CORE',
+          channel: 'SISTEMA',
           type: 'SYNC',
-          text: 'STOCK ACTUALIZADO: Quedan 0 piezas. Avisando a Mercado Libre para pausar.'
+          text: 'ACTUALIZACIÓN: Quedan 0 unidades. Pausando publicación en Mercado Libre.'
         }
       ]);
     }, 850);
@@ -165,14 +165,14 @@ export default function LandingPage() {
           time: now(),
           channel: 'MERCADOLIBRE',
           type: 'REJECT',
-          text: 'REVISIÓN DE PIEZAS: Mercado Libre ve stock = 0 antes de confirmar.'
+          text: 'VERIFICACIÓN: Mercado Libre detecta stock en 0 antes de confirmar el segundo pedido.'
         },
         {
           id: `sim-${Date.now()}-6`,
           time: now(),
-          channel: 'SAGA_CORE',
+          channel: 'SISTEMA',
           type: 'ALERT',
-          text: 'SAGA: Cancela la compra sin stock al instante. Cero ventas dobles, reputación verde intacta.'
+          text: 'PROTECCIÓN EXITOSA: Se evita la sobreventa. Reputación de vendedor 100% protegida.'
         }
       ]);
       setIsSimulating(false);
@@ -186,9 +186,9 @@ export default function LandingPage() {
       {
         id: 'reset-1',
         time: '00:00.000',
-        channel: 'SAGA_CORE',
+        channel: 'SISTEMA',
         type: 'INFO',
-        text: 'Listo de nuevo: SKU-PRO-4090 con 1 pieza en stock.'
+        text: 'Listo de nuevo: SKU-PRO-4090 con 1 unidad en almacén.'
       }
     ]);
   };
@@ -211,16 +211,16 @@ export default function LandingPage() {
             </div>
             <div>
               <span className="font-bold tracking-tight text-lg block leading-none">INVENTORY_SYNC</span>
-              <span className="font-mono-code text-[10px] text-[#8e95a5] tracking-widest uppercase">Sync en 18ms con Redis</span>
+              <span className="font-mono-code text-[10px] text-[#8e95a5] tracking-widest uppercase">Sincronización en tiempo real</span>
             </div>
           </div>
 
           <div className="hidden md:flex items-center gap-8 font-mono-code text-xs text-[#8e95a5]">
-            <a href="#simulador" className="hover:text-white transition-colors">01. VENTA_DOBLE</a>
-            <a href="#arquitectura" className="hover:text-white transition-colors">02. CÓMO_FUNCIONA</a>
-            <a href="#calculadora" className="hover:text-white transition-colors">03. CUÁNTO_PIERDES</a>
-            <a href="#benchmark" className="hover:text-white transition-colors">04. VS_ZAPIER</a>
-            <a href="#pricing" className="hover:text-white transition-colors">05. PRECIO</a>
+            <a href="#simulador" className="hover:text-white transition-colors">01. SIMULADOR</a>
+            <a href="#arquitectura" className="hover:text-white transition-colors">02. CÓMO FUNCIONA</a>
+            <a href="#calculadora" className="hover:text-white transition-colors">03. CALCULADORA</a>
+            <a href="#benchmark" className="hover:text-white transition-colors">04. COMPARATIVA</a>
+            <a href="#pricing" className="hover:text-white transition-colors">05. PRECIOS</a>
           </div>
 
           <div className="flex items-center gap-3">
@@ -247,7 +247,7 @@ export default function LandingPage() {
           <div className="lg:col-span-7 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#13161c] border border-[#20242c] font-mono-code text-xs text-[#00ff66]">
               <Cpu className="w-3.5 h-3.5" />
-              SINCRONIZACIÓN DE STOCK EN 18MS
+              SINCRONIZACIÓN AUTOMÁTICA DE INVENTARIO
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05]">
@@ -264,10 +264,10 @@ export default function LandingPage() {
 
             <div className="space-y-2">
               <p className="text-lg text-[#a1a7b5] leading-relaxed max-w-2xl font-light">
-                Si te queda una pieza y compran al mismo tiempo, te tumban la cuenta.
+                Si te queda una pieza y dos clientes compran al mismo tiempo, las cancelaciones hunden tu reputación.
               </p>
               <p className="text-base text-[#8e95a5] leading-relaxed max-w-2xl font-light">
-                Con Mutex en Redis y Saga apartamos tu stock en 18ms para no vender doble.
+                Actualizamos tus existencias al instante en cada canal para que nunca vendas lo que ya no tienes en almacén.
               </p>
             </div>
 
@@ -275,18 +275,18 @@ export default function LandingPage() {
             <div className="grid grid-cols-3 gap-3 pt-4 font-mono-code">
               <div className="border border-[#20242c] bg-[#0e1015] p-3 shadow-hard">
                 <div className="text-[10px] text-[#8e95a5] uppercase">VENTAS DOBLES</div>
-                <div className="text-2xl font-bold text-[#00ff66] mt-1">0.00%</div>
-                <div className="text-[10px] text-[#555d6e]">Apartado real con Mutex</div>
+                <div className="text-2xl font-bold text-[#00ff66] mt-1">0%</div>
+                <div className="text-[10px] text-[#555d6e]">Cero sobreventas</div>
               </div>
               <div className="border border-[#20242c] bg-[#0e1015] p-3 shadow-hard">
-                <div className="text-[10px] text-[#8e95a5] uppercase">TIEMPO DE RESPUESTA</div>
-                <div className="text-2xl font-bold text-white mt-1">&lt; 18ms</div>
-                <div className="text-[10px] text-[#555d6e]">En memoria con Redis</div>
+                <div className="text-[10px] text-[#8e95a5] uppercase">SINCRONIZACIÓN</div>
+                <div className="text-2xl font-bold text-white mt-1">Tiempo real</div>
+                <div className="text-[10px] text-[#555d6e]">Actualización inmediata</div>
               </div>
               <div className="border border-[#20242c] bg-[#0e1015] p-3 shadow-hard">
-                <div className="text-[10px] text-[#8e95a5] uppercase">SI SE CAE EL CANAL</div>
-                <div className="text-2xl font-bold text-white mt-1">5s Max</div>
-                <div className="text-[10px] text-[#555d6e]">Reintenta sin trabarse</div>
+                <div className="text-[10px] text-[#8e95a5] uppercase">CONEXIÓN</div>
+                <div className="text-2xl font-bold text-white mt-1">Automática</div>
+                <div className="text-[10px] text-[#555d6e]">Reintentos inteligentes</div>
               </div>
             </div>
 
@@ -313,7 +313,7 @@ export default function LandingPage() {
             <div className="border-b border-[#20242c] bg-[#14171e] px-4 py-2.5 flex items-center justify-between">
               <div className="flex items-center gap-2 font-mono-code text-xs text-[#8e95a5]">
                 <Terminal className="w-3.5 h-3.5 text-[#00ff66]" />
-                <span>simulador-venta-doble.sh</span>
+                <span>simulador-de-pedidos</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-mono-code text-[#00ff66]">STOCK: {stock}</span>
@@ -360,7 +360,7 @@ export default function LandingPage() {
                 className="bg-[#00ff66] disabled:opacity-50 hover:bg-[#00d957] text-black font-mono-code font-bold text-xs px-4 py-2 flex items-center gap-2 transition-all shadow-hard"
               >
                 <Play className="w-3.5 h-3.5" />
-                {isSimulating ? 'APARTANDO PIEZA EN REDIS...' : 'SIMULAR VENTA DOBLE'}
+                {isSimulating ? 'ACTUALIZANDO STOCK EN CANALES...' : 'SIMULAR PEDIDOS SIMULTÁNEOS'}
               </button>
               <button
                 onClick={resetSimulation}
@@ -375,16 +375,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* SAGA Architecture Teardown */}
+      {/* Architecture Section */}
       <section id="arquitectura" className="px-6 py-20 border-b border-[#20242c] bg-[#0c0d11]">
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="space-y-3">
-            <span className="font-mono-code text-xs text-[#00ff66] tracking-widest uppercase">// CÓMO EVITAMOS QUE VENDAS DOBLE</span>
+            <span className="font-mono-code text-xs text-[#00ff66] tracking-widest uppercase">// CÓMO FUNCIONA</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Así evitamos que vendas lo que ya no tienes
+              Así protegemos tu inventario en todos tus canales
             </h2>
             <p className="text-[#8e95a5] max-w-2xl text-sm">
-              No usamos Zapier ni truquitos que se traban. Cuidamos cada pieza con Redis y Saga paso a paso.
+              Olvídate de procesos manuales o integraciones lentas que fallan en temporada alta. Cuidamos cada pieza de tu almacén paso a paso.
             </p>
           </div>
 
@@ -393,9 +393,9 @@ export default function LandingPage() {
               <div className="w-8 h-8 bg-[#14171e] border border-[#20242c] flex items-center justify-center font-mono-code text-xs text-[#00ff66] font-bold">
                 01
               </div>
-              <h3 className="text-base font-bold tracking-tight">Recibe la venta en 5ms</h3>
+              <h3 className="text-base font-bold tracking-tight">Detección inmediata de compras</h3>
               <p className="text-xs text-[#8e95a5] leading-relaxed">
-                En cuanto alguien compra en tu tienda, Redis guarda el pedido de inmediato para que tu página nunca se alente ni se caiga en Hot Sale.
+                En cuanto entra una venta en cualquiera de tus tiendas, el sistema procesa la orden al instante para que tu inventario no sufra retrasos en eventos como Hot Sale o Buen Fin.
               </p>
             </div>
 
@@ -403,9 +403,9 @@ export default function LandingPage() {
               <div className="w-8 h-8 bg-[#14171e] border border-[#20242c] flex items-center justify-center font-mono-code text-xs text-[#00ff66] font-bold">
                 02
               </div>
-              <h3 className="text-base font-bold tracking-tight">Aparta la pieza con Mutex</h3>
+              <h3 className="text-base font-bold tracking-tight">Reserva preventiva de stock</h3>
               <p className="text-xs text-[#8e95a5] leading-relaxed">
-                Si dos clientes compran la última pieza al mismo milisegundo, Mutex bloquea el SKU en Redis en 18ms. Uno se la lleva y el otro no te tumba la cuenta.
+                Si dos compradores intentan llevarse la última unidad al mismo tiempo, el sistema asegura la venta al primero y actualiza las demás tiendas de inmediato.
               </p>
             </div>
 
@@ -413,9 +413,9 @@ export default function LandingPage() {
               <div className="w-8 h-8 bg-[#14171e] border border-[#20242c] flex items-center justify-center font-mono-code text-xs text-[#00ff66] font-bold">
                 03
               </div>
-              <h3 className="text-base font-bold tracking-tight">Ajusta el stock real</h3>
+              <h3 className="text-base font-bold tracking-tight">Existencias exactas en cada tienda</h3>
               <p className="text-xs text-[#8e95a5] leading-relaxed">
-                No le creemos a las sumas que hacen las plataformas. Ponemos las piezas exactas en Mercado Libre y Shopify para que no haya descuadres.
+                Sincronizamos la cantidad real en Mercado Libre, Shopify y demás plataformas en tiempo real para eliminar descuadres de inventario.
               </p>
             </div>
 
@@ -423,9 +423,9 @@ export default function LandingPage() {
               <div className="w-8 h-8 bg-[#14171e] border border-[#20242c] flex items-center justify-center font-mono-code text-xs text-[#00ff66] font-bold">
                 04
               </div>
-              <h3 className="text-base font-bold tracking-tight">Si el canal se traba, no se pierde nada</h3>
+              <h3 className="text-base font-bold tracking-tight">Reintentos automáticos continuos</h3>
               <p className="text-xs text-[#8e95a5] leading-relaxed">
-                Si Mercado Libre se satura o tira error 429, Saga reintenta solo en 5 segundos sin duplicar piezas ni dejar colgado tu inventario.
+                Si los servidores de alguna plataforma se saturan temporalmente, el sistema reintenta automáticamente hasta confirmar la actualización sin duplicar pedidos ni perder datos.
               </p>
             </div>
           </div>
@@ -522,10 +522,10 @@ export default function LandingPage() {
           <div className="space-y-3">
             <span className="font-mono-code text-xs text-[#00ff66] tracking-widest uppercase">// COMPARATIVA REAL</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Por qué Zapier y Make te van a fallar
+              Diseñado exclusivamente para e-commerce multicanal
             </h2>
             <p className="text-[#8e95a5] text-sm">
-              Zapier y Make se inventaron para mover correos de Excel a Gmail, no para cuidar stock en tiempo real cuando caen ventas al mismo segundo.
+              Las herramientas de automatización genéricas no están preparadas para la concurrencia ni las reglas estrictas de reputación de los marketplaces.
             </p>
           </div>
 
@@ -533,8 +533,8 @@ export default function LandingPage() {
             <table className="w-full text-left font-mono-code text-xs">
               <thead className="bg-[#14171e] border-b border-[#20242c] text-[#8e95a5]">
                 <tr>
-                  <th className="p-4">CAPACIDAD TÉCNICA</th>
-                  <th className="p-4 text-[#00ff66] bg-[#00ff66]/5">INVENTORY_SYNC (SAGA)</th>
+                  <th className="p-4">CAPACIDAD OPERATIVA</th>
+                  <th className="p-4 text-[#00ff66] bg-[#00ff66]/5">INVENTORY_SYNC</th>
                   <th className="p-4">ZAPIER / MAKE</th>
                   <th className="p-4">PLUGINS TÍPICOS</th>
                 </tr>
@@ -542,13 +542,13 @@ export default function LandingPage() {
               <tbody className="divide-y divide-[#20242c] bg-[#090a0c]">
                 <tr>
                   <td className="p-4 font-semibold text-white">Si caen 2 compras al mismo segundo</td>
-                  <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">Mutex en Redis (&lt;18ms) — Una pasa, la otra no vende doble</td>
+                  <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">Reserva inmediata — Una pasa y la otra no vende doble</td>
                   <td className="p-4 text-[#ff3b00]">Vendes doble y te cae reclamo en ML</td>
                   <td className="p-4 text-[#8e95a5]">Tardan de 15 a 60 min en enterarse</td>
                 </tr>
                 <tr>
-                  <td className="p-4 font-semibold text-white">Si Mercado Libre se frena (Error 429)</td>
-                  <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">Reintenta solo cada 5s con Saga sin trabarse</td>
+                  <td className="p-4 font-semibold text-white">Si Mercado Libre se satura (Error 429)</td>
+                  <td className="p-4 text-[#00ff66] bg-[#00ff66]/5 font-bold">Reintenta de forma continua y segura sin trabarse</td>
                   <td className="p-4 text-[#ff3b00]">Falla la tarea, te la cobran y no actualiza</td>
                   <td className="p-4 text-[#8e95a5]">Tumba el servidor de tu tienda</td>
                 </tr>
@@ -580,27 +580,27 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-2">
-              <span className="font-mono-code text-xs text-[#00ff66] tracking-widest uppercase">// CÓMO VIAJAN TUS DATOS</span>
-              <h2 className="text-3xl font-bold tracking-tight">Así se cuida cada pedido por dentro</h2>
+              <span className="font-mono-code text-xs text-[#00ff66] tracking-widest uppercase">// TRAZABILIDAD DE OPERACIONES</span>
+              <h2 className="text-3xl font-bold tracking-tight">Registro transparente de cada movimiento</h2>
             </div>
             <div className="flex border border-[#20242c] font-mono-code text-xs bg-[#0e1015]">
               <button
                 onClick={() => setActiveSchemaTab('shopify')}
                 className={`px-4 py-2 ${activeSchemaTab === 'shopify' ? 'bg-[#20242c] text-[#00ff66]' : 'text-[#8e95a5]'}`}
               >
-                SHOPIFY_WEBHOOK
+                VENTA_SHOPIFY
               </button>
               <button
                 onClick={() => setActiveSchemaTab('mercadolibre')}
                 className={`px-4 py-2 border-l border-[#20242c] ${activeSchemaTab === 'mercadolibre' ? 'bg-[#20242c] text-[#00ff66]' : 'text-[#8e95a5]'}`}
               >
-                MERCADOLIBRE_PUT
+                ACTUALIZAR_MERCADOLIBRE
               </button>
               <button
                 onClick={() => setActiveSchemaTab('compensate')}
                 className={`px-4 py-2 border-l border-[#20242c] ${activeSchemaTab === 'compensate' ? 'bg-[#20242c] text-[#00ff66]' : 'text-[#8e95a5]'}`}
               >
-                CANCELACION_AUTOMATICA
+                PROTECCION_SOBREVENTA
               </button>
             </div>
           </div>
@@ -609,20 +609,19 @@ export default function LandingPage() {
             {activeSchemaTab === 'shopify' && (
               <pre className="text-[#a1a7b5] leading-relaxed">
 {`{
-  "topic": "orders/paid",
-  "shop_domain": "mexico-tech-outlet.myshopify.com",
-  "line_items": [
+  "evento": "orders/paid",
+  "tienda": "tienda-oficial.myshopify.com",
+  "pedido_id": 9812,
+  "articulos": [
     {
       "sku": "SKU-PRO-4090",
-      "quantity": 1,
-      "price": "1299.00",
-      "variant_id": 48921092819
+      "cantidad": 1,
+      "precio": "1299.00"
     }
   ],
-  "saga_meta": {
-    "trace_id": "tr-7f09a88c",
-    "received_at": 1727479800122,
-    "cas_key": "lock:inventory:SKU-PRO-4090"
+  "sincronizacion": {
+    "estado": "PROCESADO",
+    "fecha": "2026-10-22T17:50:00Z"
   }
 }`}
               </pre>
@@ -630,20 +629,15 @@ export default function LandingPage() {
 
             {activeSchemaTab === 'mercadolibre' && (
               <pre className="text-[#a1a7b5] leading-relaxed">
-{`PUT /items/MLM991823901/variations/1782910819 HTTP/1.1
+{`PUT /items/MLM991823901 HTTP/1.1
 Host: api.mercadolibre.com
-Authorization: Bearer APP_USR-9812903-0921-998
 Content-Type: application/json
 
 {
-  "available_quantity": 0,
-  "attributes": [
-    { "id": "SELLER_SKU", "value_name": "SKU-PRO-4090" }
-  ],
-  "delta_reference": {
-    "initiator": "shopify_sync_worker",
-    "execution_time_ms": 19.4
-  }
+  "cantidad_disponible": 0,
+  "sku": "SKU-PRO-4090",
+  "estado": "ACTUALIZADO_AUTOMATICO",
+  "origen": "evento_shopify_orden_9812"
 }`}
               </pre>
             )}
@@ -651,15 +645,12 @@ Content-Type: application/json
             {activeSchemaTab === 'compensate' && (
               <pre className="text-[#a1a7b5] leading-relaxed">
 {`{
-  "action": "SAGA_COMPENSATE",
-  "status": "ROLLBACK_OR_NOTIFY",
-  "reason": "STOCK_EXHAUSTED_CONCURRENT_RACE",
-  "payload": {
-    "sku": "SKU-PRO-4090",
-    "rejected_channel": "MERCADOLIBRE",
-    "order_id": "20000084",
-    "customer_resolution": "AUTO_REFUND_NO_REPUTATION_STRIKE"
-  }
+  "accion": "PROTECCION_PREVENTIVA",
+  "sku": "SKU-PRO-4090",
+  "canal_notificado": "MERCADOLIBRE",
+  "motivo": "UNIDAD_AGOTADA_EN_OTRO_CANAL",
+  "resultado": "PUBLICACION_PAUSADA_SIN_RECLAMOS",
+  "reputacion_vendedor": "PROTEGIDA_100%"
 }`}
               </pre>
             )}
@@ -692,7 +683,7 @@ Content-Type: application/json
                   </span>
                 </div>
                 <h3 className="text-2xl font-bold tracking-tight">Plan Todo Incluido</h3>
-                <p className="text-xs text-[#8e95a5] mt-1 font-mono-code">Stock sincronizado en 18ms entre Shopify y Mercado Libre</p>
+                <p className="text-xs text-[#8e95a5] mt-1 font-mono-code">Stock sincronizado en tiempo real entre Shopify y Mercado Libre</p>
               </div>
               <div className="font-mono-code text-left md:text-right">
                 <div className="flex items-baseline gap-2 justify-start md:justify-end">
@@ -719,11 +710,11 @@ Content-Type: application/json
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#00ff66] shrink-0" />
-                <span>Mutex en Redis: cero ventas dobles (&lt;18ms)</span>
+                <span>Cero sobreventas con sincronización en tiempo real</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#00ff66] shrink-0" />
-                <span>Reintentos automáticos si la plataforma se traba</span>
+                <span>Reintentos automáticos si la plataforma se satura</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#00ff66] shrink-0" />
@@ -731,11 +722,11 @@ Content-Type: application/json
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#00ff66] shrink-0" />
-                <span>Panel para ver si hay diferencias de stock</span>
+                <span>Panel para revisar y conciliar existencias</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#00ff66] shrink-0" />
-                <span>Soporte directo por tickets con ingenieros</span>
+                <span>Soporte técnico directo con especialistas</span>
               </div>
             </div>
 
@@ -764,7 +755,7 @@ Content-Type: application/json
           <div className="flex items-center gap-3 text-[#ededed]">
             <span className="font-bold">// INVENTORY_SYNC</span>
             <span className="text-[#3a3f4d]">|</span>
-            <span className="text-[#8e95a5]">Sincronización de stock en 18ms para que nunca vendas doble.</span>
+            <span className="text-[#8e95a5]">Sincronización de existencias en tiempo real para proteger tu reputación de vendedor.</span>
           </div>
 
           <div className="flex items-center gap-6">

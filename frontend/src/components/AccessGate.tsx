@@ -105,9 +105,9 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
           </div>
           <div>
             <h1 className="font-bold text-white text-sm tracking-tight flex items-center gap-2 font-mono-code">
-              INVENTORY_SYNC <span className="text-[10px] uppercase px-1.5 py-0.5 border border-[#20242c] text-[#8e95a5]">GATEKEEPER</span>
+              INVENTORY_SYNC <span className="text-[10px] uppercase px-1.5 py-0.5 border border-[#20242c] text-[#8e95a5]">CONTROL DE ACCESO</span>
             </h1>
-            <p className="text-[11px] text-[#8e95a5] font-mono-code">Control de Acceso y Licenciamiento</p>
+            <p className="text-[11px] text-[#8e95a5] font-mono-code">Control de Acceso y Estado de Cuenta</p>
           </div>
         </div>
 
@@ -138,7 +138,7 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
             <div className="border-b border-[#20242c] bg-[#14171e] -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 px-4 py-2.5 flex items-center justify-between font-mono-code text-xs">
               <span className="text-[#ff3b00] font-bold flex items-center gap-1.5">
                 <AlertTriangle size={13} />
-                AUTH_GATE // ACCOUNT_SUSPENDED
+                CUENTA SUSPENDIDA
               </span>
               <span className="text-[10px] text-[#8e95a5] uppercase">ESTADO: PAUSADO</span>
             </div>
@@ -173,7 +173,7 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
 
             {/* Info y Contacto */}
             <div className="bg-[#090a0c] border border-[#20242c] p-4 font-mono-code text-xs space-y-2 text-[#8e95a5]">
-              <p className="text-white font-bold text-xs">// ¿CÓMO REACTIVAR EL SERVICIO?</p>
+              <p className="text-white font-bold text-xs">¿CÓMO REACTIVAR EL SERVICIO?</p>
               <p className="text-[11px] leading-relaxed">
                 Abre un ticket de soporte o contacta al administrador para liquidar el pendiente y restaurar la sincronización de inmediato.
               </p>
@@ -214,7 +214,7 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
             <div className="border-b border-[#20242c] bg-[#14171e] -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 px-4 py-2.5 flex items-center justify-between font-mono-code text-xs">
               <span className="text-[#ff9900] font-bold flex items-center gap-1.5">
                 <Hourglass size={13} />
-                AUTH_GATE // PENDING_APPROVAL
+                PENDIENTE DE ACTIVACIÓN
               </span>
               <span className="text-[10px] text-[#8e95a5] uppercase">PLAN GUEST</span>
             </div>
@@ -241,7 +241,7 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
             <div className="bg-[#090a0c] border border-[#20242c] p-4 sm:p-5 text-left font-mono-code text-xs space-y-3">
               <div className="flex items-center gap-2 text-[#ff9900] text-[11px] font-bold uppercase tracking-wider border-b border-[#20242c] pb-2">
                 <ShieldCheck size={14} />
-                <span>[!] ACCESO RESTRINGIDO</span>
+                <span>ACCESO PENDIENTE</span>
               </div>
               <p className="text-[#a1a7b5] text-xs leading-relaxed">
                 Hola, <strong className="text-white">{user.username}</strong>. Para ver tu catálogo, órdenes y comenzar a sincronizar stock con Shopify y Mercado Libre, necesitas que el administrador active tu cuenta.
@@ -293,8 +293,11 @@ export default function AccessGate({ user, onRefresh }: AccessGateProps) {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 text-center text-[11px] text-[#555d6e] font-mono-code pt-4 border-t border-[#20242c]">
-        // INVENTORY_SYNC | GATEWAY SERVICE | ACCESO POR AUTORIZACIÓN
+      <footer className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-2 max-w-5xl w-full mx-auto text-center text-[11px] text-[#555d6e] font-mono-code pt-4 border-t border-[#20242c]">
+        <span>INVENTORY_SYNC · Control de Acceso</span>
+        <Link href="/" className="text-[#8e95a5] hover:text-[#00ff66] transition-colors">
+          &larr; Volver a la landing
+        </Link>
       </footer>
     </div>
   );

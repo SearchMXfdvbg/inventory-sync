@@ -130,7 +130,7 @@ export default function InventoryPage() {
         return p;
       }));
 
-      showToast('success', `✓ ${sku}: Stock actualizado a ${parsed} en BD y sincronizado en Shopify.`);
+      showToast('success', `✓ ${sku}: Stock actualizado a ${parsed} y sincronizado con tus canales.`);
       setEditingSku(null);
     } catch (err: any) {
       console.error(err);
@@ -438,21 +438,21 @@ export default function InventoryPage() {
             <div className="flex items-center gap-2">
               <h2 className="text-xs font-bold uppercase tracking-widest font-mono text-slate-800 dark:text-white">
                 {activeChannelsCount > 0 
-                  ? `SYNC_MULTICANAL — ${activeChannelsCount} CANALES ACTIVOS` 
-                  : 'ALMACÉN_LOCAL — SIN CANALES ACTIVOS'}
+                  ? `SINCRONIZACIÓN MULTICANAL — ${activeChannelsCount} CANALES ACTIVOS` 
+                  : 'MODO LOCAL — SIN CANALES CONECTADOS'}
               </h2>
               <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest font-mono border ${
                 activeChannelsCount > 0
                   ? 'text-[#00ff66] border-[#00ff66]/40 bg-[#00ff66]/5'
                   : 'text-[#8e95a5] border-[#20242c] bg-transparent'
               }`}>
-                {activeChannelsCount > 0 ? 'ONLINE' : 'LOCAL'}
+                {activeChannelsCount > 0 ? 'ACTIVO' : 'LOCAL'}
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-[#8e95a5] mt-0.5 font-mono">
               {activeChannelsCount > 0 
-                ? 'Stock sincronizado automáticamente con todas las plataformas conectadas.'
-                : 'Catálogo local. Conecta credenciales de Shopify / Amazon / ML / eBay para activar sync.'}
+                ? 'Stock sincronizado automáticamente en todas tus tiendas conectadas.'
+                : 'Catálogo en modo local. Conecta tus tiendas (Shopify, Mercado Libre, Amazon) para activar la sincronización.'}
             </p>
           </div>
         </div>
@@ -589,7 +589,7 @@ export default function InventoryPage() {
             title="Sincronizar todo el inventario a los canales conectados"
           >
             <Zap size={13} />
-            <span>SYNC_ALL</span>
+            <span>SINCRONIZAR TODO</span>
           </button>
         </div>
       </div>
@@ -1118,7 +1118,7 @@ export default function InventoryPage() {
                     Sincronización Total Multicanal
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Sistema Central de Referencia &rarr; Todos los Canales Conectados
+                    Inventario Local &rarr; Todos los Canales Conectados
                   </p>
                 </div>
               </div>
@@ -1152,7 +1152,7 @@ export default function InventoryPage() {
 
               <div className="flex justify-between items-center text-[11px] text-slate-400 font-mono">
                 <span>SKUs: {bulkProgress.current} de {bulkProgress.total}</span>
-                <span>Modo: Lotes Asíncronos (Saga Batch)</span>
+                <span>Modo: Sincronización en segundo plano</span>
               </div>
             </div>
 
@@ -1205,7 +1205,7 @@ export default function InventoryPage() {
             {bulkResult && (
               <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex items-center gap-2.5 text-emerald-800 dark:text-emerald-200 text-xs font-bold">
                 <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
-                <span>¡Sincronización masiva finalizada con éxito! Todos los productos están alineados con el Sistema Central de Referencia.</span>
+                <span>¡Sincronización masiva finalizada con éxito! Todos los canales tienen las existencias actualizadas.</span>
               </div>
             )}
 

@@ -391,13 +391,13 @@ export default function ReconciliationPage() {
                   ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' 
                   : 'bg-emerald-500/10 text-[#00ff66] border-[#00ff66]/30'
               }`}>
-                {isPaused ? '🛑 SINCRONIZACIÓN PAUSADA' : '🟢 SINCRONIZACIÓN ACTIVA'}
+                {isPaused ? 'SINCRONIZACIÓN PAUSADA' : 'SINCRONIZACIÓN ACTIVA'}
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-[#8e95a5] mt-0.5 font-mono-code">
               {isPaused 
-                ? 'El sistema está en pausa de emergencia. No se propagarán cambios automáticos a ningún canal.'
-                : 'Audita, ajusta el inventario físico central y resuelve discrepancias de stock canal por canal.'}
+                ? 'La sincronización automática está pausada temporalmente. No se enviarán cambios a los canales.'
+                : 'Audita el inventario físico central y resuelve discrepancias de existencias canal por canal.'}
             </p>
           </div>
         </div>
@@ -409,13 +409,13 @@ export default function ReconciliationPage() {
             onClick={handleStartBulkSync}
             disabled={isBulkSyncing || isPaused || products.length === 0}
             className="flex items-center gap-1.5 px-4 py-2 bg-[#00ff66] hover:bg-emerald-400 text-black text-xs font-black uppercase transition-all shadow-hard cursor-pointer disabled:opacity-50 border border-[#00ff66]"
-            title="Empujar todo el inventario central de referencia a todos los canales conectados"
+            title="Sincronizar inventario central en todos los canales"
           >
             <Zap size={14} className="text-black" />
             <span>SINCRONIZAR TODO EL INVENTARIO</span>
           </button>
 
-          {/* Botón de Pánico: Pausar Conciliación */}
+          {/* Botón: Pausar / Reanudar Conciliación */}
           <button
             onClick={handleToggleEmergencyPause}
             className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-all shadow-hard cursor-pointer border ${
@@ -423,10 +423,10 @@ export default function ReconciliationPage() {
                 ? 'bg-[#00ff66] hover:bg-emerald-400 text-black border-[#00ff66]' 
                 : 'bg-[#14171e] hover:bg-[#1a1e28] text-[#ff3b00] border-[#ff3b00]/40'
             }`}
-            title="Botón de Pánico / Kill-Switch"
+            title="Pausar o reanudar sincronización automática"
           >
-            {isPaused ? <PlayCircle size={14} /> : <ShieldAlert size={14} />}
-            <span>{isPaused ? 'REANUDAR AUTOMACIÓN' : 'PAUSAR SINCRONIZACIÓN'}</span>
+            {isPaused ? <PlayCircle size={14} /> : <PauseCircle size={14} />}
+            <span>{isPaused ? 'REANUDAR' : 'PAUSAR SINCRONIZACIÓN'}</span>
           </button>
 
           {/* Exportar Reporte de Diferencias */}
@@ -1392,7 +1392,7 @@ export default function ReconciliationPage() {
 
               <div className="flex justify-between items-center text-[11px] text-slate-400 dark:text-[#8e95a5]">
                 <span>SKUs: {bulkProgress.current} de {bulkProgress.total}</span>
-                <span>MODO: SAGA MULTI-CHANNEL</span>
+                <span>Sincronización en curso</span>
               </div>
             </div>
 

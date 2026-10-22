@@ -41,7 +41,7 @@ export const StockCard: React.FC<StockCardProps> = ({ channel, stock, expectedSt
           </div>
           <div>
             <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-sm leading-none">{title}</h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{isSae ? 'Sistema Core (Física)' : 'Canal Digital'}</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{isSae ? 'Almacén Principal (Físico)' : 'Canal Digital'}</p>
           </div>
         </div>
         {!isSae && expectedStock !== undefined && (

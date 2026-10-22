@@ -24,23 +24,23 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
     case 'FAILED':
     case 'ERROR':
       styleClasses = 'bg-rose-50 text-rose-800 border-rose-300 dark:bg-[#ff3b00]/10 dark:text-[#ff3b00] dark:border-[#ff3b00]/50';
-      label = 'ERROR_SYNC';
+      label = 'ERROR';
       break;
     case 'CONFLICT':
       styleClasses = 'bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700';
-      label = 'CONFLICTO_CAS';
+      label = 'CONFLICTO';
       break;
     case 'RESERVED':
       styleClasses = 'bg-purple-50 text-purple-800 border-purple-300 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-700';
-      label = 'STOCK_BLOQUEADO';
+      label = 'RESERVADO';
       break;
     case 'CRITICAL_STOCK':
       styleClasses = 'bg-rose-50 text-rose-800 border-rose-300 dark:bg-[#ff3b00]/10 dark:text-[#ff3b00] dark:border-[#ff3b00]/50 animate-pulse';
-      label = 'STOCK_CRÍTICO (<5)';
+      label = 'CRÍTICO (<5)';
       break;
     case 'LOW_STOCK':
       styleClasses = 'bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-700';
-      label = 'STOCK_BAJO (<15)';
+      label = 'BAJO (<15)';
       break;
     case 'HEALTHY_STOCK':
     case 'MATCH':
@@ -55,7 +55,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
     case 'SOLO_LOCAL':
     case 'UNLINKED':
       styleClasses = 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800';
-      label = 'ALMACÉN_LOCAL';
+      label = 'ALMACÉN LOCAL';
       break;
     case 'DISCONNECTED':
       styleClasses = 'bg-slate-100 text-slate-500 border-slate-300 dark:bg-slate-900 dark:text-slate-500 dark:border-slate-800';

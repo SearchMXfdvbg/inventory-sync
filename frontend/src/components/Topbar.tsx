@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Terminal, Activity } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 
 interface TopbarProps {
@@ -46,7 +46,7 @@ export const Topbar: React.FC<TopbarProps> = ({ title }) => {
           <Link
             href="/super-admin"
             className="flex items-center gap-1.5 px-3 py-1 bg-[#ff3b00]/10 hover:bg-[#ff3b00]/20 text-[#d93200] dark:text-[#ff3b00] border border-[#ff3b00]/40 text-xs font-bold transition-all"
-            title="Consola de Control Maestro Super Admin"
+            title="Panel de Super Administrador"
           >
             <ShieldCheck size={13} className="shrink-0" />
             <span>Panel Super Admin</span>

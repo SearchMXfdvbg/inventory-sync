@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -90,7 +90,7 @@ export default function SuperAdminPage() {
   const [newClientCommission, setNewClientCommission] = useState('25%');
   const [selectedChannels, setSelectedChannels] = useState<string[]>(['Shopify', 'Amazon DE', 'eBay DE']);
 
-  // Modal de Código Secreto Maestro (060718) y Motivo de Suspensión
+  // Modal de CÃ³digo Secreto Maestro (060718) y Motivo de SuspensiÃ³n
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
   const [securityPin, setSecurityPin] = useState('');
   const [securityError, setSecurityError] = useState<string | null>(null);
@@ -120,7 +120,7 @@ export default function SuperAdminPage() {
     owner: '',
     email: '',
     password: '',
-    plan: 'Plan Básico (<200 SKUs)',
+    plan: 'Plan BÃ¡sico (<200 SKUs)',
     maxSkus: 200,
     commission_rate: '25%',
     channels: ['Shopify', 'Mercado Libre']
@@ -257,7 +257,7 @@ export default function SuperAdminPage() {
         suspension_reason: '',
         commission_rate: newClientCommission,
         created_at: new Date().toISOString(),
-        last_sync: 'En Línea'
+        last_sync: 'En LÃ­nea'
       };
 
       if (typeof window !== 'undefined') {
@@ -293,7 +293,7 @@ export default function SuperAdminPage() {
         })
       });
 
-      showToast('¡Perfil de cliente empresarial creado exitosamente!');
+      showToast('Â¡Perfil de cliente empresarial creado exitosamente!');
       setIsModalOpen(false);
       setNewClientName('');
       setNewClientOwner('');
@@ -318,7 +318,7 @@ export default function SuperAdminPage() {
   const handleValidateSecurityCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (securityPin.trim() !== '060718') {
-      setSecurityError('Código secreto incorrecto. Acceso denegado.');
+      setSecurityError('CÃ³digo secreto incorrecto. Acceso denegado.');
       return;
     }
 
@@ -381,7 +381,7 @@ export default function SuperAdminPage() {
         body: JSON.stringify({ id: targetName, username: targetName, ...payload })
       });
 
-      showToast('¡Perfil y credenciales actualizados exitosamente!');
+      showToast('Â¡Perfil y credenciales actualizados exitosamente!');
       loadData();
     } catch (err) {
       showToast('Error al actualizar datos');
@@ -468,7 +468,7 @@ export default function SuperAdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
-      {/* Toast Notificación */}
+      {/* Toast NotificaciÃ³n */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-blue-600 text-white font-bold text-xs px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2 border border-blue-400 animate-bounce">
           <CheckCircle2 size={16} />
@@ -485,13 +485,13 @@ export default function SuperAdminPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-bold text-white text-lg tracking-tight">InventorySync Master Controller</h1>
+                <h1 className="font-bold text-white text-lg tracking-tight">Panel de AdministraciÃ³n</h1>
                 <span className="bg-red-950/80 text-red-400 border border-red-800/80 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider">
                   Super Admin
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 font-mono">
-                Gestión Centralizada de Tenants & Plataforma Global
+                GestiÃ³n de cuentas, planes y configuraciÃ³n del sistema
               </p>
             </div>
           </div>
@@ -509,18 +509,18 @@ export default function SuperAdminPage() {
             <ThemeToggle />
 
             <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-3 py-1.5 rounded-xl">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Nodos AWS Frankfurt: 100% Operativos</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span>Sistema en lÃ­nea</span>
             </div>
 
             <div className="flex items-center gap-3 pl-3 border-l border-slate-800">
               <div className="text-right">
                 <p className="text-xs font-bold text-white">CristAdmin</p>
-                <p className="text-[10px] text-amber-400 font-mono">Master SaaS Owner</p>
+                <p className="text-[10px] text-amber-400 font-mono">Administrador General</p>
               </div>
               <button
                 onClick={handleLogout}
-                title="Cerrar sesión maestra"
+                title="Cerrar sesiÃ³n"
                 className="p-2.5 rounded-xl bg-slate-800 hover:bg-red-950/80 hover:text-red-400 text-slate-300 transition-colors cursor-pointer border border-slate-700/60"
               >
                 <LogOut size={16} />
@@ -541,12 +541,12 @@ export default function SuperAdminPage() {
               <Building2 size={18} className="text-blue-400" />
             </div>
             <p className="text-3xl font-black text-white">{tenants.length}</p>
-            <p className="text-[11px] text-emerald-400 font-medium mt-1">â— Todas sincronizando en tiempo real</p>
+            <p className="text-[11px] text-emerald-400 font-medium mt-1">â€¢ Cuentas con sincronizaciÃ³n activa</p>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">SKUs Bajo Gestión</span>
+              <span className="text-xs font-bold uppercase tracking-wider">SKUs Bajo GestiÃ³n</span>
               <Layers size={18} className="text-indigo-400" />
             </div>
             <p className="text-3xl font-black text-white">39,565</p>
@@ -559,7 +559,7 @@ export default function SuperAdminPage() {
               <Activity size={18} className="text-emerald-400" />
             </div>
             <p className="text-3xl font-black text-white">14,892</p>
-            <p className="text-[11px] text-emerald-400 font-medium mt-1">Latencia promedio: 16ms</p>
+            <p className="text-[11px] text-emerald-400 font-medium mt-1">SincronizaciÃ³n activa</p>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
@@ -568,7 +568,7 @@ export default function SuperAdminPage() {
               <Percent size={18} className="text-amber-400" />
             </div>
             <p className="text-3xl font-black text-white">25%</p>
-            <p className="text-[11px] text-amber-400 font-medium mt-1">Comisión recurrente pactada</p>
+            <p className="text-[11px] text-amber-400 font-medium mt-1">ComisiÃ³n pactada promedio</p>
           </div>
         </div>
 
@@ -583,7 +583,7 @@ export default function SuperAdminPage() {
             }`}
           >
             <Users size={16} />
-            <span>Gestión de Perfiles & Clientes ({tenants.length})</span>
+            <span>GestiÃ³n de Perfiles & Clientes ({tenants.length})</span>
           </button>
 
           <button
@@ -595,7 +595,7 @@ export default function SuperAdminPage() {
             }`}
           >
             <Settings2 size={16} />
-            <span>Configuraciónes Globales del SaaS</span>
+            <span>ConfiguraciÃ³n Global</span>
           </button>
 
           <button
@@ -607,18 +607,18 @@ export default function SuperAdminPage() {
             }`}
           >
             <Server size={16} />
-            <span>Nodos & Servidores EU</span>
+            <span>Estado de Servicios</span>
           </button>
         </div>
 
-        {/* Tab 1: Gestión de Tenants / Clientes */}
+        {/* Tab 1: GestiÃ³n de Tenants / Clientes */}
         {activeTab === 'tenants' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-xl font-bold text-white">Cuentas y Empresas Clientes</h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Administra las instancias dedicadas, límites de catálogo, canales autorizados y comisiones de cada cliente.
+                  Administra las instancias dedicadas, lÃ­mites de catÃ¡logo, canales autorizados y comisiones de cada cliente.
                 </p>
               </div>
 
@@ -638,7 +638,7 @@ export default function SuperAdminPage() {
                     <tr className="border-b border-slate-800 bg-slate-950/70 text-slate-400 text-xs font-bold uppercase tracking-wider font-mono">
                       <th className="px-6 py-4">Empresa / Cliente</th>
                       <th className="px-6 py-4">Plan Asignado</th>
-                      <th className="px-6 py-4">Límite SKUs</th>
+                      <th className="px-6 py-4">LÃ­mite SKUs</th>
                       <th className="px-6 py-4">Canales Habilitados</th>
                       <th className="px-6 py-4">Revenue Share</th>
                       <th className="px-6 py-4">Estado</th>
@@ -650,8 +650,8 @@ export default function SuperAdminPage() {
                       <tr>
                         <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
                           <Users size={32} className="mx-auto mb-2 text-slate-600 opacity-60" />
-                          <p className="font-semibold text-sm text-slate-300">No hay perfiles de clientes registrados aún.</p>
-                          <p className="text-xs text-slate-500 mt-1">Los nuevos clientes aparecerán aquí automáticamente al registrarse o puedes registrar uno nuevo con el botón superior.</p>
+                          <p className="font-semibold text-sm text-slate-300">No hay perfiles de clientes registrados aÃºn.</p>
+                          <p className="text-xs text-slate-500 mt-1">Los nuevos clientes aparecerÃ¡n aquÃ­ automÃ¡ticamente al registrarse o puedes registrar uno nuevo con el botÃ³n superior.</p>
                         </td>
                       </tr>
                     ) : (
@@ -659,7 +659,7 @@ export default function SuperAdminPage() {
                       <tr key={t.id} className="hover:bg-slate-800/40 transition-colors">
                         <td className="px-6 py-4">
                           <p className="font-bold text-white">{t.name}</p>
-                          <p className="text-xs text-slate-400 font-mono">{t.owner} • {t.email}</p>
+                          <p className="text-xs text-slate-400 font-mono">{t.owner} â€¢ {t.email}</p>
                         </td>
                         <td className="px-6 py-4">
                           <span className="px-2.5 py-1 rounded-lg bg-indigo-950 text-indigo-300 border border-indigo-800 text-xs font-bold">
@@ -731,22 +731,22 @@ export default function SuperAdminPage() {
           </div>
         )}
 
-        {/* Tab 2: Configuraciónes Globales del SaaS */}
+        {/* Tab 2: ConfiguraciÃ³nes Globales del SaaS */}
         {activeTab === 'config' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
               <div className="flex items-center gap-3 pb-4 border-b border-slate-800">
                 <Sliders size={20} className="text-blue-400" />
                 <div>
-                  <h3 className="font-bold text-white text-base">Parámetros Globales de Sincronización</h3>
-                  <p className="text-xs text-slate-400">Control maestro de políticas y cuotas del sistema</p>
+                  <h3 className="font-bold text-white text-base">ParÃ¡metros Globales de SincronizaciÃ³n</h3>
+                  <p className="text-xs text-slate-400">Control maestro de polÃ­ticas y cuotas del sistema</p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">
-                    Revenue Share Estándar para Nuevos Clientes
+                    Revenue Share EstÃ¡ndar para Nuevos Clientes
                   </label>
                   <input
                     type="text"
@@ -757,7 +757,7 @@ export default function SuperAdminPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">
-                    Frecuencia de Conciliación Automática (CRON)
+                    Frecuencia de ConciliaciÃ³n AutomÃ¡tica (CRON)
                   </label>
                   <select className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white">
                     <option>Cada 5 minutos (Alta Prioridad)</option>
@@ -768,7 +768,7 @@ export default function SuperAdminPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">
-                    Límite Máximo de Chunks por Batch SP-API (Amazon EU)
+                    LÃ­mite MÃ¡ximo de Chunks por Batch SP-API (Amazon EU)
                   </label>
                   <input
                     type="number"
@@ -779,10 +779,10 @@ export default function SuperAdminPage() {
 
                 <div className="pt-4 border-t border-slate-800 flex justify-end">
                   <button
-                    onClick={() => showToast('Configuración global actualizada')}
+                    onClick={() => showToast('ConfiguraciÃ³n global actualizada')}
                     className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-500/20 cursor-pointer"
                   >
-                    Guardar Parámetros Maestros
+                    Guardar ParÃ¡metros Maestros
                   </button>
                 </div>
               </div>
@@ -790,42 +790,32 @@ export default function SuperAdminPage() {
 
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
               <div className="flex items-center gap-3 pb-4 border-b border-slate-800">
-                <Key size={20} className="text-amber-400" />
+                <ShieldCheck size={20} className="text-emerald-400" />
                 <div>
-                  <h3 className="font-bold text-white text-base">Claves Maestras de Infraestructura</h3>
-                  <p className="text-xs text-slate-400">Credenciales maestras de los proveedores en la nube</p>
+                  <h3 className="font-bold text-white text-base">PolÃ­ticas de Seguridad & Aislamiento</h3>
+                  <p className="text-xs text-slate-400">ProtecciÃ³n de credenciales y aislamiento multitenant</p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">
-                    Master Encryption Key (AES-256 GCM)
-                  </label>
-                  <input
-                    type="password"
-                    defaultValue="master_enc_sec_99182319283120"
-                    readOnly
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-400 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">
-                    PostgreSQL Master DB (AWS Frankfurt)
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue="postgresql://master:••••••••@aws-eu-central-1.rds.amazonaws.com:5432/inventory_sync"
-                    readOnly
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-400 font-mono"
-                  />
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-start gap-3">
-                  <ShieldCheck size={20} className="text-emerald-400 shrink-0 mt-0.5" />
+                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1.5">
+                  <p className="text-xs font-bold text-white">Aislamiento por Tenant</p>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Las credenciales de clientes (Shopify, eBay, Kaufland) se almacenan aisladas por Tenant encriptadas con sal única para cumplir con los estándares de privacidad europeos (GDPR).
+                    Cada cliente opera en un entorno lÃ³gico independiente. Los tokens de marketplaces, catÃ¡logos y transacciones estÃ¡n particionados estrictamente por cuenta.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1.5">
+                  <p className="text-xs font-bold text-white">Cifrado de Credenciales</p>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Las credenciales y tokens de acceso (Shopify, Mercado Libre, Amazon, etc.) se almacenan encriptados en reposo y en trÃ¡nsito.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1.5">
+                  <p className="text-xs font-bold text-white">ProtecciÃ³n de Acciones Sensibles</p>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Las operaciones crÃ­ticas (suspender cuentas, editar lÃ­mites y consultar credenciales) requieren autenticaciÃ³n con PIN de Super Admin.
                   </p>
                 </div>
               </div>
@@ -833,28 +823,28 @@ export default function SuperAdminPage() {
           </div>
         )}
 
-        {/* Tab 3: Nodos & Servidores EU */}
+        {/* Tab 3: Estado de Servicios */}
         {activeTab === 'nodes' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-white">Topología de Infraestructura Europea</h2>
+            <div>
+              <h2 className="text-xl font-bold text-white">Estado de Servicios del Sistema</h2>
+              <p className="text-xs text-slate-400 mt-0.5">Monitoreo de componentes de la plataforma en tiempo real.</p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { name: 'AWS Frankfurt (eu-central-1)', role: 'FastAPI Primary API & SP-API Worker', ping: '14ms', cpu: '18%', status: 'OPERATIONAL' },
-                { name: 'Hetzner Nuremberg Storage', role: 'PostgreSQL Database & WAL Replication', ping: '19ms', cpu: '12%', status: 'OPERATIONAL' },
-                { name: 'Cloudflare Edge Gateway', role: 'DDoS Shield & Webhook Ingestion Relay', ping: '8ms', cpu: '9%', status: 'OPERATIONAL' }
-              ].map((node, i) => (
+                { name: 'API Backend Principal', role: 'FastAPI REST & Webhooks', status: 'OPERATIVO', detail: 'GestiÃ³n de autenticaciÃ³n, productos y pedidos' },
+                { name: 'Base de Datos Principal', role: 'PostgreSQL Relacional', status: 'OPERATIVO', detail: 'Almacenamiento central y auditorÃ­a de eventos' },
+                { name: 'Motor de SincronizaciÃ³n', role: 'Workers en Segundo Plano', status: 'OPERATIVO', detail: 'PropagaciÃ³n de stock y conciliaciÃ³n multicanal' }
+              ].map((service, i) => (
                 <div key={i} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[10px] font-bold uppercase text-emerald-400 font-mono">{node.status}</span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                    <span className="text-[10px] font-bold uppercase text-emerald-400 font-mono tracking-wider">{service.status}</span>
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base">{node.name}</h3>
-                    <p className="text-xs text-slate-400 mt-1">{node.role}</p>
-                  </div>
-                  <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
-                    <span className="text-slate-400">Latencia: <strong className="text-white">{node.ping}</strong></span>
-                    <span className="text-slate-400">Carga CPU: <strong className="text-white">{node.cpu}</strong></span>
+                    <h3 className="font-bold text-white text-base">{service.name}</h3>
+                    <p className="text-xs text-blue-400 font-mono mt-0.5">{service.role}</p>
+                    <p className="text-xs text-slate-400 mt-2 leading-relaxed">{service.detail}</p>
                   </div>
                 </div>
               ))}
@@ -900,13 +890,13 @@ export default function SuperAdminPage() {
                   type="text"
                   value={newClientOwner}
                   onChange={(e) => setNewClientOwner(e.target.value)}
-                  placeholder="ej. Hans Weber / Iván Martínez"
+                  placeholder="ej. Hans Weber / IvÃ¡n MartÃ­nez"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Correo Electrónico Corporativo</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Correo ElectrÃ³nico Corporativo</label>
                 <input
                   type="email"
                   required
@@ -920,14 +910,14 @@ export default function SuperAdminPage() {
               <div>
                 <label className="block text-xs font-bold text-amber-400 uppercase mb-1.5 flex items-center gap-1.5">
                   <Key size={13} />
-                  <span>Contraseña de Acceso del Cliente</span>
+                  <span>ContraseÃ±a de Acceso del Cliente</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={newClientPassword}
                   onChange={(e) => setNewClientPassword(e.target.value)}
-                  placeholder="ej. ContraseñaSegura2026#"
+                  placeholder="ej. ContraseÃ±aSegura2026#"
                   className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl px-4 py-2.5 text-sm text-amber-300 font-mono"
                 />
               </div>
@@ -951,14 +941,14 @@ export default function SuperAdminPage() {
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white"
                   >
                     <option>Plan Guest</option>
-                    <option>Plan Básico (&lt;200 SKUs)</option>
+                    <option>Plan BÃ¡sico (&lt;200 SKUs)</option>
                     <option>Plan Pro (Ilimitado)</option>
                     <option>Enterprise (39,000 SKUs)</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Límite Máximo SKUs</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">LÃ­mite MÃ¡ximo SKUs</label>
                   <input
                     type="number"
                     value={newClientMaxSkus}
@@ -999,7 +989,7 @@ export default function SuperAdminPage() {
         </div>
       )}
 
-      {/* Modal de Código Secreto Maestro (060718) */}
+      {/* Modal de CÃ³digo Secreto Maestro (060718) */}
       {isSecurityModalOpen && pendingAction && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-7 space-y-6 shadow-2xl relative">
@@ -1009,8 +999,8 @@ export default function SuperAdminPage() {
                   <Lock size={18} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-base">Autorización Super Admin</h3>
-                  <p className="text-[11px] text-slate-400 font-mono">Código Secreto Requerido</p>
+                  <h3 className="font-bold text-white text-base">AutorizaciÃ³n Super Admin</h3>
+                  <p className="text-[11px] text-slate-400 font-mono">CÃ³digo Secreto Requerido</p>
                 </div>
               </div>
               <button
@@ -1030,7 +1020,7 @@ export default function SuperAdminPage() {
               <p className="text-xs text-slate-300 leading-relaxed">
                 Para <strong className="text-amber-400 uppercase font-bold">
                   {pendingAction.type === 'view' ? 'Visualizar' : pendingAction.type === 'toggle_status' ? (pendingAction.tenant.status === 'ACTIVE' ? 'Suspender Cuenta' : 'Reactivar Cuenta') : pendingAction.type === 'update' ? 'Editar y Guardar Datos' : 'Eliminar'}
-                </strong> el perfil de <span className="text-white font-bold">{pendingAction.tenant.name}</span>, ingresa tu autorización:
+                </strong> el perfil de <span className="text-white font-bold">{pendingAction.tenant.name}</span>, ingresa tu autorizaciÃ³n:
               </p>
             </div>
 
@@ -1042,12 +1032,12 @@ export default function SuperAdminPage() {
             )}
 
             <form onSubmit={handleValidateSecurityCode} className="space-y-4">
-              {/* Campo para motivo de suspensión si la acción es suspender */}
+              {/* Campo para motivo de suspensiÃ³n si la acciÃ³n es suspender */}
               {pendingAction.type === 'toggle_status' && pendingAction.tenant.status === 'ACTIVE' && (
                 <div>
                   <label className="block text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                     <AlertTriangle size={13} />
-                    <span>Motivo de Suspensión (Visible para el Cliente)</span>
+                    <span>Motivo de SuspensiÃ³n (Visible para el Cliente)</span>
                   </label>
                   <input
                     type="text"
@@ -1060,9 +1050,9 @@ export default function SuperAdminPage() {
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {[
                       'Falta de pago de mensualidad',
-                      'Incumplimiento de términos y condiciones',
-                      'Revisión de seguridad y auditoría',
-                      'Límite de catálogo excedido'
+                      'Incumplimiento de tÃ©rminos y condiciones',
+                      'RevisiÃ³n de seguridad y auditorÃ­a',
+                      'LÃ­mite de catÃ¡logo excedido'
                     ].map((reason) => (
                       <button
                         key={reason}
@@ -1083,7 +1073,7 @@ export default function SuperAdminPage() {
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                  Código Secreto de Seguridad (PIN)
+                  CÃ³digo Secreto de Seguridad (PIN)
                 </label>
                 <input
                   type="password"
@@ -1100,7 +1090,7 @@ export default function SuperAdminPage() {
                     setSecurityPin(e.target.value);
                     setSecurityError(null);
                   }}
-                  placeholder="PIN de 6 dígitos"
+                  placeholder="PIN de 6 dÃ­gitos"
                   className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl px-4 py-3 text-center text-xl tracking-[0.4em] font-mono text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                 />
               </div>
@@ -1129,7 +1119,7 @@ export default function SuperAdminPage() {
                   <ShieldCheck size={16} />
                   <span>
                     {pendingAction.type === 'toggle_status' && pendingAction.tenant.status === 'ACTIVE'
-                      ? 'Confirmar Suspensión'
+                      ? 'Confirmar SuspensiÃ³n'
                       : 'Validar y Continuar'}
                   </span>
                 </button>
@@ -1156,7 +1146,7 @@ export default function SuperAdminPage() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-400">
-                    {isEditingInView ? 'Modo de Edición de Perfil & Credenciales' : 'Detalles y Configuración de Instancia Cliente'}
+                    {isEditingInView ? 'Modo de EdiciÃ³n de Perfil & Credenciales' : 'Detalles y ConfiguraciÃ³n de Instancia Cliente'}
                   </p>
                 </div>
               </div>
@@ -1175,7 +1165,7 @@ export default function SuperAdminPage() {
             </div>
 
             {!isEditingInView ? (
-              // Modo Solo Lectura / Visualización
+              // Modo Solo Lectura / VisualizaciÃ³n
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-xs">
                   <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
@@ -1184,19 +1174,19 @@ export default function SuperAdminPage() {
                   </div>
 
                   <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
-                    <p className="text-slate-500 font-medium uppercase text-[10px]">Correo Electrónico</p>
+                    <p className="text-slate-500 font-medium uppercase text-[10px]">Correo ElectrÃ³nico</p>
                     <p className="text-white font-mono font-medium truncate mt-0.5" title={viewedTenant.email}>{viewedTenant.email}</p>
                   </div>
 
-                  {/* Tarjeta de Contraseña con Toggle Ojo */}
+                  {/* Tarjeta de ContraseÃ±a con Toggle Ojo */}
                   <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 col-span-2 flex items-center justify-between">
                     <div>
                       <p className="text-slate-500 font-medium uppercase text-[10px] flex items-center gap-1.5">
                         <Key size={12} className="text-amber-400" />
-                        <span>Contraseña de Acceso del Cliente</span>
+                        <span>ContraseÃ±a de Acceso del Cliente</span>
                       </p>
                       <p className="text-amber-300 font-mono font-bold text-sm tracking-wider mt-1">
-                        {showViewPassword ? (viewedTenant.password || 'ClienteSeguro2026#') : '••••••••••••'}
+                        {showViewPassword ? (viewedTenant.password || 'ClienteSeguro2026#') : 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'}
                       </p>
                     </div>
                     <button
@@ -1212,7 +1202,7 @@ export default function SuperAdminPage() {
                       ) : (
                         <>
                           <Eye size={15} />
-                          <span>Ver Contraseña</span>
+                          <span>Ver ContraseÃ±a</span>
                         </>
                       )}
                     </button>
@@ -1224,7 +1214,7 @@ export default function SuperAdminPage() {
                   </div>
 
                   <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
-                    <p className="text-slate-500 font-medium uppercase text-[10px]">Límite de Catálogo</p>
+                    <p className="text-slate-500 font-medium uppercase text-[10px]">LÃ­mite de CatÃ¡logo</p>
                     <p className="text-white font-mono font-bold mt-0.5">{viewedTenant.maxSkus.toLocaleString()} SKUs</p>
                   </div>
 
@@ -1236,7 +1226,7 @@ export default function SuperAdminPage() {
                   <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
                     <p className="text-slate-500 font-medium uppercase text-[10px]">Estado de Cuenta</p>
                     <p className={`font-bold mt-0.5 ${viewedTenant.status === 'ACTIVE' ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {viewedTenant.status === 'ACTIVE' ? 'â— Activo en Tiempo Real' : 'â— Suspendido'}
+                      {viewedTenant.status === 'ACTIVE' ? '• Activo' : '• Suspendido'}
                     </p>
                   </div>
 
@@ -1244,8 +1234,8 @@ export default function SuperAdminPage() {
                     <div className="bg-red-950/70 border border-red-800/80 rounded-xl p-3.5 text-xs text-red-200 col-span-2 flex items-start gap-2.5">
                       <AlertTriangle size={16} className="text-red-400 shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-bold text-red-300 uppercase text-[10px]">Motivo de Suspensión Registrado:</p>
-                        <p className="mt-0.5 text-white font-semibold">{viewedTenant.suspension_reason || 'Revisión administrativa de seguridad'}</p>
+                        <p className="font-bold text-red-300 uppercase text-[10px]">Motivo de SuspensiÃ³n Registrado:</p>
+                        <p className="mt-0.5 text-white font-semibold">{viewedTenant.suspension_reason || 'RevisiÃ³n administrativa de seguridad'}</p>
                       </div>
                     </div>
                   )}
@@ -1296,7 +1286,7 @@ export default function SuperAdminPage() {
                 </div>
               </div>
             ) : (
-              // Modo Edición de Datos
+              // Modo EdiciÃ³n de Datos
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -1327,7 +1317,7 @@ export default function SuperAdminPage() {
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-400 uppercase mb-1">Correo Electrónico</label>
+                    <label className="block font-bold text-slate-400 uppercase mb-1">Correo ElectrÃ³nico</label>
                     <input
                       type="email"
                       required
@@ -1338,11 +1328,11 @@ export default function SuperAdminPage() {
                   </div>
                 </div>
 
-                {/* Campo Contraseña Editable con botón de ver/ocultar */}
+                {/* Campo ContraseÃ±a Editable con botÃ³n de ver/ocultar */}
                 <div>
                   <label className="block font-bold text-amber-400 uppercase mb-1 flex items-center gap-1.5">
                     <Key size={13} />
-                    <span>Contraseña de Acceso</span>
+                    <span>ContraseÃ±a de Acceso</span>
                   </label>
                   <div className="relative">
                     <input
@@ -1350,7 +1340,7 @@ export default function SuperAdminPage() {
                       required
                       value={editForm.password}
                       onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
-                      placeholder="Nueva contraseña"
+                      placeholder="Nueva contraseÃ±a"
                       className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl pl-4 pr-12 py-2.5 text-sm text-amber-300 font-mono focus:outline-none"
                     />
                     <button
@@ -1379,14 +1369,14 @@ export default function SuperAdminPage() {
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white"
                     >
                       <option>Plan Guest</option>
-                      <option>Plan Básico (&lt;200 SKUs)</option>
+                      <option>Plan BÃ¡sico (&lt;200 SKUs)</option>
                       <option>Plan Pro (Ilimitado)</option>
                       <option>Enterprise (39,000 SKUs)</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-400 uppercase mb-1">Límite Máximo SKUs</label>
+                    <label className="block font-bold text-slate-400 uppercase mb-1">LÃ­mite MÃ¡ximo SKUs</label>
                     <input
                       type="number"
                       value={editForm.maxSkus}
@@ -1464,4 +1454,5 @@ export default function SuperAdminPage() {
     </div>
   );
 }
+
 

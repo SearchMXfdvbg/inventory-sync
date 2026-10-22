@@ -112,14 +112,14 @@ export default function ProductDetailPage() {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="border border-[#20242c] bg-[#0d0e12] p-4 shadow-hard">
-              <div className="text-[10px] text-[#8e95a5] uppercase">Stock Central</div>
+              <div className="text-[10px] text-[#8e95a5] uppercase">Existencias en Almacén</div>
               <div className="text-xl font-bold text-white mt-1">{product.stock}</div>
               <div className="text-[10px] text-[#555d6e]">Unidades disponibles</div>
             </div>
             <div className="border border-[#20242c] bg-[#0d0e12] p-4 shadow-hard">
               <div className="text-[10px] text-[#8e95a5] uppercase">Precio Venta</div>
               <div className="text-xl font-bold text-white mt-1">${product.precio?.toFixed(2)}</div>
-              <div className="text-[10px] text-[#555d6e]">USD</div>
+              <div className="text-[10px] text-[#555d6e]">MXN</div>
             </div>
             <div className="border border-[#20242c] bg-[#0d0e12] p-4 shadow-hard">
               <div className="text-[10px] text-[#8e95a5] uppercase">Margen Bruto</div>
@@ -127,7 +127,7 @@ export default function ProductDetailPage() {
               <div className="text-[10px] text-[#555d6e]">Porcentaje de ganancia</div>
             </div>
             <div className="border border-[#20242c] bg-[#0d0e12] p-4 shadow-hard">
-              <div className="text-[10px] text-[#8e95a5] uppercase">Estado Sincronización</div>
+              <div className="text-[10px] text-[#8e95a5] uppercase">Estado de Sincronización</div>
               <div className="flex items-center gap-2 mt-1">
                 {product.sync_status === 'MATCH' ? (
                   <CheckCircle2 className="w-4 h-4 text-[#00ff66]" />
@@ -175,10 +175,10 @@ export default function ProductDetailPage() {
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-4">
             <button className="px-4 py-2 border border-[#20242c] bg-[#12141a] hover:bg-[#1a1e27] text-[#8e95a5] font-mono-code text-xs flex items-center gap-2">
-              <Activity className="w-3.5 h-3.5" /> VER HISTORIAL DE MOVIMIENTOS
+              <Activity className="w-3.5 h-3.5" /> HISTORIAL DE MOVIMIENTOS
             </button>
             <button className="px-4 py-2 border border-[#20242c] bg-[#12141a] hover:bg-[#1a1e27] text-[#8e95a5] font-mono-code text-xs flex items-center gap-2">
-              <Database className="w-3.5 h-3.5" /> FORZAR SINCRONIZACIÓN
+              <RotateCcw className="w-3.5 h-3.5" /> SINCRONIZAR CON CANALES
             </button>
           </div>
         </>

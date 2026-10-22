@@ -48,8 +48,8 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ venta }) => 
     <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 transition-colors">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="font-semibold text-slate-800 dark:text-white">Flujo de Sincronización Saga</h3>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Transacciones automáticas en dos fases</p>
+          <h3 className="font-semibold text-slate-800 dark:text-white">Flujo de Sincronización</h3>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Actualización automática de stock en canales</p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono">Intentos: {venta.attempts}/5</span>

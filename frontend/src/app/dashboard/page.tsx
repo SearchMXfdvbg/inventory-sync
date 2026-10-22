@@ -121,8 +121,8 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6 font-mono-code text-xs">
         <div className="p-4 border border-slate-200 dark:border-[#20242c] bg-white dark:bg-[#0d0e12] text-slate-600 dark:text-[#8e95a5] flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-[#00a843] dark:text-[#00ff66] animate-spin" />
-          <span>INICIALIZANDO TELEMETRÍA DEL CLUSTER...</span>
+          <RefreshCw className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-spin" />
+          <span>Cargando datos del panel...</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="h-28 bg-white dark:bg-[#0d0e12] border border-slate-200 dark:border-[#20242c] animate-pulse"></div>
@@ -199,57 +199,41 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 text-slate-800 dark:text-[#ededed] font-mono-code text-xs">
-      {/* Top Telemetry Strip */}
-      <div className="border border-slate-200 dark:border-[#20242c] bg-white dark:bg-[#0d0e12] p-3 shadow-hard flex flex-wrap items-center justify-between gap-4 text-[11px] transition-colors duration-200">
+      {/* System Status Strip */}
+      <div className="border border-slate-200 dark:border-[#20242c] bg-white dark:bg-[#0d0e12] px-4 py-3 shadow-hard flex flex-wrap items-center justify-between gap-4 text-xs transition-colors duration-200">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-2 rounded-full bg-[#00a843] dark:bg-[#00ff66] animate-pulse"></span>
-          <span className="text-[#008f39] dark:text-[#00ff66] font-bold">ORCHESTRATOR ONLINE</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          <span className="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider text-[11px]">Sistema Operativo</span>
           <span className="text-slate-300 dark:text-[#3a3f4d]">|</span>
-          <span className="text-slate-600 dark:text-[#8e95a5]">ENGINE: <strong className="text-slate-900 dark:text-white font-medium">Saga Pattern Distributed Worker</strong></span>
-          <span className="text-slate-300 dark:text-[#3a3f4d]">|</span>
-          <span className="text-slate-600 dark:text-[#8e95a5]">FAIL-SAFE: <strong className="text-slate-900 dark:text-white font-medium">Atomic CAS Lock (0ms Race Window)</strong></span>
+          <span className="text-slate-600 dark:text-[#8e95a5]">
+            Canales activos: <strong className="text-slate-900 dark:text-white font-medium">{connectedChannelsCount} de 5 configurados</strong>
+          </span>
         </div>
         
-        <div className="flex items-center gap-4 text-slate-600 dark:text-[#8e95a5]">
-          <span>SHOPIFY API: <strong className="text-slate-900 dark:text-white">142ms</strong></span>
-          <span>ML REST: <strong className="text-slate-900 dark:text-white">189ms</strong></span>
-          <span>AMAZON SP-API: <strong className="text-slate-900 dark:text-white">318ms</strong></span>
-          <span>SYNC LATENCY: <strong className="text-[#008f39] dark:text-[#00ff66]">&lt; 1.8s</strong></span>
-        </div>
-      </div>
-
-      {/* DB Lock Serializer Secondary Strip */}
-      <div className="border border-slate-200 dark:border-[#20242c] bg-slate-100 dark:bg-[#090a0c] px-4 py-2 shadow-hard flex flex-wrap items-center justify-between gap-4 text-[10px] text-slate-600 dark:text-[#8e95a5] transition-colors duration-200">
-        <div className="flex items-center gap-2">
-          <Database className="w-3.5 h-3.5 text-[#008f39] dark:text-[#00ff66]" />
-          <span>DB LOCK SERIALIZER: <strong className="text-slate-900 dark:text-white">SQLite WAL / PostgreSQL (Row-level)</strong></span>
-        </div>
-        <div className="flex items-center gap-3 text-slate-500 dark:text-[#555d6e]">
-          <span>MUTEX LOCK TIMEOUT: 1500ms</span>
-          <span>•</span>
-          <span>REINTENTOS EXPONENCIALES: 5s BACKOFF</span>
+        <div className="flex items-center gap-4 text-slate-500 dark:text-[#8e95a5] text-[11px]">
+          <span>Sincronización automática: <strong className="text-slate-800 dark:text-slate-200 font-semibold">Activa</strong></span>
         </div>
       </div>
 
       {/* Channel Configuration Alert if zero connected */}
       {connectedChannelsCount === 0 && (
-        <div className="border border-[#ff3b00]/40 bg-[#ff3b00]/10 p-4 shadow-hard flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-slate-800 dark:text-[#ededed]">
+        <div className="border border-amber-500/40 bg-amber-500/10 p-4 shadow-hard flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-slate-800 dark:text-[#ededed]">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#ff3b00]/20 border border-[#ff3b00]/40 text-[#ff3b00] flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 bg-amber-500/20 border border-amber-500/40 text-amber-500 flex items-center justify-center shrink-0">
               <Radio className="w-4 h-4" />
             </div>
             <div>
-              <p className="font-bold text-slate-900 dark:text-white text-xs">MODO ALMACÉN LOCAL (CANALES SIN VINCULAR)</p>
+              <p className="font-bold text-slate-900 dark:text-white text-xs">SIN CANALES DE VENTA VINCULADOS</p>
               <p className="text-[11px] text-slate-600 dark:text-[#a1a7b5] mt-0.5">
-                El sistema opera sobre inventario local. Para activar la propagación bidireccional atómica, conecta las APIs de tus canales.
+                El sistema está operando con inventario local. Para sincronizar existencias y pedidos con tus tiendas, conecta tus canales de venta.
               </p>
             </div>
           </div>
           <Link
             href="/settings/integrations"
-            className="font-bold bg-[#ff3b00] hover:bg-[#e03400] text-black px-4 py-2 shadow-hard shrink-0 text-xs"
+            className="font-bold bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 shadow-hard shrink-0 text-xs"
           >
-            VINCULAR CREDENCIALES API
+            Configurar Canales
           </Link>
         </div>
       )}
@@ -258,51 +242,51 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="border border-slate-200 dark:border-[#20242c] bg-white dark:bg-[#0d0e12] p-5 shadow-hard space-y-2 transition-colors duration-200">
           <div className="flex items-center justify-between text-slate-500 dark:text-[#8e95a5]">
-            <span className="text-[10px] uppercase font-bold tracking-wider">// STOCK TOTAL FÍSICO</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider">Stock Total Físico</span>
             <Package className="w-4 h-4 text-[#008f39] dark:text-[#00ff66]" />
           </div>
           <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{stats.totalStock.toLocaleString()}</div>
-          <div className="text-[10px] text-slate-500 dark:text-[#555d6e]">Unidades consolidadas en base central</div>
+          <div className="text-[10px] text-slate-500 dark:text-[#555d6e]">Unidades en almacén central</div>
         </div>
 
         <div className="border border-slate-200 dark:border-[#20242c] bg-white dark:bg-[#0d0e12] p-5 shadow-hard space-y-2 transition-colors duration-200">
           <div className="flex items-center justify-between text-slate-500 dark:text-[#8e95a5]">
-            <span className="text-[10px] uppercase font-bold tracking-wider">// SKUS EN RIESGO (&lt;5)</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider">Stock Crítico (&lt; 5)</span>
             <AlertTriangle className="w-4 h-4 text-[#ff3b00]" />
           </div>
           <div className="text-3xl font-extrabold text-[#ff3b00]">{stats.lowStockCount}</div>
-          <div className="text-[10px] text-slate-500 dark:text-[#555d6e]">Posible colisión ante compras simultáneas</div>
+          <div className="text-[10px] text-slate-500 dark:text-[#555d6e]">Unidades próximas a agotarse</div>
         </div>
 
         <div className="border border-slate-200 dark:border-[#20242c] bg-white dark:bg-[#0d0e12] p-5 shadow-hard space-y-2 transition-colors duration-200">
           <div className="flex items-center justify-between text-slate-500 dark:text-[#8e95a5]">
-            <span className="text-[10px] uppercase font-bold tracking-wider">// TRANSACCIONES 24H</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider">Ventas Recientes (24h)</span>
             <ShoppingCart className="w-4 h-4 text-[#008f39] dark:text-[#00ff66]" />
           </div>
           <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{stats.salesToday}</div>
-          <div className="text-[10px] text-slate-500 dark:text-[#555d6e]">Eventos de venta resueltos por Saga</div>
+          <div className="text-[10px] text-slate-500 dark:text-[#555d6e]">Pedidos sincronizados en las últimas 24h</div>
         </div>
 
         <div className="border border-slate-200 dark:border-[#20242c] bg-white dark:bg-[#0d0e12] p-5 shadow-hard space-y-2 transition-colors duration-200">
           <div className="flex items-center justify-between text-slate-500 dark:text-[#8e95a5]">
-            <span className="text-[10px] uppercase font-bold tracking-wider">// CANALES DESINCRONIZADOS</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider">Discrepancias de Stock</span>
             <RefreshCw className="w-4 h-4 text-amber-600 dark:text-[#f59e0b]" />
           </div>
           <div className="text-3xl font-extrabold text-amber-600 dark:text-[#f59e0b]">{stats.desyncCount}</div>
-          <div className="text-[10px] text-slate-500 dark:text-[#555d6e]">Discrepancias en cola de conciliación</div>
+          <div className="text-[10px] text-slate-500 dark:text-[#555d6e]">Productos con diferencias entre canales</div>
         </div>
       </div>
 
-      {/* Sales Telemetry Chart & Critical Incidents */}
+      {/* Sales Chart & Critical Incidents */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 border border-slate-200 dark:border-[#20242c] bg-white dark:bg-[#0d0e12] p-6 shadow-hard flex flex-col justify-between transition-colors duration-200">
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200 dark:border-[#20242c]">
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-tight">Rendimiento de Ventas Procesadas</h3>
-              <p className="text-[10px] text-slate-500 dark:text-[#8e95a5] mt-0.5">Unidades debitadas atómicamente en los últimos 7 días</p>
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-tight">Historial de Ventas</h3>
+              <p className="text-[10px] text-slate-500 dark:text-[#8e95a5] mt-0.5">Unidades vendidas en los últimos 7 días</p>
             </div>
-            <span className="flex items-center gap-1.5 text-[10px] text-[#008f39] dark:text-[#00ff66] bg-[#00ff66]/10 px-2 py-1 border border-[#00ff66]/30">
-              <Activity size={12} className="animate-pulse" /> LIVE STREAM
+            <span className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-[#8e95a5] bg-slate-100 dark:bg-[#14171e] px-2 py-1 border border-slate-200 dark:border-[#20242c]">
+              <Activity size={12} /> Últimos 7 días
             </span>
           </div>
 
@@ -330,7 +314,7 @@ export default function DashboardPage() {
         <div className="border border-slate-200 dark:border-[#20242c] bg-white dark:bg-[#0d0e12] p-6 shadow-hard flex flex-col justify-between transition-colors duration-200">
           <div>
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-[#20242c]">
-              <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-tight">Telemetría de Alertas</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-tight">Alertas del Sistema</h3>
               <span className="text-[10px] text-slate-500 dark:text-[#8e95a5]">{quickAlerts.length} detectadas</span>
             </div>
 
@@ -338,7 +322,7 @@ export default function DashboardPage() {
               {quickAlerts.length === 0 ? (
                 <div className="text-center py-10 text-slate-400 dark:text-[#555d6e] text-xs">
                   <CheckCircle2 className="w-6 h-6 text-[#00a843] dark:text-[#00ff66] mx-auto mb-2 opacity-50" />
-                  <span>Sin condiciones de riesgo activas en el cluster</span>
+                  <span>Sin alertas críticas pendientes</span>
                 </div>
               ) : (
                 quickAlerts.slice(0, 3).map((alert, index) => (
@@ -349,13 +333,13 @@ export default function DashboardPage() {
                           ? 'border-[#ff3b00]/40 text-[#ff3b00] bg-[#ff3b00]/10' 
                           : 'border-amber-500/40 text-amber-600 dark:text-[#f59e0b] bg-amber-500/10'
                       }`}>
-                        {alert.severity === 'HIGH' ? 'CRITICAL_LOCK' : 'WARNING'}
+                        {alert.severity === 'HIGH' ? 'CRÍTICO' : 'AVISO'}
                       </span>
                       <Link 
                         href={`/inventory/${alert.sku}`}
                         className="text-[10px] text-slate-600 dark:text-[#8e95a5] hover:text-[#008f39] dark:hover:text-[#00ff66] flex items-center gap-0.5"
                       >
-                        Inspeccionar SKU &rarr;
+                        Ver SKU &rarr;
                       </Link>
                     </div>
                     <p className="text-[11px] text-slate-800 dark:text-[#ededed] leading-tight">
@@ -383,8 +367,8 @@ export default function DashboardPage() {
       <div className="border border-slate-200 dark:border-[#20242c] bg-white dark:bg-[#0d0e12] p-6 shadow-hard space-y-4 transition-colors duration-200">
         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#20242c]">
           <div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-tight">Registro de Transacciones en Tiempo Real</h3>
-            <p className="text-[10px] text-slate-500 dark:text-[#8e95a5] mt-0.5">Eventos resueltos por la máquina de estados Saga</p>
+            <h3 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-tight">Últimas Ventas Registradas</h3>
+            <p className="text-[10px] text-slate-500 dark:text-[#8e95a5] mt-0.5">Pedidos procesados y sincronizados en canales</p>
           </div>
           <Link 
             href="/sales"
@@ -402,8 +386,8 @@ export default function DashboardPage() {
                 <th className="py-2.5 font-bold">SKU</th>
                 <th className="py-2.5 font-bold">Cant.</th>
                 <th className="py-2.5 font-bold">Almacén Central</th>
-                <th className="py-2.5 font-bold">Paso Shopify</th>
-                <th className="py-2.5 font-bold">Paso Mercado Libre</th>
+                <th className="py-2.5 font-bold">Shopify</th>
+                <th className="py-2.5 font-bold">Mercado Libre</th>
                 <th className="py-2.5 font-bold text-right">Estado</th>
               </tr>
             </thead>
@@ -427,17 +411,17 @@ export default function DashboardPage() {
                     <td className="py-3 text-slate-900 dark:text-white font-bold">{sale.cantidad}</td>
                     <td className="py-3">
                       <span className={`text-[10px] px-2 py-0.5 border ${sale.sae_decremented ? 'border-[#00ff66]/40 text-[#008f39] dark:text-[#00ff66] bg-[#00ff66]/10' : 'border-slate-300 dark:border-[#20242c] text-slate-500 dark:text-[#8e95a5]'}`}>
-                        {sale.sae_decremented ? 'CONFIRMADO' : 'EN COLA'}
+                        {sale.sae_decremented ? 'SINCRONIZADO' : 'PENDIENTE'}
                       </span>
                     </td>
                     <td className="py-3">
                       <span className={`text-[10px] px-2 py-0.5 border ${sale.shopify_synced ? 'border-[#00ff66]/40 text-[#008f39] dark:text-[#00ff66] bg-[#00ff66]/10' : 'border-slate-300 dark:border-[#20242c] text-slate-500 dark:text-[#8e95a5]'}`}>
-                        {sale.shopify_synced ? 'CONFIRMADO' : 'EN COLA'}
+                        {sale.shopify_synced ? 'SINCRONIZADO' : 'PENDIENTE'}
                       </span>
                     </td>
                     <td className="py-3">
                       <span className={`text-[10px] px-2 py-0.5 border ${sale.ml_synced ? 'border-[#00ff66]/40 text-[#008f39] dark:text-[#00ff66] bg-[#00ff66]/10' : 'border-slate-300 dark:border-[#20242c] text-slate-500 dark:text-[#8e95a5]'}`}>
-                        {sale.ml_synced ? 'CONFIRMADO' : 'EN COLA'}
+                        {sale.ml_synced ? 'SINCRONIZADO' : 'PENDIENTE'}
                       </span>
                     </td>
                     <td className="py-3 text-right">

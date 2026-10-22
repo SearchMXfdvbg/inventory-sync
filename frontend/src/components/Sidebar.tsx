@@ -14,17 +14,14 @@ import {
   LogOut,
   User,
   LifeBuoy,
-  ShieldCheck,
-  Terminal,
-  Cpu,
-  Zap
+  ShieldCheck
 } from 'lucide-react';
 import { clearSession } from '@/lib/api';
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const [currentUser, setCurrentUser] = React.useState('Operador');
+  const [currentUser, setCurrentUser] = React.useState('Usuario');
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -69,7 +66,7 @@ export const Sidebar: React.FC = () => {
           </div>
           <div>
             <h1 className="font-bold text-slate-900 dark:text-white text-sm tracking-tight leading-none">INVENTORY_SYNC</h1>
-            <p className="text-[10px] text-slate-500 dark:text-[#8e95a5] mt-1 tracking-wider uppercase">Saga Distributed Core</p>
+            <p className="text-[10px] text-slate-500 dark:text-[#8e95a5] mt-1 tracking-wider uppercase">Gestión Multicanal</p>
           </div>
         </div>
 
@@ -89,7 +86,7 @@ export const Sidebar: React.FC = () => {
                 <span>Panel Super Admin</span>
               </div>
               <span className="text-[9px] px-1 py-0.2 border border-current uppercase">
-                MASTER
+                ADMIN
               </span>
             </Link>
           )}
@@ -132,14 +129,14 @@ export const Sidebar: React.FC = () => {
             <div className="leading-tight min-w-0">
               <p className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[120px]">{currentUser}</p>
               <p className="text-[10px] text-slate-500 dark:text-[#555d6e]">
-                {currentUser.toLowerCase() === 'cristadmin' ? 'SUPER_OPERADOR' : 'OPERADOR_CLIENTE'}
+                {currentUser.toLowerCase() === 'cristadmin' ? 'Super Admin' : 'Administrador'}
               </p>
             </div>
           </div>
           
           <button 
             onClick={handleLogout}
-            title="Desconectar consola"
+            title="Cerrar sesión"
             className="p-1.5 border border-slate-300 dark:border-[#20242c] hover:border-[#ff3b00] text-slate-500 dark:text-[#8e95a5] hover:text-[#ff3b00] transition-colors shrink-0"
           >
             <LogOut size={14} />

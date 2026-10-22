@@ -204,7 +204,7 @@ export default function TicketsPage() {
     setNewCategory('ACTIVATION');
     setNewPriority('NORMAL');
 
-    triggerToast(`🎉 ¡Ticket ${newTicketId} creado con éxito! CristAdmin ha sido notificado.`);
+    triggerToast(`🎉 ¡Ticket ${newTicketId} creado con éxito! El equipo de soporte ha sido notificado.`);
   };
 
   // Enviar Respuesta a Ticket
@@ -217,7 +217,7 @@ export default function TicketsPage() {
 
     const newMsg: TicketMessage = {
       id: `msg-${Date.now()}`,
-      sender: isSenderAdmin ? 'CristAdmin (Soporte Oficial)' : currentUser,
+      sender: isSenderAdmin ? 'Soporte Oficial' : currentUser,
       role: isSenderAdmin ? 'ADMIN' : 'USER',
       text: replyText.trim(),
       timestamp: now,
@@ -259,7 +259,7 @@ export default function TicketsPage() {
       setNewTitle('Solicitud de Activación Inmediata de Plan');
       setNewCategory('ACTIVATION');
       setNewPriority('HIGH');
-      setNewMessage(`Hola CristAdmin, solicito por favor la activación de mi cuenta (${currentUser}) para comenzar a sincronizar mis productos en la plataforma.`);
+      setNewMessage(`Hola equipo de soporte, solicito por favor la activación de mi cuenta (${currentUser}) para comenzar a sincronizar mis productos en la plataforma.`);
     } else if (type === 'marketplace') {
       setNewTitle('Asistencia para vincular tienda Shopify y Mercado Libre');
       setNewCategory('MARKETPLACE');
@@ -299,7 +299,7 @@ export default function TicketsPage() {
                 </span>
               </div>
               <p className="text-xs text-[#8e95a5] mt-1 max-w-2xl leading-relaxed font-mono-code">
-                ¿Tu cuenta está en espera de aprobación? Crea un ticket solicitando la activación y el Super Administrador <strong className="text-white">CristAdmin</strong> asignará tu plan para operar de inmediato.
+                ¿Tu cuenta está en espera de aprobación? Crea un ticket solicitando la activación y el <strong className="text-white">equipo de soporte</strong> asignará tu plan para operar de inmediato.
               </p>
             </div>
           </div>
@@ -634,7 +634,7 @@ export default function TicketsPage() {
 
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-slate-400 dark:text-[#8e95a5] font-mono-code">
-                  {isSuperAdmin ? 'MODO: SUPER ADMIN' : 'CANAL: SOPORTE DIRECTO'}
+                  {isSuperAdmin ? 'Perfil: Administrador' : 'Canal: Soporte'}
                 </span>
                 <button
                   type="submit"

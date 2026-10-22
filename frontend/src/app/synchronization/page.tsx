@@ -272,7 +272,7 @@ export default function SynchronizationPage() {
               onClick={() => loadQueue()}
               className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#00ff66] hover:bg-[#00e65c] text-black font-bold font-mono-code text-xs shadow-hard border border-[#00ff66] transition-colors cursor-pointer"
             >
-              <RefreshCw size={13} className={loading ? "animate-spin" : ""} /> REFRESCAR COLA SAGA
+              <RefreshCw size={13} className={loading ? "animate-spin" : ""} /> ACTUALIZAR COLA
             </button>
           </div>
         </div>
@@ -283,7 +283,7 @@ export default function SynchronizationPage() {
               <ActivityTimeline venta={selectedVenta} />
 
               <div className="bg-white dark:bg-[#0d0e12] p-5 border border-slate-200 dark:border-[#20242c] shadow-hard transition-colors">
-                <h3 className="font-bold font-mono-code text-xs uppercase tracking-wider text-slate-800 dark:text-white mb-5">Flujo Saga: Transacciones entre Canales</h3>
+                <h3 className="font-bold font-mono-code text-xs uppercase tracking-wider text-slate-800 dark:text-white mb-5">Flujo de Sincronización entre Canales</h3>
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 font-mono-code">
                   <div className="flex flex-col items-center gap-2 p-3 border border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#14171e] w-full sm:w-28 text-center shadow-hard">
                     <span className={`px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider border ${
@@ -334,7 +334,7 @@ export default function SynchronizationPage() {
               <Layers size={36} className="text-slate-400 dark:text-[#20242c] mb-3" />
               <h3 className="font-bold text-sm uppercase text-slate-700 dark:text-slate-200">Ninguna Transacción Seleccionada</h3>
               <p className="text-xs text-slate-400 dark:text-[#8e95a5] max-w-sm mt-1 leading-relaxed">
-                Selecciona una transacción activa de la cola para auditar el flujo Saga en tiempo real.
+                Selecciona una transacción activa de la cola para auditar el flujo en tiempo real.
               </p>
             </div>
           )}
