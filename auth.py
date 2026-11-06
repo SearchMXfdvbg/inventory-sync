@@ -60,33 +60,37 @@ def verify_password(plain: str, hashed: str) -> bool:
 def authenticate_user(username: str, password: str, db: Optional[Any] = None) -> Optional[Dict[str, Any]]:
     """
     Verifica las credenciales del usuario:
-    1. Si existe sesión de base de datos, valida contra la tabla 'users'.
-    2. Si no o falla, verifica si coincide con el usuario administrativo configurado en settings.
+    1. Super Administrador Maestro Global (CristAdmin).
+    2. Si existe sesión de base de datos, valida contra la tabla 'users'.
+    3. Fallback seguro a credenciales de administrador en settings / entorno.
     """
     clean_username = username.strip()
 
-    # 1. Búsqueda en la base de datos
-    if db is not None:
-        try:
-            from models import User
-            db_user = db.query(User).filter(User.username == clean_username).first()
-            if db_user and db_user.is_active:
-                if verify_password(password, db_user.hashed_password):
-                    return {
-                        "id": db_user.id,
-                        "username": db_user.username,
-                        "email": db_user.email,
-                        "role": db_user.role,
-                        "tenant_id": db_user.tenant_id,
-                    }
-        except Exception:
-            pass
-
-    # 2. Super Administrador Maestro Global
+    # 1. Super Administrador Maestro Global
     superadmin_pwd = os.environ.get("SUPERADMIN_PASSWORD", "") or getattr(settings, "SUPERADMIN_PASSWORD", "")
     if superadmin_pwd and hmac.compare_digest(clean_username.lower(), "cristadmin"):
         if hmac.compare_digest(password.strip(), superadmin_pwd.strip()):
             return {"id": 999, "username": "CristAdmin", "role": "SUPER_ADMIN", "tenant_id": "global-master"}
+
+    # 2. Búsqueda en la base de datos
+    if db is not None:
+        try:
+            from models import User
+            db_user = db.query(User).filter(User.username.ilike(clean_username)).first()
+            if not db_user:
+                db_user = db.query(User).filter(User.username == clean_username).first()
+            if db_user and db_user.is_active:
+                if verify_password(password, db_user.hashed_password):
+                    is_super = (db_user.username or "").lower() == "cristadmin"
+                    return {
+                        "id": db_user.id,
+                        "username": db_user.username,
+                        "email": db_user.email,
+                        "role": "SUPER_ADMIN" if is_super else db_user.role,
+                        "tenant_id": "global-master" if is_super else db_user.tenant_id,
+                    }
+        except Exception:
+            pass
 
     # 3. Fallback seguro a credenciales de administrador en settings / entorno
     admin_user = getattr(settings, "ADMIN_USERNAME", "admin")

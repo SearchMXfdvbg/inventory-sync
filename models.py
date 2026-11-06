@@ -6,7 +6,7 @@ class Venta(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     external_id = Column(String(100), nullable=False)
-    origen = Column(String(50), nullable=False)  # e.g., 'shopify', 'mercadolibre', 'tiktok', 'amazon', 'ebay', 'kaufland'
+    origen = Column(String(50), nullable=False)  # e.g., 'shopify', 'mercadolibre', 'tiktok', 'amazon', 'ebay', 'kaufland', 'tiendanube'
     sku = Column(String(100), nullable=False)
     cantidad = Column(Integer, nullable=False)
     status = Column(String(50), nullable=False, default="PENDING")  # PENDING, PROCESSING, PROCESSED, FAILED_RETRYABLE, FAILED_DLQ, QUEUED_MAINTENANCE
@@ -17,6 +17,7 @@ class Venta(Base):
     amazon_synced = Column(Boolean, nullable=False, default=False)
     ebay_synced = Column(Boolean, nullable=False, default=False)
     kaufland_synced = Column(Boolean, nullable=False, default=False)
+    tiendanube_synced = Column(Boolean, nullable=False, default=False)
     user_id = Column(Integer, index=True, nullable=True, default=1)
     idempotency_key = Column(String(255), index=True, nullable=True)
     attempts = Column(Integer, nullable=False, default=0)
@@ -74,6 +75,7 @@ class TenantSettings(Base):
     enable_amazon = Column(Boolean, nullable=False, default=False)
     enable_ebay = Column(Boolean, nullable=False, default=False)
     enable_kaufland = Column(Boolean, nullable=False, default=False)
+    enable_tiendanube = Column(Boolean, nullable=False, default=False)
 
     shop_domain = Column(String(255), nullable=False, default="")
     shopify_access_token = Column(String(255), nullable=False, default="")
@@ -111,6 +113,12 @@ class TenantSettings(Base):
     kaufland_secret_key = Column(String(255), nullable=False, default="")
     kaufland_storefront = Column(String(50), nullable=False, default="de")
 
+    tiendanube_store_id = Column(String(100), nullable=False, default="")
+    tiendanube_access_token = Column(String(255), nullable=False, default="")
+    tiendanube_client_id = Column(String(100), nullable=False, default="")
+    tiendanube_client_secret = Column(String(255), nullable=False, default="")
+    tiendanube_webhook_secret = Column(String(255), nullable=False, default="")
+
     sae_data_path = Column(String(255), nullable=False, default="data/productos.json")
     sae_repository_type = Column(String(50), nullable=False, default="mock")
 
@@ -136,6 +144,7 @@ class TenantProduct(Base):
     amazon_asin = Column(String(255), nullable=True, default="")
     ebay_item_id = Column(String(255), nullable=True, default="")
     kaufland_unit_id = Column(String(255), nullable=True, default="")
+    tiendanube_variant_id = Column(String(255), nullable=True, default="")
 
     created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())

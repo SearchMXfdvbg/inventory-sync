@@ -95,6 +95,7 @@ export default function SalesPage() {
             <option value="all">TODOS LOS CANALES</option>
             <option value="shopify">Shopify</option>
             <option value="mercadolibre">Mercado Libre</option>
+            <option value="tiendanube">Tiendanube</option>
             <option value="tiktok">TikTok Shop</option>
             <option value="amazon">Amazon</option>
           </select>
@@ -158,11 +159,17 @@ export default function SalesPage() {
                       <span className={`inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider font-mono-code border ${
                         sale.origen === 'shopify' ? 'bg-[#00ff66]/10 text-[#00ff66] border-[#00ff66]/30' :
                         sale.origen === 'mercadolibre' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
+                        sale.origen === 'tiendanube' ? 'bg-[#0050C3]/10 text-[#3884ff] border-[#0050C3]/30' :
                         sale.origen === 'tiktok' ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' :
                         sale.origen === 'amazon' ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' :
                         'bg-blue-500/10 text-blue-400 border-blue-500/30'
                       }`}>
-                        {sale.origen}
+                        {sale.origen === 'tiendanube' ? 'Tiendanube' :
+                         sale.origen === 'mercadolibre' ? 'Mercado Libre' :
+                         sale.origen === 'shopify' ? 'Shopify' :
+                         sale.origen === 'tiktok' ? 'TikTok' :
+                         sale.origen === 'amazon' ? 'Amazon' :
+                         sale.origen}
                       </span>
                     </td>
                     <td className="py-3 px-4 font-mono-code font-bold text-slate-700 dark:text-slate-200">{sale.external_id}</td>

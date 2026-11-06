@@ -287,7 +287,9 @@ export default function SynchronizationPage() {
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 font-mono-code">
                   <div className="flex flex-col items-center gap-2 p-3 border border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#14171e] w-full sm:w-28 text-center shadow-hard">
                     <span className={`px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider border ${
-                      selectedVenta.origen === 'shopify' ? 'bg-[#00ff66]/10 text-[#00ff66] border-[#00ff66]/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                      selectedVenta.origen === 'shopify' ? 'bg-[#00ff66]/10 text-[#00ff66] border-[#00ff66]/30' :
+                      selectedVenta.origen === 'tiendanube' ? 'bg-[#0050C3]/10 text-[#3884ff] border-[#0050C3]/30' :
+                      'bg-amber-500/10 text-amber-400 border-amber-500/30'
                     }`}>
                       {selectedVenta.origen}
                     </span>
@@ -324,6 +326,17 @@ export default function SynchronizationPage() {
                       : selectedVenta.status === 'PROCESSING' && selectedVenta.shopify_synced ? 'border-blue-400 bg-blue-950/20 animate-pulse' : 'border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#14171e]'
                   }`}>
                     <span className="text-[8px] font-bold text-slate-400 dark:text-[#8e95a5] uppercase tracking-wider">Mercado Libre</span>
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">Sincronizado</span>
+                  </div>
+
+                  <ArrowRight size={18} className="text-slate-400 dark:text-[#8e95a5] hidden sm:block" />
+
+                  <div className={`flex flex-col items-center gap-2 p-3 border w-full sm:w-28 text-center transition-all ${
+                    selectedVenta.tiendanube_synced 
+                      ? 'border-[#0050C3]/60 bg-[#0050C3]/10 text-[#3884ff] shadow-hard' 
+                      : selectedVenta.status === 'PROCESSING' && selectedVenta.ml_synced ? 'border-blue-400 bg-blue-950/20 animate-pulse' : 'border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#14171e]'
+                  }`}>
+                    <span className="text-[8px] font-bold text-slate-400 dark:text-[#8e95a5] uppercase tracking-wider">Tiendanube</span>
                     <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">Sincronizado</span>
                   </div>
                 </div>

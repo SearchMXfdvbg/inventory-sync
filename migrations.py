@@ -23,6 +23,7 @@ TENANT_PRODUCT_COLUMNS = {
     "last_sync_source": "VARCHAR(50) DEFAULT ''",
     "ebay_item_id": "VARCHAR(255) DEFAULT ''",
     "kaufland_unit_id": "VARCHAR(255) DEFAULT ''",
+    "tiendanube_variant_id": "VARCHAR(255) DEFAULT ''",
 }
 
 TENANT_SETTINGS_COLUMNS = {
@@ -40,6 +41,12 @@ TENANT_SETTINGS_COLUMNS = {
     "kaufland_client_key": "VARCHAR(255) DEFAULT ''",
     "kaufland_secret_key": "VARCHAR(255) DEFAULT ''",
     "kaufland_storefront": "VARCHAR(50) DEFAULT 'de'",
+    "enable_tiendanube": "BOOLEAN DEFAULT FALSE NOT NULL",
+    "tiendanube_store_id": "VARCHAR(100) DEFAULT ''",
+    "tiendanube_access_token": "VARCHAR(255) DEFAULT ''",
+    "tiendanube_client_id": "VARCHAR(100) DEFAULT ''",
+    "tiendanube_client_secret": "VARCHAR(255) DEFAULT ''",
+    "tiendanube_webhook_secret": "VARCHAR(255) DEFAULT ''",
 }
 
 VENTA_COLUMNS = {
@@ -47,6 +54,7 @@ VENTA_COLUMNS = {
     "amazon_synced": "BOOLEAN DEFAULT FALSE NOT NULL",
     "ebay_synced": "BOOLEAN DEFAULT FALSE NOT NULL",
     "kaufland_synced": "BOOLEAN DEFAULT FALSE NOT NULL",
+    "tiendanube_synced": "BOOLEAN DEFAULT FALSE NOT NULL",
     "user_id": "INTEGER DEFAULT 1",
     "idempotency_key": "VARCHAR(255) DEFAULT ''",
 }
@@ -62,6 +70,7 @@ def upgrade_db(engine) -> Dict[str, Any]:
     Crea tablas faltantes y añade columnas sin interrumpir el servicio.
     """
     logger.info("[MIGRATION:UP] Iniciando actualización de base de datos...")
+    import models  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
     url_str = str(engine.url)
@@ -93,19 +102,21 @@ def upgrade_db(engine) -> Dict[str, Any]:
 
     else:
         # PostgreSQL / Neon
-        with engine.connect() as conn:
-            tables_to_migrate = [
-                ("inventory_audit_logs", AUDIT_LOG_COLUMNS),
-                ("tenant_products", TENANT_PRODUCT_COLUMNS),
-                ("tenant_settings", TENANT_SETTINGS_COLUMNS),
-                ("ventas", VENTA_COLUMNS),
-                ("users", USER_COLUMNS),
-            ]
-            for table_name, cols in tables_to_migrate:
-                for col_name, col_def in cols.items():
-                    conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {col_name} {col_def};"))
+        tables_to_migrate = [
+            ("inventory_audit_logs", AUDIT_LOG_COLUMNS),
+            ("tenant_products", TENANT_PRODUCT_COLUMNS),
+            ("tenant_settings", TENANT_SETTINGS_COLUMNS),
+            ("ventas", VENTA_COLUMNS),
+            ("users", USER_COLUMNS),
+        ]
+        for table_name, cols in tables_to_migrate:
+            for col_name, col_def in cols.items():
+                try:
+                    with engine.begin() as conn:
+                        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {col_name} {col_def};"))
                     applied.append(f"{table_name}.{col_name}")
-            conn.commit()
+                except Exception as err:
+                    logger.warning(f"[MIGRATION:UP] No se pudo verificar/añadir columna {table_name}.{col_name} en PostgreSQL: {err}")
 
     logger.info(f"[MIGRATION:UP] Migraciones aplicadas exitosamente ({len(applied)} columnas verificadas/añadidas).")
     return {"status": "success", "applied_columns": applied}
@@ -121,9 +132,9 @@ def downgrade_db(engine) -> Dict[str, Any]:
 
     rollback_targets = [
         ("inventory_audit_logs", ["reason", "ip_address", "user_agent"]),
-        ("tenant_products", ["sync_hash", "last_sync_source", "ebay_item_id", "kaufland_unit_id"]),
-        ("tenant_settings", ["enable_ebay", "enable_kaufland", "ebay_client_id", "ebay_client_secret", "ebay_refresh_token", "kaufland_client_key", "kaufland_secret_key"]),
-        ("ventas", ["ebay_synced", "kaufland_synced"]),
+        ("tenant_products", ["sync_hash", "last_sync_source", "ebay_item_id", "kaufland_unit_id", "tiendanube_variant_id"]),
+        ("tenant_settings", ["enable_ebay", "enable_kaufland", "ebay_client_id", "ebay_client_secret", "ebay_refresh_token", "kaufland_client_key", "kaufland_secret_key", "enable_tiendanube", "tiendanube_store_id", "tiendanube_access_token", "tiendanube_client_id", "tiendanube_client_secret", "tiendanube_webhook_secret"]),
+        ("ventas", ["ebay_synced", "kaufland_synced", "tiendanube_synced"]),
     ]
 
     if "sqlite" in url_str:

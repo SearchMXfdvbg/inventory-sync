@@ -41,7 +41,8 @@ import {
   syncAllProductsToChannels,
   updateProductStock,
   syncInventoryFromShopify,
-  syncInventoryFromMercadoLibre
+  syncInventoryFromMercadoLibre,
+  syncInventoryFromTiendanube
 } from '@/lib/api';
 import FilterBar, { FilterBarCounts } from '@/components/FilterBar';
 import StatusBadge from '@/components/StatusBadge';
@@ -124,7 +125,8 @@ export default function InventoryPage() {
             ...p,
             stock: parsed,
             shopify_stock: shopifyConnected ? parsed : p.shopify_stock,
-            ml_stock: mlConnected ? parsed : p.ml_stock
+            ml_stock: mlConnected ? parsed : p.ml_stock,
+            tiendanube_stock: tiendanubeConnected ? parsed : p.tiendanube_stock
           };
         }
         return p;
@@ -160,6 +162,21 @@ export default function InventoryPage() {
 
   const [syncingML, setSyncingML] = useState(false);
   const [syncingShopify, setSyncingShopify] = useState(false);
+  const [syncingTiendanube, setSyncingTiendanube] = useState(false);
+
+  const handleSyncFromTiendanube = async () => {
+    setSyncingTiendanube(true);
+    try {
+      showToast('success', 'Sincronizando inventario desde Tiendanube...');
+      const res = await syncInventoryFromTiendanube();
+      showToast('success', res.message || 'Inventario de Tiendanube sincronizado.');
+      await fetchInventoryData();
+    } catch (err: any) {
+      showToast('error', `Error sincronizando desde Tiendanube: ${err.message || err}`);
+    } finally {
+      setSyncingTiendanube(false);
+    }
+  };
 
   const handleSyncFromML = async () => {
     setSyncingML(true);
@@ -226,12 +243,14 @@ export default function InventoryPage() {
   const ebayConnected = useMemo(() => isChannelConfigured('ebay', settings), [settings]);
   const kauflandConnected = useMemo(() => isChannelConfigured('kaufland', settings), [settings]);
   const mlConnected = useMemo(() => isChannelConfigured('mercadolibre', settings), [settings]);
+  const tiendanubeConnected = useMemo(() => isChannelConfigured('tiendanube', settings), [settings]);
   const tiktokConnected = useMemo(() => isChannelConfigured('tiktok', settings), [settings]);
   const saeConnected = useMemo(() => isChannelConfigured('sae', settings), [settings]);
 
   // Canales activos / habilitados en la empresa (solo mostrar en la tabla si están seleccionados o conectados)
   const showShopify = useMemo(() => settings ? Boolean(settings.ENABLE_SHOPIFY || shopifyConnected) : true, [settings, shopifyConnected]);
   const showML = useMemo(() => settings ? Boolean(settings.ENABLE_MERCADOLIBRE || mlConnected) : true, [settings, mlConnected]);
+  const showTiendanube = useMemo(() => settings ? Boolean(settings.ENABLE_TIENDANUBE || tiendanubeConnected) : false, [settings, tiendanubeConnected]);
   const showAmazon = useMemo(() => settings ? Boolean(settings.ENABLE_AMAZON || amazonConnected) : false, [settings, amazonConnected]);
   const showEbay = useMemo(() => settings ? Boolean(settings.ENABLE_EBAY || ebayConnected) : false, [settings, ebayConnected]);
   const showKaufland = useMemo(() => settings ? Boolean(settings.ENABLE_KAUFLAND || kauflandConnected) : false, [settings, kauflandConnected]);
@@ -239,8 +258,8 @@ export default function InventoryPage() {
   const showSae = useMemo(() => settings ? Boolean(settings.ENABLE_SAE || saeConnected) : false, [settings, saeConnected]);
 
   const activeChannelsCount = useMemo(() => {
-    return [showShopify && shopifyConnected, showAmazon && amazonConnected, showEbay && ebayConnected, showKaufland && kauflandConnected, showML && mlConnected, showTiktok && tiktokConnected, showSae && saeConnected].filter(Boolean).length;
-  }, [showShopify, shopifyConnected, showAmazon, amazonConnected, showEbay, ebayConnected, showKaufland, kauflandConnected, showML, mlConnected, showTiktok, tiktokConnected, showSae, saeConnected]);
+    return [showShopify && shopifyConnected, showAmazon && amazonConnected, showEbay && ebayConnected, showKaufland && kauflandConnected, showML && mlConnected, showTiendanube && tiendanubeConnected, showTiktok && tiktokConnected, showSae && saeConnected].filter(Boolean).length;
+  }, [showShopify, shopifyConnected, showAmazon, amazonConnected, showEbay, ebayConnected, showKaufland, kauflandConnected, showML, mlConnected, showTiendanube, tiendanubeConnected, showTiktok, tiktokConnected, showSae, saeConnected]);
 
   // Extraer categorías y marcas únicas del catálogo para los filtros
   const categories = useMemo(() => {
@@ -582,6 +601,18 @@ export default function InventoryPage() {
             </button>
           )}
 
+          {showTiendanube && (
+            <button
+              onClick={handleSyncFromTiendanube}
+              disabled={syncingTiendanube}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold font-mono uppercase text-[#0050C3] dark:text-[#3884ff] bg-[#0050C3]/10 border border-[#0050C3]/40 hover:bg-[#0050C3]/20 transition-colors cursor-pointer disabled:opacity-50"
+              title="Sincronizar inventario desde Tiendanube"
+            >
+              {syncingTiendanube ? <Loader2 size={13} className="animate-spin text-[#0050C3]" /> : <Store size={13} className="text-[#0050C3]" />}
+              <span>{syncingTiendanube ? 'SINCRONIZANDO...' : 'SYNC TIENDANUBE'}</span>
+            </button>
+          )}
+
           <button
             onClick={handleStartBulkSync}
             disabled={isBulkSyncing || products.length === 0}
@@ -669,6 +700,15 @@ export default function InventoryPage() {
                     <div className="flex items-center gap-1.5">
                       <span>Mercado Libre</span>
                       <span className={`w-1.5 h-1.5 ${mlConnected ? 'bg-[#00ff66]' : 'bg-[#20242c]'}`} title={mlConnected ? 'Conectado' : 'Sin configurar'} />
+                    </div>
+                  </th>
+                )}
+
+                {showTiendanube && (
+                  <th className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <span>Tiendanube</span>
+                      <span className={`w-1.5 h-1.5 ${tiendanubeConnected ? 'bg-[#0050C3]' : 'bg-[#20242c]'}`} title={tiendanubeConnected ? 'Conectado' : 'Sin configurar'} />
                     </div>
                   </th>
                 )}
@@ -881,6 +921,17 @@ export default function InventoryPage() {
                         <td className="px-4 py-3 text-xs font-mono">
                           {mlConnected ? (
                             <span className="font-bold text-slate-800 dark:text-slate-200">{p.ml_stock ?? p.stock}</span>
+                          ) : (
+                            <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
+                          )}
+                        </td>
+                      )}
+
+                      {/* Tiendanube */}
+                      {showTiendanube && (
+                        <td className="px-4 py-3 text-xs font-mono">
+                          {tiendanubeConnected ? (
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{p.tiendanube_stock ?? p.stock}</span>
                           ) : (
                             <span className="text-slate-400 dark:text-[#8e95a5]/50 text-[11px]">—</span>
                           )}

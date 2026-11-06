@@ -21,6 +21,7 @@ class VentaUpdate(BaseModel):
     sae_decremented: Optional[bool] = None
     shopify_synced: Optional[bool] = None
     ml_synced: Optional[bool] = None
+    tiendanube_synced: Optional[bool] = None
     attempts: Optional[int] = None
     last_error: Optional[str] = None
     processed_at: Optional[datetime] = None
@@ -32,6 +33,11 @@ class VentaResponse(VentaBase):
     sae_decremented: bool
     shopify_synced: bool
     ml_synced: bool
+    tiktok_synced: Optional[bool] = False
+    amazon_synced: Optional[bool] = False
+    ebay_synced: Optional[bool] = False
+    kaufland_synced: Optional[bool] = False
+    tiendanube_synced: Optional[bool] = False
     attempts: int
     last_error: Optional[str] = None
     created_at: datetime
@@ -93,6 +99,7 @@ class SettingsUpdate(BaseModel):
     ENABLE_AMAZON: Optional[bool] = None
     ENABLE_EBAY: Optional[bool] = None
     ENABLE_KAUFLAND: Optional[bool] = None
+    ENABLE_TIENDANUBE: Optional[bool] = None
 
     # TikTok Shop
     TIKTOK_APP_KEY: Optional[str] = None
@@ -100,6 +107,13 @@ class SettingsUpdate(BaseModel):
     TIKTOK_ACCESS_TOKEN: Optional[str] = None
     TIKTOK_SHOP_ID: Optional[str] = None
     TIKTOK_SHOP_CIPHER: Optional[str] = None
+
+    # Tiendanube
+    TIENDANUBE_STORE_ID: Optional[str] = None
+    TIENDANUBE_ACCESS_TOKEN: Optional[str] = None
+    TIENDANUBE_CLIENT_ID: Optional[str] = None
+    TIENDANUBE_CLIENT_SECRET: Optional[str] = None
+    TIENDANUBE_WEBHOOK_SECRET: Optional[str] = None
 
     # Amazon SP-API
     AMAZON_SELLER_ID: Optional[str] = None
@@ -171,6 +185,7 @@ class SettingsResponse(BaseModel):
     ENABLE_AMAZON: bool = True
     ENABLE_EBAY: bool = True
     ENABLE_KAUFLAND: bool = True
+    ENABLE_TIENDANUBE: bool = True
 
     # TikTok Shop
     TIKTOK_APP_KEY: str = ""
@@ -178,6 +193,13 @@ class SettingsResponse(BaseModel):
     TIKTOK_ACCESS_TOKEN: str = ""
     TIKTOK_SHOP_ID: str = ""
     TIKTOK_SHOP_CIPHER: str = ""
+
+    # Tiendanube
+    TIENDANUBE_STORE_ID: str = ""
+    TIENDANUBE_ACCESS_TOKEN: str = ""
+    TIENDANUBE_CLIENT_ID: str = ""
+    TIENDANUBE_CLIENT_SECRET: str = ""
+    TIENDANUBE_WEBHOOK_SECRET: str = ""
 
     # Amazon SP-API
     AMAZON_SELLER_ID: str = ""
@@ -216,6 +238,9 @@ class SettingsResponse(BaseModel):
         "EBAY_CLIENT_SECRET",
         "EBAY_REFRESH_TOKEN",
         "KAUFLAND_SECRET_KEY",
+        "TIENDANUBE_ACCESS_TOKEN",
+        "TIENDANUBE_CLIENT_SECRET",
+        "TIENDANUBE_WEBHOOK_SECRET",
         mode="before"
     )
     @classmethod
@@ -343,6 +368,12 @@ class ShopifyOAuthExchangeRequest(BaseModel):
     code: str
     state: Optional[str] = None
     redirect_uri: Optional[str] = "https://inventory-sync-rouge.vercel.app/settings/integrations"
+
+
+class TiendanubeOAuthExchangeRequest(BaseModel):
+    code: str = Field(..., description="Código de autorización devuelto por Tiendanube")
+    client_id: Optional[str] = Field(None, description="Client ID de Tiendanube opcional")
+    client_secret: Optional[str] = Field(None, description="Client Secret de Tiendanube opcional")
 
 
 # Audit Logs Schema

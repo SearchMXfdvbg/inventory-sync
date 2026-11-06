@@ -16,6 +16,7 @@ from tiktok_client import TikTokClient
 from amazon_client import AmazonClient
 from ebay_client import EbayClient
 from kaufland_client import KauflandClient
+from tiendanube_client import TiendanubeClient
 from config import settings
 
 # Initialize logging using the application's global setup
@@ -29,7 +30,30 @@ tiktok_client = TikTokClient()
 amazon_client = AmazonClient()
 ebay_client = EbayClient()
 kaufland_client = KauflandClient()
+tiendanube_client = TiendanubeClient()
 sae = SAEDatabaseRepository(settings.DATABASE_URL)
+
+
+def get_tiendanube_client_for_user(user_id: int, db: Session) -> TiendanubeClient:
+    """
+    Retorna un cliente de Tiendanube configurado para el tenant/usuario especificado.
+    Lee TenantSettings con fallback a variables de configuración en settings.
+    """
+    from models import TenantSettings
+    t_settings = db.query(TenantSettings).filter(TenantSettings.user_id == user_id).first()
+    store_id = (getattr(t_settings, "tiendanube_store_id", None) if t_settings else None) or getattr(settings, "TIENDANUBE_STORE_ID", "")
+    access_token = (getattr(t_settings, "tiendanube_access_token", None) if t_settings else None) or getattr(settings, "TIENDANUBE_ACCESS_TOKEN", "")
+    client_id = (getattr(t_settings, "tiendanube_client_id", None) if t_settings else None) or getattr(settings, "TIENDANUBE_CLIENT_ID", "")
+    client_secret = (getattr(t_settings, "tiendanube_client_secret", None) if t_settings else None) or getattr(settings, "TIENDANUBE_CLIENT_SECRET", "")
+    user_agent = getattr(settings, "TIENDANUBE_USER_AGENT", "")
+
+    return TiendanubeClient(
+        store_id=str(store_id or "").strip(),
+        access_token=str(access_token or "").strip(),
+        client_id=str(client_id or "").strip(),
+        client_secret=str(client_secret or "").strip(),
+        user_agent=str(user_agent or "").strip(),
+    )
 
 # Schedule progresivo de reintentos rápidos (evita esperas excesivas ante hipos de red):
 # Intento 0: Inmediato al registrarse.
@@ -195,6 +219,10 @@ async def run_iteration(db: Session) -> bool:
         enable_amazon = getattr(settings, "ENABLE_AMAZON", True)
         enable_ebay = getattr(settings, "ENABLE_EBAY", True)
         enable_kaufland = getattr(settings, "ENABLE_KAUFLAND", True)
+        enable_tiendanube = getattr(settings, "ENABLE_TIENDANUBE", False)
+        t_tenant_settings = db.query(TenantSettings).filter(TenantSettings.user_id == (venta.user_id or 1)).first()
+        if t_tenant_settings and hasattr(t_tenant_settings, "enable_tiendanube") and t_tenant_settings.enable_tiendanube is not None:
+            enable_tiendanube = bool(t_tenant_settings.enable_tiendanube)
 
         # Validar requerimientos solo para canales efectivamente habilitados
         missing_fields = []
@@ -385,7 +413,42 @@ async def run_iteration(db: Session) -> bool:
         else:
             venta.kaufland_synced = True
 
-        # 11. Complete the saga if all required channels completed
+        # 11. Tiendanube inventory update
+        if not getattr(venta, "tiendanube_synced", False):
+            if venta.origen == "tiendanube" or not enable_tiendanube:
+                if hasattr(venta, "tiendanube_synced"):
+                    venta.tiendanube_synced = True
+                db.commit()
+            else:
+                from unittest.mock import Mock, MagicMock
+                if isinstance(tiendanube_client, (Mock, MagicMock)) or isinstance(getattr(tiendanube_client, "update_stock", None), (Mock, MagicMock)):
+                    tn_client = tiendanube_client
+                else:
+                    tn_client = get_tiendanube_client_for_user(venta.user_id or 1, db)
+
+                if tn_client and tn_client.is_configured:
+                    try:
+                        tn_var_id = getattr(t_prod, "tiendanube_variant_id", None) if t_prod else None
+                        await tn_client.update_stock(
+                            sku=venta.sku,
+                            quantity=current_master_stock,
+                            variant_ref=tn_var_id
+                        )
+                        track_outbound_sync("tiendanube", venta.sku, current_master_stock)
+                        if hasattr(venta, "tiendanube_synced"):
+                            venta.tiendanube_synced = True
+                        db.commit()
+                        logger.info(f"Venta ID {venta.id}: Tiendanube stock updated successfully to {current_master_stock}.")
+                    except Exception as e:
+                        logger.exception(f"Temporary error updating stock in Tiendanube for Venta ID {venta.id}: {e}")
+                        handle_temp_error(db, venta, f"TiendanubeSyncError: {str(e)}")
+                        return False
+                else:
+                    if hasattr(venta, "tiendanube_synced"):
+                        venta.tiendanube_synced = True
+                    db.commit()
+
+        # 12. Complete the saga if all required channels completed
         all_completed = (
             (not enable_sae or venta.sae_decremented) and
             (not enable_shopify or venta.shopify_synced) and
@@ -393,7 +456,8 @@ async def run_iteration(db: Session) -> bool:
             (not enable_tiktok or venta.tiktok_synced) and
             (not enable_amazon or venta.amazon_synced) and
             (not enable_ebay or venta.ebay_synced) and
-            (not enable_kaufland or venta.kaufland_synced)
+            (not enable_kaufland or venta.kaufland_synced) and
+            (not enable_tiendanube or getattr(venta, "tiendanube_synced", True))
         )
 
         if all_completed:

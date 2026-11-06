@@ -39,6 +39,9 @@ import {
   exchangeMercadoLibreCode,
   getShopifyOAuthUrl,
   exchangeShopifyCode,
+  getTiendanubeAuthUrl,
+  exchangeTiendanubeCode,
+  API_BASE_URL,
   TestConnectionResponse,
   IntegrationStatus, 
   SystemSettings 
@@ -83,6 +86,12 @@ export default function IntegrationsSettingsPage() {
     AMAZON_MARKETPLACE_ID: 'A1AM78C64UM0Y8',
     ENABLE_EBAY: true,
     ENABLE_KAUFLAND: true,
+    ENABLE_TIENDANUBE: true,
+    TIENDANUBE_STORE_ID: '',
+    TIENDANUBE_ACCESS_TOKEN: '',
+    TIENDANUBE_CLIENT_ID: '',
+    TIENDANUBE_CLIENT_SECRET: '',
+    TIENDANUBE_WEBHOOK_SECRET: '',
     EBAY_CLIENT_ID: '',
     EBAY_CLIENT_SECRET: '',
     EBAY_REFRESH_TOKEN: '',
@@ -96,7 +105,7 @@ export default function IntegrationsSettingsPage() {
   const [testingChannel, setTestingChannel] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, TestConnectionResponse>>({});
 
-  const handleTestConnection = async (channel: 'shopify' | 'mercadolibre' | 'tiktok' | 'amazon' | 'sae' | 'ebay' | 'kaufland') => {
+  const handleTestConnection = async (channel: 'shopify' | 'mercadolibre' | 'tiktok' | 'amazon' | 'sae' | 'ebay' | 'kaufland' | 'tiendanube') => {
     setTestingChannel(channel);
     try {
       let payload: Record<string, any> = {};
@@ -104,6 +113,13 @@ export default function IntegrationsSettingsPage() {
         payload = {
           shop_domain: settings.SHOP_DOMAIN,
           access_token: settings.SHOPIFY_ACCESS_TOKEN,
+        };
+      } else if (channel === 'tiendanube') {
+        payload = {
+          store_id: settings.TIENDANUBE_STORE_ID,
+          access_token: settings.TIENDANUBE_ACCESS_TOKEN,
+          client_id: settings.TIENDANUBE_CLIENT_ID,
+          client_secret: settings.TIENDANUBE_CLIENT_SECRET,
         };
       } else if (channel === 'mercadolibre') {
         payload = {
@@ -172,7 +188,7 @@ export default function IntegrationsSettingsPage() {
     }
   };
 
-  const handleDisconnect = async (channel: 'shopify' | 'mercadolibre' | 'tiktok' | 'amazon' | 'ebay' | 'kaufland') => {
+  const handleDisconnect = async (channel: 'shopify' | 'mercadolibre' | 'tiktok' | 'amazon' | 'ebay' | 'kaufland' | 'tiendanube') => {
     if (!confirm(`¿Seguro que deseas desconectar y desvincular la tienda de ${channel.toUpperCase()}?`)) {
       return;
     }
@@ -187,6 +203,15 @@ export default function IntegrationsSettingsPage() {
           SHOPIFY_ACCESS_TOKEN: '',
           SHOPIFY_LOCATION_ID: '',
           SHOPIFY_API_SECRET: ''
+        }));
+      } else if (channel === 'tiendanube') {
+        setSettings(prev => ({
+          ...prev,
+          TIENDANUBE_STORE_ID: '',
+          TIENDANUBE_ACCESS_TOKEN: '',
+          TIENDANUBE_CLIENT_ID: '',
+          TIENDANUBE_CLIENT_SECRET: '',
+          TIENDANUBE_WEBHOOK_SECRET: ''
         }));
       } else if (channel === 'mercadolibre') {
         setSettings(prev => ({
@@ -262,6 +287,7 @@ export default function IntegrationsSettingsPage() {
         ENABLE_AMAZON: settingsRes.ENABLE_AMAZON ?? true,
         ENABLE_EBAY: settingsRes.ENABLE_EBAY ?? true,
         ENABLE_KAUFLAND: settingsRes.ENABLE_KAUFLAND ?? true,
+        ENABLE_TIENDANUBE: settingsRes.ENABLE_TIENDANUBE ?? true,
       }));
     } catch (error) {
       console.error('Error al obtener datos de integraciones', error);
@@ -278,9 +304,11 @@ export default function IntegrationsSettingsPage() {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       const shop = urlParams.get('shop');
+      const oauthProvider = sessionStorage.getItem('oauth_provider');
 
       if (code && shop) {
         setConnectingOAuth(true);
+        sessionStorage.removeItem('oauth_provider');
         window.history.replaceState({}, document.title, window.location.pathname);
         showToast('Procesando autorización oficial de Shopify...', 'success');
         exchangeShopifyCode({ shop, code })
@@ -295,8 +323,26 @@ export default function IntegrationsSettingsPage() {
           .finally(() => {
             setConnectingOAuth(false);
           });
+      } else if (code && (oauthProvider === 'tiendanube' || urlParams.get('source') === 'tiendanube')) {
+        setConnectingOAuth(true);
+        sessionStorage.removeItem('oauth_provider');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        showToast('Procesando autorización oficial de Tiendanube...', 'success');
+        exchangeTiendanubeCode({ code })
+          .then(async (res) => {
+            showToast(res.message || '¡Tiendanube conectada exitosamente!', 'success');
+            await fetchData();
+          })
+          .catch((err) => {
+            console.error('Error intercambiando código OAuth Tiendanube:', err);
+            showToast(err.message || 'Error al completar la vinculación con Tiendanube', 'error');
+          })
+          .finally(() => {
+            setConnectingOAuth(false);
+          });
       } else if (code) {
         setConnectingOAuth(true);
+        sessionStorage.removeItem('oauth_provider');
         window.history.replaceState({}, document.title, window.location.pathname);
         showToast('Procesando autorización oficial de Mercado Libre...', 'success');
         exchangeMercadoLibreCode(code)
@@ -315,9 +361,30 @@ export default function IntegrationsSettingsPage() {
     }
   }, []);
 
+  const handleConnectTiendanubeOAuth = async () => {
+    setConnectingOAuth(true);
+    try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('oauth_provider', 'tiendanube');
+      }
+      const res = await getTiendanubeAuthUrl();
+      if (res?.url) {
+        window.location.href = res.url;
+      } else {
+        throw new Error('No se pudo generar la URL de autorización');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error al iniciar vinculación con Tiendanube', 'error');
+      setConnectingOAuth(false);
+    }
+  };
+
   const handleConnectMercadoLibreOAuth = async () => {
     setConnectingOAuth(true);
     try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('oauth_provider', 'mercadolibre');
+      }
       const res = await getMercadoLibreOAuthUrl();
       if (res?.url) {
         window.location.href = res.url;
@@ -398,6 +465,7 @@ export default function IntegrationsSettingsPage() {
   const activeConnections = [];
   if (status?.active_channels?.shopify && settings.ENABLE_SHOPIFY) activeConnections.push({ name: 'Shopify', color: 'bg-emerald-500' });
   if (status?.active_channels?.mercadolibre && settings.ENABLE_MERCADOLIBRE) activeConnections.push({ name: 'Mercado Libre', color: 'bg-yellow-400' });
+  if ((status?.active_channels?.tiendanube || status?.tiendanube?.status === 'connected' || testResults['tiendanube']?.success || (settings.TIENDANUBE_STORE_ID && settings.TIENDANUBE_ACCESS_TOKEN)) && settings.ENABLE_TIENDANUBE) activeConnections.push({ name: 'Tiendanube', color: 'bg-[#0050C3]' });
   if (settings.ENABLE_AMAZON && settings.AMAZON_CLIENT_ID && settings.AMAZON_REFRESH_TOKEN) activeConnections.push({ name: 'Amazon SP-API', color: 'bg-orange-500' });
   if (settings.ENABLE_TIKTOK && settings.TIKTOK_APP_KEY) activeConnections.push({ name: 'TikTok Shop', color: 'bg-pink-500' });
   if (settings.ENABLE_EBAY && settings.EBAY_CLIENT_ID) activeConnections.push({ name: 'eBay', color: 'bg-blue-500' });
@@ -482,6 +550,7 @@ export default function IntegrationsSettingsPage() {
                 className="w-full border border-slate-300 dark:border-[#20242c] px-3.5 py-2.5 text-xs text-slate-900 dark:text-white bg-slate-50 dark:bg-[#090a0c] focus:border-[#00ff66] focus:outline-none cursor-pointer transition-colors font-mono-code font-bold"
               >
                 <option value="shopify">Shopify (Tiendas Online y Marcas Propias)</option>
+                <option value="tiendanube">Tiendanube (Nuvemshop)</option>
                 <option value="amazon">Amazon SP-API (Seller Central - México, EE.UU. y Europa)</option>
                 <option value="mercadolibre">Mercado Libre (Catálogo Central)</option>
                 <option value="ebay">eBay Alemania / Europa</option>
@@ -504,6 +573,7 @@ export default function IntegrationsSettingsPage() {
                   { key: 'ENABLE_SHOPIFY', label: 'Shopify', icon: Store },
                   { key: 'ENABLE_SAE', label: 'CONTPAQi SAE / ERP Local', icon: Database },
                   { key: 'ENABLE_MERCADOLIBRE', label: 'Mercado Libre', icon: ShoppingBag },
+                  { key: 'ENABLE_TIENDANUBE', label: 'Tiendanube (Nuvemshop)', icon: Store },
                   { key: 'ENABLE_TIKTOK', label: 'TikTok Shop', icon: Video },
                   { key: 'ENABLE_AMAZON', label: 'Amazon SP-API', icon: Globe2 },
                   { key: 'ENABLE_EBAY', label: 'eBay Alemania / Europa', icon: ShoppingBag },
@@ -805,6 +875,206 @@ export default function IntegrationsSettingsPage() {
                   }`}>
                     {testResults['mercadolibre'].success ? <Check size={14} className="shrink-0 mt-0.5" /> : <AlertCircle size={14} className="shrink-0 mt-0.5" />}
                     <span>{testResults['mercadolibre'].message}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 3. TIENDANUBE (NUVEMSHOP) */}
+          {(settings.ENABLE_TIENDANUBE ?? true) && (
+            <div className="border border-slate-200 dark:border-[#20242c] bg-white dark:bg-[#0d0e12] p-5 shadow-hard flex flex-col justify-between space-y-4">
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#20242c] mb-3">
+                  <div className="flex items-center gap-2">
+                    <Store size={16} className="text-[#0050C3] dark:text-[#3884ff]" />
+                    <h3 className="font-bold text-slate-900 dark:text-white uppercase">Tiendanube (Nuvemshop)</h3>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 border border-[#0050C3]/40 text-[#0050C3] dark:text-[#3884ff] bg-[#0050C3]/10 font-bold uppercase">
+                    {(status?.tiendanube?.status === 'connected' || testResults['tiendanube']?.success || (status?.active_channels?.tiendanube && settings.TIENDANUBE_STORE_ID)) ? 'CONECTADO' : 'DESCONECTADO'}
+                  </span>
+                </div>
+
+                {/* Banner de Estado Conectado / Desconectar Tiendanube */}
+                {((status?.tiendanube?.status === 'connected' || testResults['tiendanube']?.success || (status?.active_channels?.tiendanube && settings.TIENDANUBE_STORE_ID)) && settings.TIENDANUBE_STORE_ID) ? (
+                  <div className="mb-4 p-3 border border-[#0050C3]/40 bg-[#0050C3]/10 text-[#0050C3] dark:text-[#3884ff] flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#0050C3] dark:bg-[#3884ff] animate-pulse shrink-0" />
+                      <div className="truncate">
+                        <div className="font-bold text-[10px] uppercase tracking-wider text-[#0050C3] dark:text-[#3884ff]">
+                          CONECTADO CON LA TIENDA DE TIENDANUBE:
+                        </div>
+                        <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate">
+                          {testResults['tiendanube']?.shop_name || `STORE ID: ${settings.TIENDANUBE_STORE_ID}`}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDisconnect('tiendanube')}
+                      className="px-2.5 py-1 text-[11px] font-bold text-red-500 hover:text-white border border-red-500/40 bg-red-500/10 hover:bg-red-500 transition-colors uppercase flex items-center gap-1 shrink-0 cursor-pointer"
+                    >
+                      <Unlink size={12} />
+                      <span>DESCONECTAR</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-4 p-3 border border-[#0050C3]/40 bg-[#0050C3]/5 flex flex-col gap-2">
+                    <div className="flex items-center justify-between text-xs text-[#0050C3] dark:text-[#3884ff]">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#0050C3] dark:bg-[#3884ff]" />
+                        <span className="font-bold">Vinculación Oficial OAuth 2.0</span>
+                      </div>
+                      <span className="text-[10px] px-1.5 py-0.5 border border-[#0050C3]/30 font-bold uppercase">RECOMENDADO</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleConnectTiendanubeOAuth}
+                      disabled={connectingOAuth}
+                      className="w-full py-2.5 px-3 bg-[#0050C3] hover:bg-[#0040a0] text-white font-extrabold text-xs flex items-center justify-center gap-2 uppercase tracking-wider transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+                    >
+                      {connectingOAuth ? (
+                        <>
+                          <RefreshCw size={13} className="animate-spin text-white" />
+                          <span>CONECTANDO CON TIENDANUBE...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Link2 size={13} className="text-white" />
+                          <span>CONECTAR CON TIENDANUBE (OAUTH 2.0)</span>
+                        </>
+                      )}
+                    </button>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 text-center">
+                      Autoriza tu tienda de Tiendanube / Nuvemshop Partners en un clic sin copiar tokens manualmente.
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">
+                        Store ID (User ID de Tienda)
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.TIENDANUBE_STORE_ID || ''}
+                        onChange={(e) => handleInputChange('TIENDANUBE_STORE_ID', e.target.value)}
+                        placeholder="Ej: 1234567"
+                        className="w-full border border-slate-300 dark:border-[#20242c] px-3 py-2 bg-slate-50 dark:bg-[#090a0c] text-slate-900 dark:text-white focus:border-[#0050C3] focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">
+                        App Client ID
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.TIENDANUBE_CLIENT_ID || ''}
+                        onChange={(e) => handleInputChange('TIENDANUBE_CLIENT_ID', e.target.value)}
+                        placeholder="Ej: 1234"
+                        className="w-full border border-slate-300 dark:border-[#20242c] px-3 py-2 bg-slate-50 dark:bg-[#090a0c] text-slate-900 dark:text-white focus:border-[#0050C3] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">
+                      Access Token (Bearer API Token)
+                    </label>
+                    <input
+                      type="password"
+                      value={settings.TIENDANUBE_ACCESS_TOKEN || ''}
+                      onChange={(e) => handleInputChange('TIENDANUBE_ACCESS_TOKEN', e.target.value)}
+                      placeholder="••••••••••••••••••••••••••••••••"
+                      className="w-full border border-slate-300 dark:border-[#20242c] px-3 py-2 bg-slate-50 dark:bg-[#090a0c] text-slate-900 dark:text-white focus:border-[#0050C3] focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">
+                        Client Secret
+                      </label>
+                      <input
+                        type="password"
+                        value={settings.TIENDANUBE_CLIENT_SECRET || ''}
+                        onChange={(e) => handleInputChange('TIENDANUBE_CLIENT_SECRET', e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full border border-slate-300 dark:border-[#20242c] px-3 py-2 bg-slate-50 dark:bg-[#090a0c] text-slate-900 dark:text-white focus:border-[#0050C3] focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase mb-1">
+                        Webhook Secret (Opcional)
+                      </label>
+                      <input
+                        type="password"
+                        value={settings.TIENDANUBE_WEBHOOK_SECRET || ''}
+                        onChange={(e) => handleInputChange('TIENDANUBE_WEBHOOK_SECRET', e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full border border-slate-300 dark:border-[#20242c] px-3 py-2 bg-slate-50 dark:bg-[#090a0c] text-slate-900 dark:text-white focus:border-[#0050C3] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Webhook informativo para Partners */}
+                  <div className="p-3 border border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#14171e] space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-[#8e95a5] uppercase">
+                        URL de Webhook para Tiendanube Partners
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${API_BASE_URL}/webhook/tiendanube`);
+                          showToast('URL del webhook copiada al portapapeles', 'success');
+                        }}
+                        className="text-[10px] text-[#0050C3] dark:text-[#3884ff] hover:underline flex items-center gap-1 font-bold cursor-pointer"
+                      >
+                        <Copy size={11} />
+                        <span>COPIAR</span>
+                      </button>
+                    </div>
+                    <code className="block p-1.5 bg-black/40 text-[#3884ff] text-[10px] font-mono break-all border border-slate-700/50">
+                      {`${API_BASE_URL}/webhook/tiendanube`}
+                    </code>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      Configura esta URL en el Panel de Partners de Tiendanube &gt; Mi Aplicación &gt; Webhooks para recibir órdenes y cambios de producto en tiempo real.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 dark:border-[#20242c] space-y-2">
+                <button
+                  type="button"
+                  onClick={() => handleTestConnection('tiendanube')}
+                  disabled={testingChannel === 'tiendanube'}
+                  className="w-full py-2 border border-slate-300 dark:border-[#20242c] bg-slate-100 dark:bg-[#14171e] hover:border-[#0050C3] font-bold text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {testingChannel === 'tiendanube' ? (
+                    <>
+                      <RefreshCw size={13} className="animate-spin text-[#0050C3] dark:text-[#3884ff]" />
+                      <span>PROBANDO CONEXIÓN...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Activity size={13} className="text-[#0050C3] dark:text-[#3884ff]" />
+                      <span>PROBAR CONEXIÓN EN VIVO</span>
+                    </>
+                  )}
+                </button>
+
+                {testResults['tiendanube'] && (
+                  <div className={`p-2 border text-xs flex items-start gap-2 ${
+                    testResults['tiendanube'].success 
+                      ? 'border-[#00ff66]/40 bg-[#00ff66]/10 text-[#008f39] dark:text-[#00ff66]' 
+                      : 'border-[#ff3b00]/40 bg-[#ff3b00]/10 text-[#ff3b00]'
+                  }`}>
+                    {testResults['tiendanube'].success ? <Check size={14} className="shrink-0 mt-0.5" /> : <AlertCircle size={14} className="shrink-0 mt-0.5" />}
+                    <span>{testResults['tiendanube'].message}</span>
                   </div>
                 )}
               </div>

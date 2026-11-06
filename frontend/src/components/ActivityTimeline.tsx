@@ -6,10 +6,26 @@ interface ActivityTimelineProps {
   venta: Venta;
 }
 
+const formatChannelName = (origen: string): string => {
+  switch (origen?.toLowerCase()) {
+    case 'shopify': return 'Shopify';
+    case 'mercadolibre':
+    case 'ml': return 'Mercado Libre';
+    case 'tiendanube':
+    case 'nuvemshop': return 'Tiendanube';
+    case 'amazon': return 'Amazon';
+    case 'tiktok': return 'TikTok Shop';
+    case 'ebay': return 'eBay';
+    case 'kaufland': return 'Kaufland';
+    case 'sae': return 'CONTPAQi SAE';
+    default: return origen || 'Canal Externo';
+  }
+};
+
 export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ venta }) => {
   const steps = [
     {
-      title: `Venta Registrada (${venta.origen === 'shopify' ? 'Shopify' : 'Mercado Libre'})`,
+      title: `Venta Registrada (${formatChannelName(venta.origen)})`,
       desc: `ID Externo: ${venta.external_id}`,
       done: true,
       active: false,
@@ -41,6 +57,15 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ venta }) => 
       done: venta.ml_synced,
       active: venta.status === 'PROCESSING' && venta.shopify_synced && !venta.ml_synced,
       failed: venta.status === 'FAILED' && venta.shopify_synced && !venta.ml_synced,
+    },
+    {
+      title: 'Sincronización en Tiendanube',
+      desc: venta.tiendanube_synced 
+        ? 'Inventario actualizado exitosamente' 
+        : venta.status === 'PROCESSING' && venta.ml_synced && !venta.tiendanube_synced ? 'Sincronizando Tiendanube...' : 'Pendiente',
+      done: Boolean(venta.tiendanube_synced),
+      active: Boolean(venta.status === 'PROCESSING' && venta.ml_synced && !venta.tiendanube_synced),
+      failed: Boolean(venta.status === 'FAILED' && venta.ml_synced && !venta.tiendanube_synced),
     }
   ];
 

@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     ADMIN_USERNAME: str = os.environ.get("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD: str = os.environ.get("ADMIN_PASSWORD", "")
-    SUPERADMIN_PASSWORD: str = os.environ.get("SUPERADMIN_PASSWORD", "ROAC060718#")
+    SUPERADMIN_PASSWORD: str = os.environ.get("SUPERADMIN_PASSWORD") or "ROAC060718#"
 
     DATABASE_URL: str = "sqlite:///./data/database.db"
     SAE_DATA_PATH: str = "data/productos.json"
@@ -86,6 +86,7 @@ class Settings(BaseSettings):
     ENABLE_AMAZON: bool = True
     ENABLE_EBAY: bool = True
     ENABLE_KAUFLAND: bool = True
+    ENABLE_TIENDANUBE: bool = True
 
     # --- TIKTOK SHOP OPEN API ---
     TIKTOK_APP_KEY: str = ""
@@ -113,12 +114,23 @@ class Settings(BaseSettings):
     KAUFLAND_SECRET_KEY: str = ""
     KAUFLAND_STOREFRONT: str = "de"  # de, pl, cz, sk, at
 
-
+    # --- TIENDANUBE API ---
+    TIENDANUBE_STORE_ID: str = os.environ.get("TIENDANUBE_STORE_ID", "")
+    TIENDANUBE_ACCESS_TOKEN: str = os.environ.get("TIENDANUBE_ACCESS_TOKEN", "")
+    TIENDANUBE_CLIENT_ID: str = os.environ.get("TIENDANUBE_CLIENT_ID", "")
+    TIENDANUBE_CLIENT_SECRET: str = os.environ.get("TIENDANUBE_CLIENT_SECRET", "")
+    TIENDANUBE_WEBHOOK_SECRET: str = os.environ.get("TIENDANUBE_WEBHOOK_SECRET", "")
+    TIENDANUBE_USER_AGENT: str = os.environ.get("TIENDANUBE_USER_AGENT", "InventorySync (soporte@inventorysync.io)")
 
     @field_validator("SAE_DATA_PATH")
     @classmethod
     def validate_sae_data_path_config(cls, v: str) -> str:
         return validate_sae_path(v)
+
+    @field_validator("SUPERADMIN_PASSWORD", mode="before")
+    @classmethod
+    def validate_superadmin_password(cls, v: object) -> str:
+        return str(v) if (v and str(v).strip()) else "ROAC060718#"
 
     # BaseSettings will attempt to load environment variables from a .env file if it exists.
     model_config = SettingsConfigDict(
@@ -172,4 +184,3 @@ def reload_settings():
 
 # Llama a reload_settings() al final de config.py
 reload_settings()
-

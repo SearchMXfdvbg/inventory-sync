@@ -83,14 +83,16 @@ export default function DashboardPage() {
 
         const shopifyOk = isChannelConfigured('shopify', settData);
         const mlOk = isChannelConfigured('mercadolibre', settData);
+        const tiendanubeOk = isChannelConfigured('tiendanube', settData);
         const amazonOk = isChannelConfigured('amazon', settData);
         const ebayOk = isChannelConfigured('ebay', settData);
         const kauflandOk = isChannelConfigured('kaufland', settData);
 
         const desyncCount = prodData.filter(p => {
-          if (!shopifyOk && !mlOk && !amazonOk && !ebayOk && !kauflandOk) return false;
+          if (!shopifyOk && !mlOk && !amazonOk && !ebayOk && !kauflandOk && !tiendanubeOk) return false;
           if (shopifyOk && p.shopify_stock !== undefined && p.stock !== p.shopify_stock) return true;
           if (mlOk && p.ml_stock !== undefined && p.stock !== p.ml_stock) return true;
+          if (tiendanubeOk && p.tiendanube_stock !== undefined && p.stock !== p.tiendanube_stock) return true;
           if (amazonOk && p.amazon_stock !== undefined && p.stock !== p.amazon_stock) return true;
           if (ebayOk && p.ebay_stock !== undefined && p.stock !== p.ebay_stock) return true;
           if (kauflandOk && p.kaufland_stock !== undefined && p.stock !== p.kaufland_stock) return true;
@@ -172,12 +174,14 @@ export default function DashboardPage() {
     }
     const shopifyOk = isChannelConfigured('shopify', settings);
     const mlOk = isChannelConfigured('mercadolibre', settings);
+    const tiendanubeOk = isChannelConfigured('tiendanube', settings);
     const amazonOk = isChannelConfigured('amazon', settings);
     const ebayOk = isChannelConfigured('ebay', settings);
     const kauflandOk = isChannelConfigured('kaufland', settings);
 
     if ((shopifyOk && p.shopify_stock !== undefined && p.stock !== p.shopify_stock) ||
         (mlOk && p.ml_stock !== undefined && p.stock !== p.ml_stock) ||
+        (tiendanubeOk && p.tiendanube_stock !== undefined && p.stock !== p.tiendanube_stock) ||
         (amazonOk && p.amazon_stock !== undefined && p.stock !== p.amazon_stock) ||
         (ebayOk && p.ebay_stock !== undefined && p.stock !== p.ebay_stock) ||
         (kauflandOk && p.kaufland_stock !== undefined && p.stock !== p.kaufland_stock)) {
@@ -192,10 +196,11 @@ export default function DashboardPage() {
 
   const shopifyConnected = isChannelConfigured('shopify', settings);
   const mlConnected = isChannelConfigured('mercadolibre', settings);
+  const tiendanubeConnected = isChannelConfigured('tiendanube', settings);
   const amazonConnected = isChannelConfigured('amazon', settings);
   const ebayConnected = isChannelConfigured('ebay', settings);
   const kauflandConnected = isChannelConfigured('kaufland', settings);
-  const connectedChannelsCount = [shopifyConnected, mlConnected, amazonConnected, ebayConnected, kauflandConnected].filter(Boolean).length;
+  const connectedChannelsCount = [shopifyConnected, mlConnected, tiendanubeConnected, amazonConnected, ebayConnected, kauflandConnected].filter(Boolean).length;
 
   return (
     <div className="space-y-6 text-slate-800 dark:text-[#ededed] font-mono-code text-xs">
@@ -206,7 +211,7 @@ export default function DashboardPage() {
           <span className="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider text-[11px]">Sistema Operativo</span>
           <span className="text-slate-300 dark:text-[#3a3f4d]">|</span>
           <span className="text-slate-600 dark:text-[#8e95a5]">
-            Canales activos: <strong className="text-slate-900 dark:text-white font-medium">{connectedChannelsCount} de 5 configurados</strong>
+            Canales activos: <strong className="text-slate-900 dark:text-white font-medium">{connectedChannelsCount} de 6 configurados</strong>
           </span>
         </div>
         

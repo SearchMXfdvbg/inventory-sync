@@ -19,18 +19,20 @@ export interface Product {
   amazon_asin?: string;
   ebay_item_id?: string;
   kaufland_offer_id?: string;
+  tiendanube_variant_id?: string;
   shopify_stock?: number;
   ml_stock?: number;
   amazon_stock?: number;
   ebay_stock?: number;
   kaufland_stock?: number;
+  tiendanube_stock?: number;
   sync_status?: 'MATCH' | 'DESYNC' | 'PENDING' | 'LOCAL_ONLY' | 'UNLINKED';
 }
 
 export interface Venta {
   id: number;
   external_id: string;
-  origen: string; // 'shopify' | 'mercadolibre' | 'amazon' | 'ebay' | 'kaufland' | 'tiktok'
+  origen: string; // 'shopify' | 'mercadolibre' | 'amazon' | 'ebay' | 'kaufland' | 'tiktok' | 'tiendanube'
   sku: string;
   cantidad: number;
   status: string; // 'PENDING' | 'PROCESSING' | 'PROCESSED' | 'FAILED'
@@ -40,6 +42,7 @@ export interface Venta {
   amazon_synced?: boolean;
   ebay_synced?: boolean;
   kaufland_synced?: boolean;
+  tiendanube_synced?: boolean;
   attempts: number;
   last_error?: string | null;
   created_at: string;
@@ -56,6 +59,7 @@ export interface ReconcileResponse {
   amazon_stock?: number;
   ebay_stock?: number;
   kaufland_stock?: number;
+  tiendanube_stock?: number;
   stocks: {
     sae: number;
     shopify: number;
@@ -63,6 +67,7 @@ export interface ReconcileResponse {
     amazon?: number;
     ebay?: number;
     kaufland?: number;
+    tiendanube?: number;
   };
 }
 
@@ -76,6 +81,7 @@ export interface IntegrationStatus {
     amazon: boolean;
     ebay?: boolean;
     kaufland?: boolean;
+    tiendanube?: boolean;
   };
   sae: {
     status: string;
@@ -110,6 +116,12 @@ export interface IntegrationStatus {
     status: string;
     storefront?: string;
     enabled?: boolean;
+  };
+  tiendanube?: {
+    status: string;
+    store_id?: string;
+    enabled?: boolean;
+    [key: string]: any;
   };
 }
 
@@ -221,6 +233,7 @@ export interface LoginResponse {
 
 export const login = async (username: string, password: string): Promise<LoginResponse> => {
   const cleanUsername = username.trim();
+  const requestUsername = cleanUsername.toLowerCase() === 'cristadmin' ? 'CristAdmin' : cleanUsername;
 
   try {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -229,7 +242,7 @@ export const login = async (username: string, password: string): Promise<LoginRe
         'Content-Type': 'application/json',
         'X-Tenant-ID': getTenantId(),
       },
-      body: JSON.stringify({ username: cleanUsername, password }),
+      body: JSON.stringify({ username: requestUsername, password }),
     });
 
     if (response.ok) {
@@ -467,6 +480,38 @@ export const syncInventoryFromMercadoLibre = async (): Promise<{ success: boolea
   return await response.json();
 };
 
+export const syncInventoryFromTiendanube = async (): Promise<{ success: boolean; message: string; updated: number; created: number; total_items?: number }> => {
+  const response = await fetchApi(`${BASE_URL}/inventory/sync-from-tiendanube`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    const err = await response.text().catch(() => '');
+    throw new Error(`Error sincronizando desde Tiendanube: ${err.slice(0, 100)}`);
+  }
+  return await response.json();
+};
+
+export const getTiendanubeAuthUrl = async (): Promise<{ url: string; client_id?: string; redirect_uri?: string }> => {
+  const response = await fetchApi(`${BASE_URL}/auth/tiendanube/url`);
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || 'Error al obtener la URL de autorización de Tiendanube');
+  }
+  return await response.json();
+};
+
+export const exchangeTiendanubeCode = async (data: { code: string; client_id?: string; client_secret?: string }): Promise<{ success: boolean; message: string; [key: string]: any }> => {
+  const response = await fetchApi(`${BASE_URL}/auth/tiendanube/exchange`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || 'Error al conectar con Tiendanube');
+  }
+  return await response.json();
+};
+
 export const getMercadoLibreOAuthUrl = async (): Promise<{ url: string; client_id: string; redirect_uri: string }> => {
   const response = await fetchApi(`${BASE_URL}/auth/mercadolibre/url`);
   if (!response.ok) {
@@ -612,6 +657,13 @@ export interface SystemSettings {
   ENABLE_AMAZON?: boolean;
   ENABLE_EBAY?: boolean;
   ENABLE_KAUFLAND?: boolean;
+  ENABLE_TIENDANUBE?: boolean;
+
+  TIENDANUBE_STORE_ID?: string;
+  TIENDANUBE_ACCESS_TOKEN?: string;
+  TIENDANUBE_CLIENT_ID?: string;
+  TIENDANUBE_CLIENT_SECRET?: string;
+  TIENDANUBE_WEBHOOK_SECRET?: string;
 
   TIKTOK_APP_KEY?: string;
   TIKTOK_APP_SECRET?: string;
@@ -655,6 +707,12 @@ const DEFAULT_SETTINGS_ENTERPRISE: SystemSettings = {
   ENABLE_AMAZON: false,
   ENABLE_EBAY: false,
   ENABLE_KAUFLAND: false,
+  ENABLE_TIENDANUBE: false,
+  TIENDANUBE_STORE_ID: '',
+  TIENDANUBE_ACCESS_TOKEN: '',
+  TIENDANUBE_CLIENT_ID: '',
+  TIENDANUBE_CLIENT_SECRET: '',
+  TIENDANUBE_WEBHOOK_SECRET: '',
   AMAZON_SELLER_ID: '',
   AMAZON_CLIENT_ID: '',
   AMAZON_CLIENT_SECRET: '',
@@ -848,6 +906,7 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
   const amazonCol = findColumnIndex(['amazon_asin', 'amazon', 'asin']);
   const ebayCol = findColumnIndex(['ebay_item_id', 'ebayid', 'ebay']);
   const kauflandCol = findColumnIndex(['kaufland_offer_id', 'kauflandid', 'kaufland']);
+  const tiendanubeCol = findColumnIndex(['tiendanube_variant_id', 'tiendanubeid', 'tiendanube', 'nuvemshop']);
 
   const products: Product[] = [];
 
@@ -930,6 +989,7 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
     const amazonAsin = (amazonCol >= 0 && row[amazonCol]) ? String(row[amazonCol]).trim() : undefined;
     const ebayId = (ebayCol >= 0 && row[ebayCol]) ? String(row[ebayCol]).trim() : undefined;
     const kauflandId = (kauflandCol >= 0 && row[kauflandCol]) ? String(row[kauflandCol]).trim() : undefined;
+    const tiendanubeId = (tiendanubeCol >= 0 && row[tiendanubeCol]) ? String(row[tiendanubeCol]).trim() : undefined;
 
     products.push({
       sku: skuRaw,
@@ -949,11 +1009,13 @@ export const parseInventoryFile = async (file: File): Promise<Product[]> => {
       amazon_asin: amazonAsin,
       ebay_item_id: ebayId,
       kaufland_offer_id: kauflandId,
+      tiendanube_variant_id: tiendanubeId,
       shopify_stock: shopifyId ? stock : undefined,
       ml_stock: mlId ? stock : undefined,
       amazon_stock: amazonAsin ? stock : undefined,
       ebay_stock: ebayId ? stock : undefined,
       kaufland_stock: kauflandId ? stock : undefined,
+      tiendanube_stock: tiendanubeId ? stock : undefined,
       sync_status: 'LOCAL_ONLY'
     });
   }
@@ -997,7 +1059,7 @@ export const importInventoryFile = async (file: File): Promise<ImportInventoryRe
 };
 
 export const downloadInventoryTemplate = async (): Promise<void> => {
-  const csvContent = 'sku,nombre,stock,shopify_inventory_item_id,shopify_location_id,ml_item_id,amazon_asin,ebay_item_id,kaufland_offer_id\nSKU-EJEMPLO-001,Producto Modelo,10,gid://shopify/InventoryItem/123456789,gid://shopify/Location/987654321,MLM123456789,,,\n';
+  const csvContent = 'sku,nombre,stock,shopify_inventory_item_id,shopify_location_id,ml_item_id,amazon_asin,ebay_item_id,kaufland_offer_id,tiendanube_variant_id\nSKU-EJEMPLO-001,Producto Modelo,10,gid://shopify/InventoryItem/123456789,gid://shopify/Location/987654321,MLM123456789,,,,,\n';
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1023,6 +1085,9 @@ export const isChannelConfigured = (channel: string, settings: SystemSettings | 
       return Boolean(settings.ENABLE_EBAY !== false && (settings.EBAY_CLIENT_ID || settings.EBAY_REFRESH_TOKEN));
     case 'kaufland':
       return Boolean(settings.ENABLE_KAUFLAND !== false && (settings.KAUFLAND_CLIENT_KEY || settings.KAUFLAND_SECRET_KEY));
+    case 'tiendanube':
+    case 'nuvemshop':
+      return Boolean(settings.ENABLE_TIENDANUBE !== false && (settings.TIENDANUBE_STORE_ID || settings.TIENDANUBE_ACCESS_TOKEN));
     case 'tiktok':
       return Boolean(settings.ENABLE_TIKTOK !== false && (settings.TIKTOK_APP_KEY || settings.TIKTOK_ACCESS_TOKEN));
     case 'sae':
@@ -1042,6 +1107,7 @@ export const exportProductsToExcel = (products: Product[], filename: string = 'i
     'Stock Central (Local)': p.stock,
     'Stock Shopify': p.shopify_stock ?? 'No vinculado',
     'Stock Mercado Libre': p.ml_stock ?? 'No vinculado',
+    'Stock Tiendanube': p.tiendanube_stock ?? 'No vinculado',
     'Stock Amazon EU': p.amazon_stock ?? 'No vinculado',
     'Stock eBay DE': p.ebay_stock ?? 'No vinculado',
     'Stock Kaufland DE': p.kaufland_stock ?? 'No vinculado',
@@ -1066,6 +1132,7 @@ export const exportDifferencesToExcel = (products: Product[], filename: string =
       (p.amazon_stock !== undefined && p.amazon_stock !== s) ||
       (p.ebay_stock !== undefined && p.ebay_stock !== s) ||
       (p.kaufland_stock !== undefined && p.kaufland_stock !== s) ||
+      (p.tiendanube_stock !== undefined && p.tiendanube_stock !== s) ||
       (p.ml_stock !== undefined && p.ml_stock !== s)
     );
   });
@@ -1078,14 +1145,16 @@ export const exportDifferencesToExcel = (products: Product[], filename: string =
     'Stock Central (Físico SAE)': p.stock,
     'Stock Shopify': p.shopify_stock ?? 'N/A',
     'Dif. Shopify': p.shopify_stock !== undefined ? p.shopify_stock - p.stock : 0,
+    'Stock Mercado Libre': p.ml_stock ?? 'N/A',
+    'Dif. Mercado Libre': p.ml_stock !== undefined ? p.ml_stock - p.stock : 0,
+    'Stock Tiendanube': p.tiendanube_stock ?? 'N/A',
+    'Dif. Tiendanube': p.tiendanube_stock !== undefined ? p.tiendanube_stock - p.stock : 0,
     'Stock Amazon EU': p.amazon_stock ?? 'N/A',
     'Dif. Amazon': p.amazon_stock !== undefined ? p.amazon_stock - p.stock : 0,
     'Stock eBay DE': p.ebay_stock ?? 'N/A',
     'Dif. eBay': p.ebay_stock !== undefined ? p.ebay_stock - p.stock : 0,
     'Stock Kaufland DE': p.kaufland_stock ?? 'N/A',
     'Dif. Kaufland': p.kaufland_stock !== undefined ? p.kaufland_stock - p.stock : 0,
-    'Stock Mercado Libre': p.ml_stock ?? 'N/A',
-    'Dif. Mercado Libre': p.ml_stock !== undefined ? p.ml_stock - p.stock : 0,
     'Estado': p.sync_status === 'DESYNC' ? 'DESALINEADO' : 'ALINEADO',
     'Fecha de Reporte': new Date().toLocaleString()
   }));
@@ -1198,6 +1267,7 @@ export const updateCentralStock = async (sku: string, newStock: number, reason: 
   if (products[idx].ebay_stock !== undefined) products[idx].ebay_stock = newStock;
   if (products[idx].kaufland_stock !== undefined) products[idx].kaufland_stock = newStock;
   if (products[idx].ml_stock !== undefined) products[idx].ml_stock = newStock;
+  if (products[idx].tiendanube_stock !== undefined) products[idx].tiendanube_stock = newStock;
 
 
 
@@ -1225,6 +1295,7 @@ export const reconcileSingleChannel = async (sku: string, channel: string): Prom
   else if (ch === 'amazon') products[idx].amazon_stock = targetStock;
   else if (ch === 'ebay') products[idx].ebay_stock = targetStock;
   else if (ch === 'kaufland') products[idx].kaufland_stock = targetStock;
+  else if (ch === 'tiendanube' || ch === 'nuvemshop') products[idx].tiendanube_stock = targetStock;
   else if (ch === 'mercadolibre' || ch === 'ml') products[idx].ml_stock = targetStock;
 
 
@@ -1257,6 +1328,7 @@ export const resolveStockConflict = async (
   products[idx].amazon_stock = targetStock;
   products[idx].ebay_stock = targetStock;
   products[idx].kaufland_stock = targetStock;
+  products[idx].tiendanube_stock = targetStock;
   products[idx].ml_stock = targetStock;
   products[idx].sync_status = 'MATCH';
 
@@ -1287,6 +1359,7 @@ export const syncAllProductsToChannels = async (
   if (isChannelConfigured('amazon', settings)) activeChannels.push('amazon');
   if (isChannelConfigured('ebay', settings)) activeChannels.push('ebay');
   if (isChannelConfigured('kaufland', settings)) activeChannels.push('kaufland');
+  if (isChannelConfigured('tiendanube', settings)) activeChannels.push('tiendanube');
   if (isChannelConfigured('mercadolibre', settings)) activeChannels.push('mercadolibre');
 
   // Procesamiento por lotes simulado/real para evitar saturación de memoria
@@ -1322,6 +1395,12 @@ export const syncAllProductsToChannels = async (
       if (activeChannels.includes('kaufland')) {
         const rule = getChannelRule('kaufland');
         p.kaufland_stock = rule.active && rule.mode === 'percentage' 
+          ? Math.floor(masterStock * (rule.value / 100)) 
+          : (rule.active ? Math.max(0, masterStock - rule.value) : masterStock);
+      }
+      if (activeChannels.includes('tiendanube')) {
+        const rule = getChannelRule('tiendanube');
+        p.tiendanube_stock = rule.active && rule.mode === 'percentage' 
           ? Math.floor(masterStock * (rule.value / 100)) 
           : (rule.active ? Math.max(0, masterStock - rule.value) : masterStock);
       }

@@ -156,10 +156,11 @@ export default function ReconciliationPage() {
   const ebayConnected = useMemo(() => isChannelConfigured('ebay', settings), [settings]);
   const kauflandConnected = useMemo(() => isChannelConfigured('kaufland', settings), [settings]);
   const mlConnected = useMemo(() => isChannelConfigured('mercadolibre', settings), [settings]);
+  const tiendanubeConnected = useMemo(() => isChannelConfigured('tiendanube', settings), [settings]);
 
   const activeChannelsCount = useMemo(() => {
-    return [shopifyConnected, amazonConnected, ebayConnected, kauflandConnected, mlConnected].filter(Boolean).length;
-  }, [shopifyConnected, amazonConnected, ebayConnected, kauflandConnected, mlConnected]);
+    return [shopifyConnected, amazonConnected, ebayConnected, kauflandConnected, mlConnected, tiendanubeConnected].filter(Boolean).length;
+  }, [shopifyConnected, amazonConnected, ebayConnected, kauflandConnected, mlConnected, tiendanubeConnected]);
 
   // Lista de desincronizados
   const desyncedProducts = useMemo(() => {
@@ -170,10 +171,11 @@ export default function ReconciliationPage() {
         (amazonConnected && p.amazon_stock !== undefined && p.amazon_stock !== s) ||
         (ebayConnected && p.ebay_stock !== undefined && p.ebay_stock !== s) ||
         (kauflandConnected && p.kaufland_stock !== undefined && p.kaufland_stock !== s) ||
+        (tiendanubeConnected && p.tiendanube_stock !== undefined && p.tiendanube_stock !== s) ||
         (mlConnected && p.ml_stock !== undefined && p.ml_stock !== s)
       );
     });
-  }, [products, shopifyConnected, amazonConnected, ebayConnected, kauflandConnected, mlConnected]);
+  }, [products, shopifyConnected, amazonConnected, ebayConnected, kauflandConnected, tiendanubeConnected, mlConnected]);
 
   const displayedSkusList = useMemo(() => {
     if (skuFilterTab === 'desync') return desyncedProducts;
@@ -576,8 +578,8 @@ export default function ReconciliationPage() {
               </div>
             </div>
 
-            {/* GRID DE 6 CANALES */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            {/* GRID DE CANALES CONECTADOS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-4">
               
               {/* 1. Almacén Central (Fuente Core) + Botón LÁPIZ EDITAR */}
               <div className="flex flex-col justify-between border-2 border-blue-500/40 bg-slate-50 dark:bg-[#14171e] p-4 shadow-hard relative group">
@@ -665,6 +667,69 @@ export default function ReconciliationPage() {
                         className="w-full text-center py-1 bg-transparent hover:bg-slate-100 dark:hover:bg-[#1a1e28] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#20242c] text-[10px] font-bold transition cursor-pointer flex items-center justify-center gap-1"
                       >
                         {testingChannel === 'shopify' ? <Loader2 size={10} className="animate-spin" /> : <Wifi size={10} />}
+                        <span>Probar Conexión</span>
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      href="/settings/integrations"
+                      className="w-full text-center py-1.5 bg-slate-200 dark:bg-[#14171e] text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-300 dark:hover:bg-[#1a1e28] transition border border-slate-300 dark:border-[#20242c]"
+                    >
+                      Conectar
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {/* Tiendanube */}
+              <div className={`flex flex-col justify-between border p-4 shadow-hard transition-all ${
+                tiendanubeConnected 
+                  ? 'border-[#0050C3]/40 bg-slate-50 dark:bg-[#14171e]' 
+                  : 'border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#090A0C] opacity-75'
+              }`}>
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`p-2 border ${tiendanubeConnected ? 'bg-[#0050C3]/20 text-[#3884ff] border-[#0050C3]/40' : 'bg-slate-200 dark:bg-[#14171e] text-slate-400 border-slate-300 dark:border-[#20242c]'}`}>
+                      <Store size={18} />
+                    </div>
+                    {tiendanubeConnected && (
+                      <button
+                        onClick={() => handleOpenRuleModal('tiendanube')}
+                        className="p-1.5 border border-slate-300 dark:border-[#20242c] hover:bg-slate-100 dark:hover:bg-[#1a1e28] text-slate-400 hover:text-white transition-colors cursor-pointer"
+                        title="Configurar regla de stock para Tiendanube"
+                      >
+                        <Sliders size={13} />
+                      </button>
+                    )}
+                  </div>
+
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-[#8e95a5] uppercase tracking-wider block">
+                    Tiendanube
+                  </span>
+                  <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
+                    {tiendanubeConnected ? (selectedProduct?.tiendanube_stock ?? saeStock) : '—'}
+                  </span>
+                  <span className="text-[10px] text-slate-400 dark:text-[#8e95a5] block mt-0.5">
+                    {tiendanubeConnected ? '🟢 Conectado' : '⚪ Sin conectar'}
+                  </span>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-200 dark:border-[#20242c] flex flex-col gap-1.5">
+                  {tiendanubeConnected ? (
+                    <>
+                      <button
+                        onClick={() => handleReconcileSingleChannel('tiendanube')}
+                        className="w-full text-center py-1.5 bg-[#0050C3] hover:bg-[#0040a0] text-white text-xs font-bold uppercase transition shadow-hard cursor-pointer flex items-center justify-center gap-1 border border-[#0050C3]"
+                      >
+                        <RefreshCw size={12} />
+                        <span>Conciliar solo este</span>
+                      </button>
+                      <button
+                        onClick={() => handleTestChannel('tiendanube')}
+                        disabled={testingChannel === 'tiendanube'}
+                        className="w-full text-center py-1 bg-transparent hover:bg-slate-100 dark:hover:bg-[#1a1e28] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#20242c] text-[10px] font-bold transition cursor-pointer flex items-center justify-center gap-1"
+                      >
+                        {testingChannel === 'tiendanube' ? <Loader2 size={10} className="animate-spin" /> : <Wifi size={10} />}
                         <span>Probar Conexión</span>
                       </button>
                     </>
@@ -1304,6 +1369,28 @@ export default function ReconciliationPage() {
                       </div>
                     </div>
                     <span className="text-sm font-bold text-amber-400">{selectedProduct.amazon_stock ?? selectedProduct.stock} uds</span>
+                  </label>
+                )}
+
+                {/* Opción Tiendanube */}
+                {tiendanubeConnected && (
+                  <label
+                    onClick={() => {
+                      setConflictMasterSource('tiendanube');
+                      setConflictCustomStock(selectedProduct.tiendanube_stock ?? selectedProduct.stock);
+                    }}
+                    className={`flex items-center justify-between p-3 border cursor-pointer transition-all ${
+                      conflictMasterSource === 'tiendanube' ? 'border-[#0050C3] bg-[#0050C3]/10 shadow-[2px_2px_0px_#0050C3]' : 'border-slate-200 dark:border-[#20242c] bg-slate-50 dark:bg-[#14171e]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Store size={16} className="text-[#3884ff]" />
+                      <div>
+                        <span className="text-xs font-bold block text-slate-800 dark:text-white uppercase">Tiendanube</span>
+                        <span className="text-[10px] text-slate-400 dark:text-[#8e95a5]">Stock en Tiendanube</span>
+                      </div>
+                    </div>
+                    <span className="text-sm font-bold text-[#3884ff]">{selectedProduct.tiendanube_stock ?? selectedProduct.stock} uds</span>
                   </label>
                 )}
               </div>
