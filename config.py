@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     ADMIN_USERNAME: str = os.environ.get("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD: str = os.environ.get("ADMIN_PASSWORD", "")
+    SUPERADMIN_PASSWORD: str = os.environ.get("SUPERADMIN_PASSWORD", "ROAC060718#")
 
     DATABASE_URL: str = "sqlite:///./data/database.db"
     SAE_DATA_PATH: str = "data/productos.json"
